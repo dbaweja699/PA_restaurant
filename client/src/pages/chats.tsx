@@ -22,7 +22,7 @@ import { MessageSquare, Users, Clock } from "lucide-react";
 
 function ChatCard({ chat }: { chat: Chat }) {
   const [expanded, setExpanded] = useState(false);
-  
+
   const getSourceIcon = (source: string) => {
     switch (source.toLowerCase()) {
       case "website":
@@ -37,7 +37,7 @@ function ChatCard({ chat }: { chat: Chat }) {
         return <i className="ri-message-2-line mr-1"></i>;
     }
   };
-  
+
   return (
     <Card className="mb-4">
       <CardHeader className="pb-2">
@@ -68,19 +68,13 @@ function ChatCard({ chat }: { chat: Chat }) {
         <div className="flex justify-between items-center text-sm text-neutral-600 mb-2">
           <div className="flex items-center">
             <Clock size={14} className="mr-1" />
-            Started {(() => {
-                try {
-                  return formatDistanceToNow(new Date(chat.startTime), { addSuffix: true });
-                } catch (e) {
-                  return 'Unknown time';
-                }
-              })()}
+            Started {chat.startTime ? formatDistanceToNow(new Date(chat.startTime), { addSuffix: true }) : 'Unknown time'}
           </div>
           <div>
             Topic: <span className="font-medium">{chat.topic || "General Inquiry"}</span>
           </div>
         </div>
-        
+
         {expanded && (
           <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
             <p className="font-medium mb-1">Summary</p>
@@ -102,9 +96,9 @@ export default function Chats() {
   const { data: chats, isLoading } = useQuery<Chat[]>({ 
     queryKey: ['/api/chats'],
   });
-  
+
   const [activeTab, setActiveTab] = useState("active");
-  
+
   if (isLoading) {
     return (
       <div className="py-6 px-4 sm:px-6 lg:px-8">
@@ -112,9 +106,9 @@ export default function Chats() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        
+
         <Skeleton className="h-12 w-64 mb-4" />
-        
+
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-40 w-full" />
@@ -123,20 +117,20 @@ export default function Chats() {
       </div>
     );
   }
-  
+
   const activeChatCount = chats?.filter(chat => chat.status === "active").length || 0;
   const completedChatCount = chats?.filter(chat => chat.status !== "active").length || 0;
-  
+
   const activeChats = chats?.filter(chat => chat.status === "active") || [];
   const completedChats = chats?.filter(chat => chat.status !== "active") || [];
-  
+
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-2xl font-display font-bold text-neutral-900">Chat Interactions</h1>
         <p className="mt-1 text-sm text-neutral-600">Monitor and manage AI-handled customer chats</p>
       </div>
-      
+
       <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="active" className="flex items-center">
@@ -153,7 +147,7 @@ export default function Chats() {
             )}
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="active" className="mt-0">
           {activeChats.length === 0 ? (
             <Card>
@@ -165,7 +159,7 @@ export default function Chats() {
             activeChats.map(chat => <ChatCard key={chat.id} chat={chat} />)
           )}
         </TabsContent>
-        
+
         <TabsContent value="completed" className="mt-0">
           {completedChats.length === 0 ? (
             <Card>

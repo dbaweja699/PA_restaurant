@@ -25,10 +25,10 @@ import { cn } from "@/lib/utils";
 
 function OrderDetailsRow({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
-  
+
   // @ts-ignore - items is defined as json in schema
   const items = Array.isArray(order.items) ? order.items : [];
-  
+
   const getTypeIcon = () => {
     switch (order.type.toLowerCase()) {
       case "delivery":
@@ -41,7 +41,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
         return <ShoppingCart className="h-4 w-4" />;
     }
   };
-  
+
   const getStatusColor = () => {
     switch (order.status.toLowerCase()) {
       case "processing":
@@ -58,7 +58,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
         return "bg-neutral-100 text-neutral-800";
     }
   };
-  
+
   return (
     <>
       <TableRow className="cursor-pointer hover:bg-neutral-50" onClick={() => setExpanded(!expanded)}>
@@ -88,7 +88,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
           </Button>
         </TableCell>
       </TableRow>
-      
+
       {expanded && (
         <TableRow className="bg-neutral-50">
           <TableCell colSpan={7} className="p-4">
@@ -104,12 +104,12 @@ function OrderDetailsRow({ order }: { order: Order }) {
                   </li>
                 ))}
               </ul>
-              
+
               <div className="mt-4 pt-2 border-t border-neutral-200 flex justify-between font-medium">
                 <span>Total</span>
                 <span>{order.total}</span>
               </div>
-              
+
               <div className="mt-4 pt-2 border-t border-neutral-200">
                 <h4 className="font-medium mb-2">Processing Details</h4>
                 <div className="flex justify-between">
@@ -118,7 +118,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                     {order.aiProcessed ? "Yes" : "No"}
                   </Badge>
                 </div>
-                
+
                 <div className="mt-4 flex justify-end space-x-2">
                   <Button variant="outline" size="sm">Edit Order</Button>
                   <Button size="sm">Update Status</Button>
@@ -136,9 +136,9 @@ export default function Orders() {
   const { data: orders, isLoading } = useQuery<Order[]>({ 
     queryKey: ['/api/orders'],
   });
-  
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  
+
   if (isLoading) {
     return (
       <div className="py-6 px-4 sm:px-6 lg:px-8">
@@ -146,7 +146,7 @@ export default function Orders() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        
+
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-32" />
@@ -158,12 +158,12 @@ export default function Orders() {
       </div>
     );
   }
-  
+
   const filteredOrders = orders?.filter(order => {
     if (statusFilter === "all") return true;
     return order.status.toLowerCase() === statusFilter.toLowerCase();
   }) || [];
-  
+
   // Count orders by status
   const orderCounts = {
     processing: orders?.filter(o => o.status.toLowerCase() === "processing").length || 0,
@@ -171,7 +171,7 @@ export default function Orders() {
     ready: orders?.filter(o => o.status.toLowerCase() === "ready").length || 0,
     completed: orders?.filter(o => o.status.toLowerCase() === "completed").length || 0
   };
-  
+
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
@@ -180,7 +180,7 @@ export default function Orders() {
           Track and manage orders processed by the AI assistant
         </p>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className={cn(
           "cursor-pointer hover:border-primary/50 transition-colors",
@@ -194,7 +194,7 @@ export default function Orders() {
             <ShoppingCart className="h-8 w-8 text-neutral-400" />
           </CardContent>
         </Card>
-        
+
         <Card className={cn(
           "cursor-pointer hover:border-blue-400/50 transition-colors",
           statusFilter === "processing" ? "border-blue-400" : ""
@@ -209,7 +209,7 @@ export default function Orders() {
             </Badge>
           </CardContent>
         </Card>
-        
+
         <Card className={cn(
           "cursor-pointer hover:border-yellow-400/50 transition-colors",
           statusFilter === "ready" ? "border-yellow-400" : ""
@@ -224,7 +224,7 @@ export default function Orders() {
             </Badge>
           </CardContent>
         </Card>
-        
+
         <Card className={cn(
           "cursor-pointer hover:border-green-400/50 transition-colors",
           statusFilter === "completed" ? "border-green-400" : ""
@@ -240,7 +240,7 @@ export default function Orders() {
           </CardContent>
         </Card>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium flex items-center">
