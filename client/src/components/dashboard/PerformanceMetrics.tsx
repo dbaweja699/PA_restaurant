@@ -4,14 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { type PerformanceMetrics as PerformanceMetricsType } from "@shared/schema";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function MetricItem({ label, value, color }: { label: string; value: number; color: string }) {
+function MetricItem({ label, value, color }: { label: string; value: number | null; color: string }) {
+  const actualValue = value ?? 0;
   return (
     <div>
       <div className="flex justify-between items-center mb-1">
         <span className="text-sm font-medium text-neutral-700">{label}</span>
-        <span className="text-sm font-medium text-neutral-900">{value}%</span>
+        <span className="text-sm font-medium text-neutral-900">{actualValue}%</span>
       </div>
-      <Progress value={value} className="h-2 bg-neutral-200" indicatorClassName={color} />
+      <Progress value={actualValue} className={`h-2 bg-neutral-200`} style={{ ['--progress-fill' as any]: color }} />
     </div>
   );
 }
@@ -91,7 +92,7 @@ export function PerformanceMetrics() {
         <div className="flex justify-between items-center w-full">
           <span className="text-sm font-medium text-neutral-600">Overall AI Efficiency</span>
           <span className="text-sm font-bold text-accent">
-            {metrics.overallEfficiency}%
+            {metrics.overallEfficiency ?? 0}%
           </span>
         </div>
       </CardFooter>
