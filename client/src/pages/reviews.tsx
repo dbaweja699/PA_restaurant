@@ -66,11 +66,11 @@ function ReviewCard({ review }: { review: Review }) {
         <div className="flex justify-between items-start">
           <div className="flex items-center">
             <div className="h-10 w-10 bg-neutral-100 rounded-full flex items-center justify-center mr-3">
-              {review.customerName ? review.customerName.charAt(0) : '?'}
+              {review.customer_name ? review.customer_name.charAt(0) : '?'}
             </div>
             <div>
               <CardTitle className="text-base">
-                {review.customerName}
+                {review.customer_name || 'Anonymous'}
               </CardTitle>
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center text-xs text-neutral-500">

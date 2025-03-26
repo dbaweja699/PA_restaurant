@@ -23,6 +23,10 @@ export default function Calls() {
 
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
 
+  const formatPhoneNumber = (phone: string) => {
+    return phone.replace(/(\+\d{1})(\d{3})(\d{3})(\d{4})/, '$1 ($2) $3-$4');
+  };
+
   if (isLoading) {
     return (
       <div className="py-6 px-4 sm:px-6 lg:px-8">
@@ -33,10 +37,29 @@ export default function Calls() {
 
         <Card>
           <CardHeader>
-            <Skeleton className="h-6 w-32" />
+            <CardTitle>Call History</CardTitle>
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-64 w-full" />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Phone Number</TableHead>
+                  <TableHead>Start Time</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Duration</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCalls.map((call) => (
+                  <TableRow key={call.id}>
+                    <TableCell>{formatPhoneNumber(call.phoneNumber)}</TableCell>
+                    <TableCell>{format(new Date(call.startTime), "MMM d, h:mm a")}</TableCell>
+                    <TableCell>{call.status}</TableCell>
+                    <TableCell>{call.duration ? `${call.duration}s` : '-'}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>

@@ -70,7 +70,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
           </div>
         </TableCell>
         <TableCell>
-          {format(new Date(order.orderTime), "MMM d, h:mm a")}
+          {order.orderTime ? format(new Date(order.orderTime), "MMM d, h:mm a") : '-'}
         </TableCell>
         <TableCell>{order.customerName}</TableCell>
         <TableCell>
