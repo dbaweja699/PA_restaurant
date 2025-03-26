@@ -20,9 +20,9 @@ export default function Calls() {
   const { data: calls, isLoading } = useQuery<Call[]>({ 
     queryKey: ['/api/calls'],
   });
-  
+
   const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
-  
+
   if (isLoading) {
     return (
       <div className="py-6 px-4 sm:px-6 lg:px-8">
@@ -30,7 +30,7 @@ export default function Calls() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        
+
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-32" />
@@ -42,12 +42,12 @@ export default function Calls() {
       </div>
     );
   }
-  
+
   const filteredCalls = calls?.filter(call => {
     if (filter === "all") return true;
     return call.status === filter;
   }) || [];
-  
+
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8 flex justify-between items-center">
@@ -55,7 +55,7 @@ export default function Calls() {
           <h1 className="text-2xl font-display font-bold text-neutral-900">Call Management</h1>
           <p className="mt-1 text-sm text-neutral-600">Monitor and manage AI-handled customer calls</p>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <Button
             variant={filter === "all" ? "default" : "outline"}
@@ -81,7 +81,7 @@ export default function Calls() {
           </Button>
         </div>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium flex items-center">
@@ -121,7 +121,7 @@ export default function Calls() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(call.startTime), "MMM d, h:mm a")}
+                      {call.startTime ? format(new Date(call.startTime), "MMM d, h:mm a") : "Invalid date"}
                     </TableCell>
                     <TableCell>
                       {call.duration ? (
@@ -129,7 +129,7 @@ export default function Calls() {
                       ) : (
                         <div className="flex items-center text-accent">
                           <Clock className="mr-1 h-3 w-3" />
-                          {formatDistanceToNow(new Date(call.startTime))}
+                          {call.startTime ? formatDistanceToNow(new Date(call.startTime)) : "Unknown"}
                         </div>
                       )}
                     </TableCell>
