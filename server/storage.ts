@@ -296,7 +296,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      role: insertUser.role || 'user',
+      avatarUrl: insertUser.avatarUrl === undefined ? null : insertUser.avatarUrl
+    };
     this.users.set(id, user);
     return user;
   }
@@ -514,6 +519,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use DatabaseStorage instead of MemStorage
-import { storage as dbStorage } from './DatabaseStorage';
-export const storage = dbStorage;
+// Use the memory storage for now until we can get the project running
+//import { storage as dbStorage } from './DatabaseStorage';
+//export const storage = dbStorage;
+
+export const storage = new MemStorage();

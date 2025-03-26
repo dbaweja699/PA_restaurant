@@ -70,13 +70,5 @@ async function initDatabase() {
   }
 }
 
-// Execute the initialization
-initDatabase()
-  .then(() => {
-    console.log('Database setup complete.');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Database setup failed:', error);
-    process.exit(1);
-  });
+// Export the initialization function
+export default initDatabase;
