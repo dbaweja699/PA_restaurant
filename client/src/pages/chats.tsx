@@ -68,7 +68,13 @@ function ChatCard({ chat }: { chat: Chat }) {
         <div className="flex justify-between items-center text-sm text-neutral-600 mb-2">
           <div className="flex items-center">
             <Clock size={14} className="mr-1" />
-            Started {formatDistanceToNow(new Date(chat.startTime), { addSuffix: true })}
+            Started {(() => {
+                try {
+                  return formatDistanceToNow(new Date(chat.startTime), { addSuffix: true });
+                } catch (e) {
+                  return 'Unknown time';
+                }
+              })()}
           </div>
           <div>
             Topic: <span className="font-medium">{chat.topic || "General Inquiry"}</span>
