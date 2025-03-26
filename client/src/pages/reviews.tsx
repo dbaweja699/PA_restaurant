@@ -29,7 +29,7 @@ function StarRating({ rating }: { rating: number }) {
 
 function ReviewCard({ review }: { review: Review }) {
   const [expanded, setExpanded] = useState(false);
-  
+
   const getSourceIcon = (source: string) => {
     switch (source.toLowerCase()) {
       case "google":
@@ -46,7 +46,7 @@ function ReviewCard({ review }: { review: Review }) {
         return <i className="ri-star-line mr-1"></i>;
     }
   };
-  
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "new":
@@ -59,14 +59,14 @@ function ReviewCard({ review }: { review: Review }) {
         return <Badge variant="outline">{status}</Badge>;
     }
   };
-  
+
   return (
     <Card className="mb-4">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div className="flex items-center">
             <div className="h-10 w-10 bg-neutral-100 rounded-full flex items-center justify-center mr-3">
-              {review.customerName.charAt(0)}
+              {review.customerName ? review.customerName.charAt(0) : '?'}
             </div>
             <div>
               <CardTitle className="text-base">
@@ -94,7 +94,7 @@ function ReviewCard({ review }: { review: Review }) {
         <p className="text-neutral-700">
           "{review.comment}"
         </p>
-        
+
         {expanded && review.aiResponse && (
           <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
             <p className="font-medium mb-1 flex items-center">
@@ -117,7 +117,7 @@ function ReviewCard({ review }: { review: Review }) {
             Awaiting AI Response
           </Button>
         )}
-        
+
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="flex items-center">
             <ThumbsUp className="h-4 w-4 mr-1" /> Approve
@@ -133,9 +133,9 @@ export default function Reviews() {
   const { data: reviews, isLoading } = useQuery<Review[]>({ 
     queryKey: ['/api/reviews'],
   });
-  
+
   const [filter, setFilter] = useState<"all" | "new" | "responded" | "archived">("all");
-  
+
   if (isLoading) {
     return (
       <div className="py-6 px-4 sm:px-6 lg:px-8">
@@ -143,13 +143,13 @@ export default function Reviews() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        
+
         <div className="flex gap-2 mb-6">
           {[...Array(4)].map((_, i) => (
             <Skeleton key={i} className="h-10 w-24" />
           ))}
         </div>
-        
+
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <Skeleton key={i} className="h-40 w-full" />
@@ -158,15 +158,15 @@ export default function Reviews() {
       </div>
     );
   }
-  
+
   const filteredReviews = reviews?.filter(review => {
     if (filter === "all") return true;
     return review.status === filter;
   }) || [];
-  
+
   const newCount = reviews?.filter(r => r.status === "new").length || 0;
   const respondedCount = reviews?.filter(r => r.status === "responded").length || 0;
-  
+
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
@@ -175,7 +175,7 @@ export default function Reviews() {
           Monitor customer reviews and AI-generated responses
         </p>
       </div>
-      
+
       <div className="flex items-center space-x-2 mb-6">
         <Button
           variant={filter === "all" ? "default" : "outline"}
@@ -212,7 +212,7 @@ export default function Reviews() {
           Archived
         </Button>
       </div>
-      
+
       {filteredReviews.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
