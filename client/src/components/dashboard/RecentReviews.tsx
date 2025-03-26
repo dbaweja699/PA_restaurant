@@ -85,10 +85,10 @@ export function RecentReviews() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center mr-2">
-                    <span>{review.customerName.charAt(0)}</span>
+                    <span>{review.customerName && review.customerName.charAt(0)}</span>
                   </div>
                   <span className="font-medium text-neutral-800">
-                    {review.customerName}
+                    {review.customerName || "Anonymous"}
                   </span>
                 </div>
                 <StarRating rating={review.rating} />
@@ -99,7 +99,7 @@ export function RecentReviews() {
               <p className="mt-1 text-xs text-neutral-500">
                 {review.status === "responded" ? (
                   <>
-                    <i className="ri-checkbox-circle-line text-accent"></i> AI responded {formatDistanceToNow(new Date(review.aiRespondedAt!), { addSuffix: true })}
+                    <i className="ri-checkbox-circle-line text-accent"></i> AI responded {review.aiRespondedAt ? formatDistanceToNow(new Date(review.aiRespondedAt), { addSuffix: true }) : ""}
                   </>
                 ) : (
                   <span className="text-accent">

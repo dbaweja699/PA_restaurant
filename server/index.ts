@@ -51,12 +51,12 @@ app.use((req, res, next) => {
     console.error('Database migration failed:', error);
   }
   
-  // Then initialize the database with demo data
+  // Connect to Supabase database
   try {
     await initDatabase();
-    console.log('Database initialized successfully');
+    console.log('Supabase database connection established');
   } catch (error) {
-    console.error('Database initialization failed:', error);
+    console.error('Supabase database connection failed:', error);
   }
   
   const server = await registerRoutes(app);

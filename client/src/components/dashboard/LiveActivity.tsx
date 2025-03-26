@@ -13,6 +13,13 @@ type ActivityIconProps = {
 
 function ActivityIcon({ type }: ActivityIconProps) {
   const getIconClass = () => {
+    if (!type) {
+      return {
+        bgColor: "bg-neutral-500",
+        icon: "ri-question-line"
+      };
+    }
+    
     switch (type) {
       case "call":
         return {
@@ -130,16 +137,16 @@ export function LiveActivity() {
                   <ActivityIcon type={activity.activityType} />
                   <div className="ml-4">
                     <h3 className="font-medium text-neutral-900">
-                      {activity.activityType.charAt(0).toUpperCase() + activity.activityType.slice(1)}
+                      {activity.activityType && activity.activityType.charAt(0).toUpperCase() + activity.activityType.slice(1) || "Activity"}
                     </h3>
                     <p className="text-sm text-neutral-600">
                       {activity.activityType === "call" ? "+" : ""}
-                      ID: {activity.activityId}
+                      ID: {activity.activityId || "N/A"}
                     </p>
                     <div className="flex items-center text-xs text-neutral-500 mt-1">
-                      <span>Started {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}</span>
+                      <span>Started {activity.timestamp ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : "recently"}</span>
                       <span className="mx-2">•</span>
-                      <span>{activity.summary.split(" ").slice(0, 3).join(" ")}</span>
+                      <span>{activity.summary ? activity.summary.split(" ").slice(0, 3).join(" ") : "No summary available"}</span>
                     </div>
                   </div>
                 </div>
@@ -154,7 +161,7 @@ export function LiveActivity() {
               {expandedActivity === activity.id && (
                 <div className="mt-3 pt-3 border-t border-neutral-100">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-neutral-600">{activity.summary}</span>
+                    <span className="text-neutral-600">{activity.summary || "No detailed summary available"}</span>
                     <span className="px-2 py-1 bg-accent-light text-white text-xs rounded-full animate-pulse">
                       Active
                     </span>

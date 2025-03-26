@@ -31,7 +31,7 @@ export function QuickStats() {
       icon: "ri-customer-service-2-line",
       iconBgColor: "bg-secondary-light",
       title: "Calls Handled Today",
-      value: stats.callsHandledToday,
+      value: stats.callsHandledToday || 0,
       footer: (
         <>
           <i className="ri-arrow-up-line"></i> 12% from yesterday
@@ -46,7 +46,7 @@ export function QuickStats() {
       icon: "ri-message-3-line",
       iconBgColor: "bg-accent-light",
       title: "Active Chats",
-      value: stats.activeChats,
+      value: stats.activeChats || 0,
       footer: (
         <>
           <span className="inline-block w-2 h-2 bg-accent rounded-full animate-pulse mr-1"></span>
@@ -62,7 +62,7 @@ export function QuickStats() {
       icon: "ri-calendar-check-line",
       iconBgColor: "bg-primary-light",
       title: "Today's Bookings",
-      value: stats.todaysBookings,
+      value: stats.todaysBookings || 0,
       footer: (
         <>
           <i className="ri-arrow-up-line"></i> 4 in last hour
@@ -77,9 +77,9 @@ export function QuickStats() {
       icon: "ri-shopping-cart-2-line",
       iconBgColor: "bg-secondary-light",
       title: "Orders Processed",
-      value: stats.ordersProcessed,
+      value: stats.ordersProcessed || 0,
       footer: (
-        <>{stats.ordersTotalValue} total value</>
+        <>{stats.ordersTotalValue || "$0"} total value</>
       ),
       footerLink: {
         text: "View",

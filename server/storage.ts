@@ -594,10 +594,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use memory storage for now until Supabase credentials are added
-// import { storage as supabaseStorage } from './supabaseStorage';
-// Import the DatabaseStorage
-import { DatabaseStorage } from './DatabaseStorage';
+// Import SupabaseStorage for data persistence
+import { SupabaseStorage } from './supabaseStorage';
 
-// Use the DatabaseStorage as the primary storage implementation
-export const storage = new DatabaseStorage();
+// Use SupabaseStorage as the only storage implementation
+export const storage = new SupabaseStorage();

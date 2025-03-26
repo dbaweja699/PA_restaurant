@@ -91,16 +91,16 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <img 
                   className="h-10 w-10 rounded-full" 
                   src={user.avatarUrl} 
-                  alt={user.fullName}
+                  alt={user.fullName || "User"}
                 />
               ) : (
-                <span className="text-xl">{user.fullName.charAt(0)}</span>
+                <span className="text-xl">{user.fullName && user.fullName.charAt(0) || "U"}</span>
               )}
             </div>
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium">{user.fullName}</p>
-            <p className="text-xs text-gray-300">{user.role}</p>
+            <p className="text-sm font-medium">{user.fullName || "User"}</p>
+            <p className="text-xs text-gray-300">{user.role || "Administrator"}</p>
           </div>
         </div>
       )}

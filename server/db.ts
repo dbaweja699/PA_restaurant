@@ -1,3 +1,5 @@
+// This file is used for database migrations and schema operations
+// The app's primary data access is through Supabase (see supabaseStorage.ts)
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
