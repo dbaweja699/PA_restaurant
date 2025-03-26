@@ -10,7 +10,7 @@ export default function Dashboard() {
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-2xl font-display font-bold text-neutral-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-neutral-600">Overview of your restaurant's AI assistant activities</p>
+        <p className="mt-1 text-sm text-neutral-600">Overview of your Dblytics Restaurant AI Assistant</p>
       </div>
       
       <QuickStats />

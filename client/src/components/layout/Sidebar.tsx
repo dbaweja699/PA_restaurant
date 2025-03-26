@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import logoImg from "@/assets/logo.png";
 
 type SidebarProps = {
   isOpen: boolean;
@@ -37,10 +38,14 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   
   return (
     <div className={sidebarClasses}>
-      <div className="flex items-center justify-center h-16 px-4 border-b border-primary-light">
-        <h1 className="text-xl font-display font-bold tracking-wide">
-          <span className="text-secondary">Restaurant</span>AI
-        </h1>
+      <div className="flex items-center justify-center h-24 px-4 border-b border-primary-light">
+        <div className="flex flex-col items-center">
+          <img src={logoImg} alt="Dblytics Logo" className="h-14 w-14 mb-1" />
+          <h1 className="text-sm font-display font-bold tracking-wide">
+            <span className="text-white">Dblytics</span>
+            <span className="block text-xs text-center text-gray-300">Restaurant AI Assistant</span>
+          </h1>
+        </div>
         
         {isOpen && (
           <button 
