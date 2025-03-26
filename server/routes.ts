@@ -273,11 +273,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // User
   app.get(`${apiPrefix}/user`, async (req, res) => {
-    const users = await Promise.all([...storage.users.values()]);
-    if (users.length > 0) {
-      res.json(users[0]);
-    } else {
-      res.status(404).json({ error: "No users found" });
+    try {
+      // Get first user with ID 1 (assuming this is the main user)
+      const user = await storage.getUser(1);
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ error: "No users found" });
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Server error" });
     }
   });
 

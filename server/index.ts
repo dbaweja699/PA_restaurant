@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import initDatabase from "./initDatabase"; // Import the database initialization function
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 const app = express();
 app.use(express.json());
@@ -38,7 +40,18 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize the database
+  const execPromise = promisify(exec);
+  
+  // Run database migration first
+  try {
+    console.log('Running database migration...');
+    await execPromise('npx tsx server/migrateDatabase.ts');
+    console.log('Database migration completed');
+  } catch (error) {
+    console.error('Database migration failed:', error);
+  }
+  
+  // Then initialize the database with demo data
   try {
     await initDatabase();
     console.log('Database initialized successfully');

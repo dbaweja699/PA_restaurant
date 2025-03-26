@@ -317,7 +317,18 @@ export class MemStorage implements IStorage {
   
   async createCall(insertCall: InsertCall): Promise<Call> {
     const id = this.callCurrentId++;
-    const call: Call = { ...insertCall, id };
+    const call: Call = {
+      id,
+      status: insertCall.status || 'pending',
+      phoneNumber: insertCall.phoneNumber,
+      startTime: insertCall.startTime || new Date(),
+      endTime: insertCall.endTime || null,
+      duration: insertCall.duration || null,
+      topic: insertCall.topic || null,
+      summary: insertCall.summary || null,
+      aiHandled: insertCall.aiHandled || false,
+      transferredToHuman: insertCall.transferredToHuman || false
+    };
     this.calls.set(id, call);
     return call;
   }
@@ -342,7 +353,18 @@ export class MemStorage implements IStorage {
   
   async createChat(insertChat: InsertChat): Promise<Chat> {
     const id = this.chatCurrentId++;
-    const chat: Chat = { ...insertChat, id };
+    const chat: Chat = {
+      id,
+      status: insertChat.status || 'pending',
+      startTime: insertChat.startTime || new Date(),
+      endTime: insertChat.endTime || null,
+      topic: insertChat.topic || null,
+      summary: insertChat.summary || null,
+      aiHandled: insertChat.aiHandled || false,
+      transferredToHuman: insertChat.transferredToHuman || false,
+      customerName: insertChat.customerName || null,
+      source: insertChat.source || 'website'
+    };
     this.chats.set(id, chat);
     return chat;
   }
@@ -367,7 +389,17 @@ export class MemStorage implements IStorage {
   
   async createReview(insertReview: InsertReview): Promise<Review> {
     const id = this.reviewCurrentId++;
-    const review: Review = { ...insertReview, id };
+    const review: Review = {
+      id,
+      date: insertReview.date || new Date(),
+      status: insertReview.status || 'new',
+      customerName: insertReview.customerName,
+      source: insertReview.source || 'website',
+      rating: insertReview.rating,
+      comment: insertReview.comment,
+      aiResponse: insertReview.aiResponse || null,
+      aiRespondedAt: insertReview.aiRespondedAt || null
+    };
     this.reviews.set(id, review);
     return review;
   }
@@ -392,7 +424,16 @@ export class MemStorage implements IStorage {
   
   async createOrder(insertOrder: InsertOrder): Promise<Order> {
     const id = this.orderCurrentId++;
-    const order: Order = { ...insertOrder, id };
+    const order: Order = {
+      id,
+      type: insertOrder.type,
+      status: insertOrder.status || 'pending',
+      customerName: insertOrder.customerName,
+      orderTime: insertOrder.orderTime || new Date(),
+      items: insertOrder.items,
+      total: insertOrder.total,
+      aiProcessed: insertOrder.aiProcessed || false
+    };
     this.orders.set(id, order);
     return order;
   }
@@ -417,7 +458,17 @@ export class MemStorage implements IStorage {
   
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
     const id = this.bookingCurrentId++;
-    const booking: Booking = { ...insertBooking, id };
+    const booking: Booking = {
+      id,
+      status: insertBooking.status || 'pending',
+      customerName: insertBooking.customerName,
+      source: insertBooking.source || 'website',
+      aiProcessed: insertBooking.aiProcessed || false,
+      bookingTime: insertBooking.bookingTime,
+      partySize: insertBooking.partySize,
+      notes: insertBooking.notes || null,
+      specialOccasion: insertBooking.specialOccasion || null
+    };
     this.bookings.set(id, booking);
     return booking;
   }
@@ -447,7 +498,15 @@ export class MemStorage implements IStorage {
   
   async createPerformanceMetrics(insertMetrics: InsertPerformanceMetrics): Promise<PerformanceMetrics> {
     const id = this.performanceMetricsCurrentId++;
-    const metrics: PerformanceMetrics = { ...insertMetrics, id };
+    const metrics: PerformanceMetrics = {
+      id,
+      date: insertMetrics.date || new Date(),
+      customerSatisfaction: insertMetrics.customerSatisfaction || null,
+      responseTime: insertMetrics.responseTime || null,
+      issueResolution: insertMetrics.issueResolution || null,
+      handoffRate: insertMetrics.handoffRate || null,
+      overallEfficiency: insertMetrics.overallEfficiency || null
+    };
     this.performanceMetrics.set(id, metrics);
     return metrics;
   }
@@ -465,7 +524,14 @@ export class MemStorage implements IStorage {
   
   async createActivityLog(insertLog: InsertActivityLog): Promise<ActivityLog> {
     const id = this.activityLogCurrentId++;
-    const log: ActivityLog = { ...insertLog, id };
+    const log: ActivityLog = {
+      id,
+      status: insertLog.status,
+      summary: insertLog.summary,
+      timestamp: insertLog.timestamp || new Date(),
+      activityType: insertLog.activityType,
+      activityId: insertLog.activityId
+    };
     this.activityLogs.set(id, log);
     return log;
   }
@@ -481,7 +547,16 @@ export class MemStorage implements IStorage {
   
   async createSocialMedia(insertSocial: InsertSocialMedia): Promise<SocialMedia> {
     const id = this.socialMediaCurrentId++;
-    const social: SocialMedia = { ...insertSocial, id };
+    const social: SocialMedia = {
+      id,
+      status: insertSocial.status || 'pending',
+      aiResponse: insertSocial.aiResponse || null,
+      aiRespondedAt: insertSocial.aiRespondedAt || null,
+      platform: insertSocial.platform,
+      postTime: insertSocial.postTime,
+      content: insertSocial.content,
+      author: insertSocial.author
+    };
     this.socialMedia.set(id, social);
     return social;
   }
@@ -519,8 +594,10 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use the memory storage for now until we can get the project running
-//import { storage as dbStorage } from './DatabaseStorage';
-//export const storage = dbStorage;
+// Use memory storage for now until Supabase credentials are added
+// import { storage as supabaseStorage } from './supabaseStorage';
+// Import the DatabaseStorage
+import { DatabaseStorage } from './DatabaseStorage';
 
-export const storage = new MemStorage();
+// Use the DatabaseStorage as the primary storage implementation
+export const storage = new DatabaseStorage();
