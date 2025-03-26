@@ -1,11 +1,14 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { 
   BellIcon, 
   HelpCircleIcon, 
   SearchIcon,
-  MenuIcon
+  MenuIcon,
+  LogOutIcon
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type TopNavProps = {
   openSidebar: () => void;
@@ -58,5 +61,35 @@ export function TopNav({ openSidebar }: TopNavProps) {
         </div>
       </div>
     </div>
+  );
+}
+export default function TopNav() {
+  const [, setLocation] = useLocation();
+
+  const handleSignOut = () => {
+    // Clear any auth tokens/state if needed
+    setLocation('/signin');
+  };
+
+  return (
+    <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
+      <Input
+        type="search"
+        placeholder="Search..."
+        className="w-[300px]"
+        prefix={<SearchIcon className="h-4 w-4 text-muted-foreground" />}
+      />
+      <div className="ml-auto flex items-center gap-4">
+        <Button variant="ghost" size="icon">
+          <BellIcon className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon">
+          <HelpCircleIcon className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={handleSignOut}>
+          <LogOutIcon className="h-4 w-4" />
+        </Button>
+      </div>
+    </header>
   );
 }
