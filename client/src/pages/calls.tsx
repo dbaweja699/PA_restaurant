@@ -27,6 +27,15 @@ export default function Calls() {
     return phone?.replace(/(\+\d{1})(\d{3})(\d{3})(\d{4})/, '$1 ($2) $3-$4') || '';
   };
 
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return '-';
+    try {
+      return format(new Date(dateStr), "MMM d, h:mm a");
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   const filteredCalls = calls?.filter(call => {
     if (filter === "all") return true;
     return call.status === filter;
@@ -103,7 +112,7 @@ export default function Calls() {
               {filteredCalls.map((call) => (
                 <TableRow key={call.id}>
                   <TableCell>{formatPhoneNumber(call.phoneNumber)}</TableCell>
-                  <TableCell>{format(new Date(call.startTime), "MMM d, h:mm a")}</TableCell>
+                  <TableCell>{formatDate(call.startTime)}</TableCell>
                   <TableCell>{call.status}</TableCell>
                   <TableCell>{call.duration ? `${call.duration}s` : '-'}</TableCell>
                 </TableRow>
