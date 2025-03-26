@@ -48,11 +48,11 @@ function ChatCard({ chat }: { chat: Chat }) {
             </div>
             <div>
               <CardTitle className="text-base">
-                {chat.customerName || "Unknown Customer"}
+                {chat.customer_name || "Unknown Customer"}
               </CardTitle>
               <div className="text-xs text-neutral-500 flex items-center mt-1">
-                {getSourceIcon(chat.source)}
-                {chat.source.charAt(0).toUpperCase() + chat.source.slice(1)} Chat
+                {getSourceIcon(chat.source || 'website')}
+                {(chat.source || 'website').charAt(0).toUpperCase() + (chat.source || 'website').slice(1)} Chat
               </div>
             </div>
           </div>
@@ -60,7 +60,7 @@ function ChatCard({ chat }: { chat: Chat }) {
             variant={chat.status === "active" ? "default" : "secondary"}
             className={chat.status === "active" ? "animate-pulse" : ""}
           >
-            {chat.status}
+            {chat.status || 'unknown'}
           </Badge>
         </div>
       </CardHeader>
@@ -68,7 +68,10 @@ function ChatCard({ chat }: { chat: Chat }) {
         <div className="flex justify-between items-center text-sm text-neutral-600 mb-2">
           <div className="flex items-center">
             <Clock size={14} className="mr-1" />
-            Started {chat.startTime ? formatDistanceToNow(new Date(chat.startTime), { addSuffix: true }) : 'Unknown time'}
+            {chat.start_time ? 
+              formatDistanceToNow(new Date(chat.start_time), { addSuffix: true }) 
+              : 'Unknown time'
+            }
           </div>
           <div>
             Topic: <span className="font-medium">{chat.topic || "General Inquiry"}</span>
@@ -79,6 +82,11 @@ function ChatCard({ chat }: { chat: Chat }) {
           <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
             <p className="font-medium mb-1">Summary</p>
             <p>{chat.summary || "No summary available"}</p>
+            <div className="mt-2 space-y-1 text-sm">
+              <p>AI Handled: {chat.ai_handled ? 'Yes' : 'No'}</p>
+              <p>Transferred to Human: {chat.transferred_to_human ? 'Yes' : 'No'}</p>
+              {chat.user_id && <p>User ID: {chat.user_id}</p>}
+            </div>
           </div>
         )}
       </CardContent>
@@ -93,8 +101,12 @@ function ChatCard({ chat }: { chat: Chat }) {
 }
 
 export default function Chats() {
-  const { data: chats, isLoading } = useQuery<Chat[]>({ 
+  const { data: chats = [], isLoading } = useQuery<Chat[]>({
     queryKey: ['/api/chats'],
+    queryFn: async () => {
+      const response = await fetch("/api/chats");
+      return response.json();
+    },
   });
 
   const [activeTab, setActiveTab] = useState("active");
