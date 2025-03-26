@@ -18,3 +18,19 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     headers: { 'x-my-custom-header': 'my-app-name' },
   },
 });
+
+// Test database connection
+export async function testConnection() {
+  try {
+    const { data, error } = await supabase.from('users').select('count').single();
+    if (error) throw error;
+    console.log('Successfully connected to Supabase database');
+    return true;
+  } catch (error) {
+    console.error('Error connecting to Supabase:', error);
+    return false;
+  }
+}
+
+// Test the connection immediately
+testConnection();
