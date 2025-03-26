@@ -10,6 +10,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Dashboard
   app.get(`${apiPrefix}/dashboard/stats`, async (req, res) => {
+
+  // Auth routes
+  app.post(`${apiPrefix}/auth/signup`, async (req, res) => {
+    try {
+      const { username, password, fullName } = req.body;
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+      
+      // Create new user
+      const user = await storage.createUser({
+        username,
+        password,
+        fullName,
+        role: 'user'
+      });
+      
+      res.status(201).json({ message: "User created successfully" });
+    } catch (error) {
+      console.error('Error creating user:', error);
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
+  app.post(`${apiPrefix}/auth/signin`, async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      const user = await storage.getUserByUsername(username);
+      if (!user || user.password !== password) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      // For security, don't send the password back
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error signing in:', error);
+      res.status(500).json({ error: "Failed to sign in" });
+    }
+  });
+
+
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats || { 

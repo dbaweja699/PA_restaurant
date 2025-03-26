@@ -14,9 +14,14 @@ import Social from "@/pages/social";
 import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
+import SignIn from "@/pages/auth/SignIn";
+import SignUp from "@/pages/auth/SignUp";
+
 function Router() {
   return (
     <Switch>
+      <Route path="/signin" component={SignIn} />
+      <Route path="/signup" component={SignUp} />
       <Route path="/" component={Dashboard} />
       <Route path="/calls" component={Calls} />
       <Route path="/chats" component={Chats} />
@@ -30,12 +35,22 @@ function Router() {
   );
 }
 
+import { Protected } from "@/components/layout/Protected";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <MainLayout>
-        <Router />
-      </MainLayout>
+      <Switch>
+        <Route path="/signin" component={SignIn} />
+        <Route path="/signup" component={SignUp} />
+        <Route>
+          <Protected>
+            <MainLayout>
+              <Router />
+            </MainLayout>
+          </Protected>
+        </Route>
+      </Switch>
       <Toaster />
     </QueryClientProvider>
   );
