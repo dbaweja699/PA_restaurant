@@ -293,7 +293,12 @@ export class SupabaseStorage implements IStorage {
       .limit(1)
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.log('Error fetching performance metrics:', error.message);
+      // Return undefined if no data is found
+      if (error.code === 'PGRST116') return undefined;
+      throw error;
+    }
     return data;
   }
 
@@ -326,8 +331,13 @@ export class SupabaseStorage implements IStorage {
       .order('timestamp', { ascending: false })
       .limit(limit);
     
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.log('Error fetching activity logs:', error.message);
+      // Return empty array if there's an error
+      if (error.code === 'PGRST116') return [];
+      throw error;
+    }
+    return data || [];
   }
 
   async createActivityLog(insertLog: InsertActivityLog): Promise<ActivityLog> {
@@ -395,7 +405,12 @@ export class SupabaseStorage implements IStorage {
       .limit(1)
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.log('Error fetching dashboard stats:', error.message);
+      // Return undefined if no data is found
+      if (error.code === 'PGRST116') return undefined;
+      throw error;
+    }
     return data;
   }
 

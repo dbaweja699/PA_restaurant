@@ -10,19 +10,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Dashboard
   app.get(`${apiPrefix}/dashboard/stats`, async (req, res) => {
-    const stats = await storage.getDashboardStats();
-    res.json(stats || { error: "No dashboard stats available" });
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats || { 
+        totalCalls: 0,
+        totalChats: 0,
+        totalReviews: 0,
+        totalOrders: 0,
+        totalBookings: 0,
+        callsHandled: 0,
+        callsAvgDuration: 0,
+        reviewsAvgRating: 0,
+        date: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      res.status(500).json({ error: "Error fetching dashboard stats" });
+    }
   });
   
   app.get(`${apiPrefix}/dashboard/performance`, async (req, res) => {
-    const metrics = await storage.getLatestPerformanceMetrics();
-    res.json(metrics || { error: "No performance metrics available" });
+    try {
+      const metrics = await storage.getLatestPerformanceMetrics();
+      res.json(metrics || { 
+        customerSatisfaction: 0,
+        responseTime: 0,
+        issueResolution: 0,
+        handoffRate: 0,
+        overallEfficiency: 0,
+        date: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching performance metrics:', error);
+      res.status(500).json({ error: "Error fetching performance metrics" });
+    }
   });
   
   app.get(`${apiPrefix}/dashboard/activity`, async (req, res) => {
-    const limit = parseInt(req.query.limit as string) || 10;
-    const logs = await storage.getRecentActivityLogs(limit);
-    res.json(logs);
+    try {
+      const limit = parseInt(req.query.limit as string) || 10;
+      const logs = await storage.getRecentActivityLogs(limit);
+      res.json(logs || []);
+    } catch (error) {
+      console.error('Error fetching activity logs:', error);
+      res.status(500).json({ error: "Error fetching activity logs" });
+    }
   });
   
   // Calls
@@ -109,8 +141,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Reviews
   app.get(`${apiPrefix}/reviews`, async (req, res) => {
-    const reviews = await storage.getReviews();
-    res.json(reviews);
+    try {
+      const reviews = await storage.getReviews();
+      res.json(reviews || []);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      res.status(500).json({ error: "Error fetching reviews" });
+    }
   });
   
   app.get(`${apiPrefix}/reviews/:id`, async (req, res) => {
@@ -191,8 +228,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Bookings
   app.get(`${apiPrefix}/bookings`, async (req, res) => {
-    const bookings = await storage.getBookings();
-    res.json(bookings);
+    try {
+      const bookings = await storage.getBookings();
+      res.json(bookings || []);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      res.status(500).json({ error: "Error fetching bookings" });
+    }
   });
   
   app.get(`${apiPrefix}/bookings/:id`, async (req, res) => {
