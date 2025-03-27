@@ -141,9 +141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate calls handled today
       const callsHandledToday = calls.filter(call => {
+        if (!call.startTime) return false;
         const callDate = new Date(call.startTime);
-        callDate.setHours(0, 0, 0, 0);
-        return callDate.getTime() === today.getTime();
+        const today = new Date();
+        return callDate.toDateString() === today.toDateString();
       }).length;
       
       // Update dashboard with real counts from database
