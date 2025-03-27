@@ -93,7 +93,7 @@ export function setupOpenAIRoutes(app: Express) {
             // Return specific error message based on HTTP status
             if (n8nResponse.status === 404) {
               return res.status(503).json({
-                content: "The n8n webhook is not active. Please activate the workflow in n8n by clicking the 'Test workflow' button, then try again.",
+                content: "The n8n webhook needs to be triggered. Please:\n1. Go to your n8n workflow\n2. Click the 'Test workflow' button in the canvas\n3. Try your request again\n\nNote: In test mode, the webhook only stays active for one request after clicking test.",
                 model: "error_webhook_inactive"
               });
             }
