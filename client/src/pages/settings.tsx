@@ -141,6 +141,7 @@ export default function Settings() {
   
   // Refs for the input fields
   const fullNameRef = useRef<HTMLInputElement>(null);
+  const usernameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   
   // User update mutation
@@ -164,6 +165,7 @@ export default function Settings() {
     if (!user) return;
     
     const fullName = fullNameRef.current?.value || '';
+    const username = usernameRef.current?.value || '';
     const email = emailRef.current?.value || '';
     
     const userData: Partial<{ username: string, email: string, full_name: string }> = {};
@@ -173,8 +175,13 @@ export default function Settings() {
       userData.full_name = fullName;
     }
     
-    if (email !== user.username) {
-      userData.username = email; // In this implementation, username is used as email
+    if (username !== user.username) {
+      userData.username = username;
+    }
+    
+    if (user.email && email !== user.email) {
+      userData.email = email;
+    } else if (!user.email && email) {
       userData.email = email;
     }
     
@@ -291,12 +298,21 @@ export default function Settings() {
                 </div>
                 
                 <div className="grid gap-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input 
+                    id="username" 
+                    ref={usernameRef}
+                    defaultValue={user?.username || ""} 
+                  />
+                </div>
+                
+                <div className="grid gap-2">
                   <Label htmlFor="email-user">Email</Label>
                   <Input 
                     id="email-user" 
                     type="email" 
                     ref={emailRef}
-                    defaultValue={user?.username || ""} 
+                    defaultValue={user?.email || ""} 
                   />
                 </div>
                 
