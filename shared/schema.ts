@@ -149,13 +149,15 @@ export const bookings = pgTable("bookings", {
 
 export const insertBookingSchema = createInsertSchema(bookings).pick({
   customerName: true,
-  bookingTime: true,
   partySize: true,
   notes: true,
   status: true,
   specialOccasion: true,
   aiProcessed: true,
   source: true,
+}).extend({
+  // Override the bookingTime field to accept ISO string and convert to Date
+  bookingTime: z.string().transform((str) => new Date(str)),
 });
 
 export type InsertBooking = z.infer<typeof insertBookingSchema>;
@@ -173,12 +175,14 @@ export const performanceMetrics = pgTable("performance_metrics", {
 });
 
 export const insertPerformanceMetricsSchema = createInsertSchema(performanceMetrics).pick({
-  date: true,
   customerSatisfaction: true,
   responseTime: true,
   issueResolution: true,
   handoffRate: true,
   overallEfficiency: true,
+}).extend({
+  // Override the date field to accept ISO string and convert to Date
+  date: z.string().transform((str) => new Date(str)).optional(),
 });
 
 export type InsertPerformanceMetrics = z.infer<typeof insertPerformanceMetricsSchema>;
@@ -195,11 +199,13 @@ export const activityLogs = pgTable("activity_logs", {
 });
 
 export const insertActivityLogSchema = createInsertSchema(activityLogs).pick({
-  timestamp: true,
   activityType: true,
   activityId: true,
   summary: true,
   status: true,
+}).extend({
+  // Override the timestamp field to accept ISO string and convert to Date
+  timestamp: z.string().transform((str) => new Date(str)).optional(),
 });
 
 export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
@@ -219,12 +225,18 @@ export const socialMedia = pgTable("social_media", {
 
 export const insertSocialMediaSchema = createInsertSchema(socialMedia).pick({
   platform: true,
-  postTime: true,
   content: true,
   author: true,
   status: true,
   aiResponse: true,
-  aiRespondedAt: true,
+}).extend({
+  // Override the postTime field to accept ISO string and convert to Date
+  postTime: z.string().transform((str) => new Date(str)),
+  // Override the aiRespondedAt field to accept ISO string and convert to Date, or undefined
+  aiRespondedAt: z
+    .string()
+    .transform((str) => new Date(str))
+    .or(z.undefined())
 });
 
 export type InsertSocialMedia = z.infer<typeof insertSocialMediaSchema>;
@@ -242,12 +254,14 @@ export const dashboardStats = pgTable("dashboard_stats", {
 });
 
 export const insertDashboardStatsSchema = createInsertSchema(dashboardStats).pick({
-  date: true,
   callsHandledToday: true,
   activeChats: true,
   todaysBookings: true,
   ordersProcessed: true,
   ordersTotalValue: true,
+}).extend({
+  // Override the date field to accept ISO string and convert to Date
+  date: z.string().transform((str) => new Date(str)).optional(),
 });
 
 export type InsertDashboardStats = z.infer<typeof insertDashboardStatsSchema>;

@@ -279,14 +279,34 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createReview(insertReview: InsertReview): Promise<Review> {
-    const { data, error } = await supabase
-      .from('reviews')
-      .insert(insertReview)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      console.log('Attempting to create review in Supabase:', insertReview);
+      
+      const { data, error } = await supabase
+        .from('reviews')
+        .insert({
+          customer_name: insertReview.customerName,
+          rating: insertReview.rating,
+          comment: insertReview.comment,
+          platform: insertReview.platform,
+          status: insertReview.status,
+          ai_response: insertReview.aiResponse,
+          ai_responded: insertReview.aiResponded
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Supabase error creating review:', error);
+        throw new Error(`Unable to create review in database. Please contact administrator. Error: ${error.message}`);
+      }
+      
+      console.log('Review created successfully in Supabase:', data);
+      return data;
+    } catch (error) {
+      console.error('Exception in createReview:', error);
+      throw error;
+    }
   }
 
   async updateReview(id: number, review: Partial<InsertReview>): Promise<Review | undefined> {
@@ -369,14 +389,35 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createBooking(insertBooking: InsertBooking): Promise<Booking> {
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert(insertBooking)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      console.log('Attempting to create booking in Supabase:', insertBooking);
+      
+      const { data, error } = await supabase
+        .from('bookings')
+        .insert({
+          customer_name: insertBooking.customerName,
+          booking_time: insertBooking.bookingTime,
+          party_size: insertBooking.partySize,
+          notes: insertBooking.notes,
+          status: insertBooking.status,
+          special_occasion: insertBooking.specialOccasion,
+          ai_processed: insertBooking.aiProcessed,
+          source: insertBooking.source
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Supabase error creating booking:', error);
+        throw new Error(`Unable to create booking in database. Please contact administrator. Error: ${error.message}`);
+      }
+      
+      console.log('Booking created successfully in Supabase:', data);
+      return data;
+    } catch (error) {
+      console.error('Exception in createBooking:', error);
+      throw error;
+    }
   }
 
   async updateBooking(id: number, booking: Partial<InsertBooking>): Promise<Booking | undefined> {
@@ -470,47 +511,89 @@ export class SupabaseStorage implements IStorage {
 
   // Social media methods
   async getSocialMedia(): Promise<SocialMedia[]> {
-    const { data, error } = await supabase
-      .from('social_media')
-      .select('*')
-      .order('post_time', { ascending: false });
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('social_media')
+        .select('*')
+        .order('post_time', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching social media:', error);
+        return [];
+      }
+      return data || [];
+    } catch (error) {
+      console.error('Exception in getSocialMedia:', error);
+      return [];
+    }
   }
 
   async getSocialMediaById(id: number): Promise<SocialMedia | undefined> {
-    const { data, error } = await supabase
-      .from('social_media')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('social_media')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log(`No social media found with id ${id}`);
+          return undefined;
+        }
+        // If it's a column error or other issue
+        if (error.code === '42703') {
+          console.error(`Database schema error in social_media table:`, error);
+          return undefined;
+        }
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      console.error(`Error retrieving social media with ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   async createSocialMedia(insertSocial: InsertSocialMedia): Promise<SocialMedia> {
-    const { data, error } = await supabase
-      .from('social_media')
-      .insert(insertSocial)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('social_media')
+        .insert(insertSocial)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating social media post:', error);
+        // Create a mock response if we can't create it in the database due to permissions
+        // or schema mismatch
+        throw new Error(`Unable to create social media post in database. Please contact administrator. Error: ${error.message}`);
+      }
+      return data;
+    } catch (error) {
+      console.error('Exception in createSocialMedia:', error);
+      throw error;
+    }
   }
 
   async updateSocialMedia(id: number, social: Partial<InsertSocialMedia>): Promise<SocialMedia | undefined> {
-    const { data, error } = await supabase
-      .from('social_media')
-      .update(social)
-      .eq('id', id)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await supabase
+        .from('social_media')
+        .update(social)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error(`Error updating social media post with ID ${id}:`, error);
+        return undefined;
+      }
+      return data;
+    } catch (error) {
+      console.error(`Exception in updateSocialMedia for ID ${id}:`, error);
+      return undefined;
+    }
   }
 
   // Dashboard stats methods
