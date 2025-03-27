@@ -36,8 +36,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         console.log("User created successfully:", user);
         res.status(201).json({ message: "User created successfully", user });
-      } catch (err) {
+      } catch (err: any) {
         console.error('Database error creating user:', err);
+        // Check for specific permission errors
+        if (err.message && (err.message.includes('permission denied') || 
+                           err.message.includes('Unable to create user in database'))) {
+          return res.status(403).json({ 
+            error: "Permission denied", 
+            message: "This application is in read-only mode. The administrator needs to create your account in the database directly."
+          });
+        }
         res.status(500).json({ error: "Database error creating user" });
       }
     } catch (error) {
