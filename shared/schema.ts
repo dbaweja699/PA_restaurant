@@ -268,7 +268,7 @@ export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(), // call, booking, review, conversation
   message: text("message").notNull(),
-  details: json("details").notNull(), // JSON object with relevant details
+  details: json("data").notNull(), // JSON object with relevant details (renamed to 'data' to match Supabase table)
   isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   userId: integer("user_id"), // Optional, can be for specific user or broadcast

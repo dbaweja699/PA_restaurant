@@ -823,7 +823,7 @@ export class SupabaseStorage implements IStorage {
       
       if (userId) {
         // Get notifications for this user or global notifications (userId is null)
-        query = query.or(`userId.eq.${userId},userId.is.null`);
+        query = query.or(`user_id.eq.${userId},user_id.is.null`);
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -833,7 +833,18 @@ export class SupabaseStorage implements IStorage {
         return [];
       }
       
-      return data || [];
+      // Map the Supabase response to our schema format
+      const notifications = (data || []).map(item => ({
+        id: item.id,
+        type: item.type,
+        message: item.message,
+        details: item.data, // Map from 'data' column to 'details'
+        isRead: item.is_read,
+        createdAt: item.created_at,
+        userId: item.user_id
+      }));
+      
+      return notifications;
     } catch (error) {
       console.error('Error in getNotifications:', error);
       return [];
@@ -848,7 +859,7 @@ export class SupabaseStorage implements IStorage {
       
       if (userId) {
         // Get unread notifications for this user or global notifications
-        query = query.or(`userId.eq.${userId},userId.is.null`);
+        query = query.or(`user_id.eq.${userId},user_id.is.null`);
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -858,7 +869,18 @@ export class SupabaseStorage implements IStorage {
         return [];
       }
       
-      return data || [];
+      // Map the Supabase response to our schema format
+      const notifications = (data || []).map(item => ({
+        id: item.id,
+        type: item.type,
+        message: item.message,
+        details: item.data, // Map from 'data' column to 'details'
+        isRead: item.is_read,
+        createdAt: item.created_at,
+        userId: item.user_id
+      }));
+      
+      return notifications;
     } catch (error) {
       console.error('Error in getUnreadNotifications:', error);
       return [];
@@ -867,15 +889,17 @@ export class SupabaseStorage implements IStorage {
   
   async createNotification(notification: InsertNotification): Promise<Notification> {
     try {
-      // Convert to snake_case for the database
+      // Convert to snake_case for the database and match the column names in your Supabase table
       const dbNotification = {
         type: notification.type,
         message: notification.message,
-        details: notification.details,
+        data: notification.details, // Map 'details' to 'data' column in Supabase
         is_read: notification.isRead || false,
         created_at: notification.createdAt ? new Date(notification.createdAt) : new Date(),
         user_id: notification.userId || null
       };
+      
+      console.log('Creating notification in Supabase:', dbNotification);
       
       const { data, error } = await supabase
         .from('notifications')
@@ -884,7 +908,7 @@ export class SupabaseStorage implements IStorage {
         .single();
       
       if (error) {
-        console.error('Error creating notification:', error);
+        console.error('Error creating notification in Supabase:', error);
         // Fall back to memory storage
         const memoryNotification: Notification = {
           id: Date.now(),
@@ -898,7 +922,20 @@ export class SupabaseStorage implements IStorage {
         return memoryNotification;
       }
       
-      return data;
+      console.log('Notification created successfully in Supabase:', data);
+      
+      // Map Supabase response fields back to our schema (data -> details)
+      const mappedNotification: Notification = {
+        id: data.id,
+        type: data.type,
+        message: data.message,
+        details: data.data, // Map 'data' column from Supabase to 'details' in our schema
+        isRead: data.is_read,
+        createdAt: data.created_at,
+        userId: data.user_id
+      };
+      
+      return mappedNotification;
     } catch (error) {
       console.error('Error in createNotification:', error);
       // Fall back to memory storage
@@ -929,7 +966,20 @@ export class SupabaseStorage implements IStorage {
         return undefined;
       }
       
-      return data;
+      // Map the response to our schema
+      if (data) {
+        return {
+          id: data.id,
+          type: data.type,
+          message: data.message,
+          details: data.data, // Map from 'data' column to 'details'
+          isRead: data.is_read,
+          createdAt: data.created_at,
+          userId: data.user_id
+        };
+      }
+      
+      return undefined;
     } catch (error) {
       console.error('Error in markNotificationAsRead:', error);
       return undefined;
