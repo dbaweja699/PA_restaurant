@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertCallSchema, insertChatSchema, insertReviewSchema, insertOrderSchema, insertBookingSchema, insertSocialMediaSchema } from "../shared/schema";
+import { insertCallSchema, insertChatSchema, insertReviewSchema, insertOrderSchema, insertBookingSchema, insertSocialMediaSchema, insertNotificationSchema } from "../shared/schema";
 import { pool } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -627,6 +627,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error processing user update:', error);
       res.status(500).json({ error: "Server error" });
+    }
+  });
+  
+  // Notifications API routes
+  app.get(`${apiPrefix}/notifications`, async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const notifications = await storage.getNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      res.status(500).json({ error: "Error fetching notifications" });
+    }
+  });
+  
+  app.get(`${apiPrefix}/notifications/unread`, async (req, res) => {
+    try {
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const unreadNotifications = await storage.getUnreadNotifications(userId);
+      res.json(unreadNotifications);
+    } catch (error) {
+      console.error('Error fetching unread notifications:', error);
+      res.status(500).json({ error: "Error fetching unread notifications" });
+    }
+  });
+  
+  app.post(`${apiPrefix}/notifications`, async (req, res) => {
+    try {
+      const validatedData = insertNotificationSchema.parse(req.body);
+      const notification = await storage.createNotification(validatedData);
+      res.status(201).json(notification);
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid notification data", details: error.errors });
+      }
+      res.status(400).json({ error: "Invalid notification data" });
+    }
+  });
+  
+  app.patch(`${apiPrefix}/notifications/:id/read`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const notification = await storage.markNotificationAsRead(id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notification not found" });
+      }
+      res.json(notification);
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+  
+  app.post(`${apiPrefix}/notifications/read-all`, async (req, res) => {
+    try {
+      const userId = req.body.userId ? parseInt(req.body.userId) : undefined;
+      await storage.markAllNotificationsAsRead(userId);
+      res.status(200).json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+      res.status(500).json({ error: "Failed to mark all notifications as read" });
+    }
+  });
+  
+  // Special endpoint for the n8n webhook to create AI agent notifications
+  app.post(`${apiPrefix}/ai-agent/notify`, async (req, res) => {
+    try {
+      // Validate basic structure
+      if (!req.body.message || !req.body.type) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+      
+      // Create notification from n8n webhook data
+      const notification = await storage.createNotification({
+        type: req.body.type,
+        message: req.body.message,
+        details: req.body.details || {},
+        isRead: false,
+        userId: req.body.userId || null
+      });
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Notification created successfully",
+        notification 
+      });
+    } catch (error) {
+      console.error('Error creating AI agent notification:', error);
+      res.status(500).json({ 
+        error: "Failed to create AI agent notification",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

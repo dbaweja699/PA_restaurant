@@ -11,7 +11,8 @@ import {
   PerformanceMetrics, InsertPerformanceMetrics,
   ActivityLog, InsertActivityLog,
   SocialMedia, InsertSocialMedia,
-  DashboardStats, InsertDashboardStats
+  DashboardStats, InsertDashboardStats,
+  Notification, InsertNotification
 } from "../shared/schema";
 
 export class SupabaseStorage implements IStorage {
@@ -812,6 +813,147 @@ export class SupabaseStorage implements IStorage {
       
       if (error) throw error;
       return data;
+    }
+  }
+  
+  // Notification methods
+  async getNotifications(userId?: number): Promise<Notification[]> {
+    try {
+      let query = supabase.from('notifications').select('*');
+      
+      if (userId) {
+        // Get notifications for this user or global notifications (userId is null)
+        query = query.or(`userId.eq.${userId},userId.is.null`);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error in getNotifications:', error);
+      return [];
+    }
+  }
+  
+  async getUnreadNotifications(userId?: number): Promise<Notification[]> {
+    try {
+      let query = supabase.from('notifications')
+        .select('*')
+        .eq('is_read', false);
+      
+      if (userId) {
+        // Get unread notifications for this user or global notifications
+        query = query.or(`userId.eq.${userId},userId.is.null`);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching unread notifications:', error);
+        return [];
+      }
+      
+      return data || [];
+    } catch (error) {
+      console.error('Error in getUnreadNotifications:', error);
+      return [];
+    }
+  }
+  
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    try {
+      // Convert to snake_case for the database
+      const dbNotification = {
+        type: notification.type,
+        message: notification.message,
+        details: notification.details,
+        is_read: notification.isRead || false,
+        created_at: notification.createdAt ? new Date(notification.createdAt) : new Date(),
+        user_id: notification.userId || null
+      };
+      
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert(dbNotification)
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('Error creating notification:', error);
+        // Fall back to memory storage
+        const memoryNotification: Notification = {
+          id: Date.now(),
+          type: notification.type,
+          message: notification.message,
+          details: notification.details,
+          isRead: notification.isRead || false,
+          createdAt: notification.createdAt ? new Date(notification.createdAt) : new Date(),
+          userId: notification.userId || null
+        };
+        return memoryNotification;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error in createNotification:', error);
+      // Fall back to memory storage
+      const fallbackNotification: Notification = {
+        id: Date.now(),
+        type: notification.type,
+        message: notification.message,
+        details: notification.details,
+        isRead: notification.isRead || false,
+        createdAt: notification.createdAt ? new Date(notification.createdAt) : new Date(),
+        userId: notification.userId || null
+      };
+      return fallbackNotification;
+    }
+  }
+  
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .update({ is_read: true })
+        .eq('id', id)
+        .select('*')
+        .single();
+      
+      if (error) {
+        console.error('Error marking notification as read:', error);
+        return undefined;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error in markNotificationAsRead:', error);
+      return undefined;
+    }
+  }
+  
+  async markAllNotificationsAsRead(userId?: number): Promise<void> {
+    try {
+      let query = supabase.from('notifications')
+        .update({ is_read: true })
+        .eq('is_read', false);
+      
+      if (userId) {
+        // Mark as read notifications for this user or global notifications
+        query = query.or(`user_id.eq.${userId},user_id.is.null`);
+      }
+      
+      const { error } = await query;
+      
+      if (error) {
+        console.error('Error marking all notifications as read:', error);
+      }
+    } catch (error) {
+      console.error('Error in markAllNotificationsAsRead:', error);
     }
   }
 }

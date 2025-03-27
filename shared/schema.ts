@@ -262,3 +262,30 @@ export const insertDashboardStatsSchema = createInsertSchema(dashboardStats).pic
 
 export type InsertDashboardStats = z.infer<typeof insertDashboardStatsSchema>;
 export type DashboardStats = typeof dashboardStats.$inferSelect;
+
+// AI Agent Notifications schema
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // call, booking, review, conversation
+  message: text("message").notNull(),
+  details: json("details").notNull(), // JSON object with relevant details
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  userId: integer("user_id"), // Optional, can be for specific user or broadcast
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  type: true,
+  message: true,
+  details: true,
+  isRead: true,
+  userId: true,
+}).extend({
+  // Override to ensure we accept JSON objects for details
+  details: z.record(z.any()),
+  // Override created_at to accept ISO string
+  createdAt: z.string().transform((str) => new Date(str)).optional(),
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

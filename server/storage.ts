@@ -8,7 +8,8 @@ import {
   type PerformanceMetrics, type InsertPerformanceMetrics,
   type ActivityLog, type InsertActivityLog,
   type SocialMedia, type InsertSocialMedia,
-  type DashboardStats, type InsertDashboardStats
+  type DashboardStats, type InsertDashboardStats,
+  type Notification, type InsertNotification
 } from "../shared/schema";
 
 export interface IStorage {
@@ -67,6 +68,13 @@ export interface IStorage {
   // Dashboard stats operations
   getDashboardStats(): Promise<DashboardStats | undefined>;
   updateDashboardStats(stats: Partial<InsertDashboardStats>): Promise<DashboardStats | undefined>;
+  
+  // AI Agent Notification operations
+  getNotifications(userId?: number): Promise<Notification[]>;
+  getUnreadNotifications(userId?: number): Promise<Notification[]>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId?: number): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -79,6 +87,7 @@ export class MemStorage implements IStorage {
   private performanceMetrics: Map<number, PerformanceMetrics>;
   private activityLogs: Map<number, ActivityLog>;
   private socialMedia: Map<number, SocialMedia>;
+  private notifications: Map<number, Notification>;
   private dashboardStats: DashboardStats | undefined;
   
   private userCurrentId: number;
@@ -90,6 +99,7 @@ export class MemStorage implements IStorage {
   private performanceMetricsCurrentId: number;
   private activityLogCurrentId: number;
   private socialMediaCurrentId: number;
+  private notificationCurrentId: number;
   private dashboardStatsCurrentId: number;
 
   constructor() {
@@ -102,6 +112,7 @@ export class MemStorage implements IStorage {
     this.performanceMetrics = new Map();
     this.activityLogs = new Map();
     this.socialMedia = new Map();
+    this.notifications = new Map();
     
     this.userCurrentId = 1;
     this.callCurrentId = 1;
@@ -112,6 +123,7 @@ export class MemStorage implements IStorage {
     this.performanceMetricsCurrentId = 1;
     this.activityLogCurrentId = 1;
     this.socialMediaCurrentId = 1;
+    this.notificationCurrentId = 1;
     this.dashboardStatsCurrentId = 1;
     
     // Initialize with some demo data
@@ -644,6 +656,69 @@ export class MemStorage implements IStorage {
     
     this.dashboardStats = { ...this.dashboardStats, ...partialStats };
     return this.dashboardStats;
+  }
+  
+  // Notification methods
+  async getNotifications(userId?: number): Promise<Notification[]> {
+    const notifications = Array.from(this.notifications.values());
+    
+    if (userId) {
+      // Return notifications for specific user, or those with null userId (broadcast)
+      return notifications.filter(notification => 
+        notification.userId === userId || notification.userId === null
+      ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+    
+    // Return all notifications
+    return notifications.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+  
+  async getUnreadNotifications(userId?: number): Promise<Notification[]> {
+    const notifications = await this.getNotifications(userId);
+    return notifications.filter(notification => !notification.isRead);
+  }
+  
+  async createNotification(insertNotification: InsertNotification): Promise<Notification> {
+    const id = this.notificationCurrentId++;
+    const notification: Notification = {
+      id,
+      type: insertNotification.type,
+      message: insertNotification.message,
+      details: insertNotification.details,
+      isRead: insertNotification.isRead || false,
+      createdAt: insertNotification.createdAt || new Date(),
+      userId: insertNotification.userId || null
+    };
+    
+    this.notifications.set(id, notification);
+    return notification;
+  }
+  
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+    const notification = this.notifications.get(id);
+    if (!notification) return undefined;
+    
+    const updatedNotification = { ...notification, isRead: true };
+    this.notifications.set(id, updatedNotification);
+    return updatedNotification;
+  }
+  
+  async markAllNotificationsAsRead(userId?: number): Promise<void> {
+    const notifications = await this.getNotifications(userId);
+    
+    notifications.forEach(notification => {
+      if (userId) {
+        // Only mark as read if it matches the userId or is a broadcast
+        if (notification.userId === userId || notification.userId === null) {
+          this.notifications.set(notification.id, { ...notification, isRead: true });
+        }
+      } else {
+        // Mark all as read
+        this.notifications.set(notification.id, { ...notification, isRead: true });
+      }
+    });
   }
 }
 

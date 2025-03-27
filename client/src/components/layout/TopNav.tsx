@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { 
-  BellIcon, 
   HelpCircleIcon, 
   SearchIcon,
   MenuIcon,
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 type TopNavProps = {
   openSidebar: () => void;
@@ -66,9 +66,7 @@ export default function TopNav({ openSidebar }: TopNavProps) {
         </div>
 
         <div className="ml-4 flex items-center md:ml-6 space-x-4">
-          <Button variant="ghost" size="icon">
-            <BellIcon className="h-5 w-5" />
-          </Button>
+          <NotificationCenter />
 
           <Button variant="ghost" size="icon">
             <HelpCircleIcon className="h-5 w-5" />
