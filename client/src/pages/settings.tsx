@@ -492,6 +492,21 @@ export default function Settings() {
                   </div>
                   <Switch id="sms-notifications" defaultChecked />
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <Label 
+                      htmlFor="ai-call-answering" 
+                      className="mb-1"
+                    >
+                      AI Call Answering
+                    </Label>
+                    <span className="text-sm text-neutral-500">
+                      Let AI handle incoming calls
+                    </span>
+                  </div>
+                  <Switch id="ai-call-answering" defaultChecked />
+                </div>
               </div>
               
               <div className="pt-4 border-t">
