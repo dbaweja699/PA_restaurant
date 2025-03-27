@@ -3,25 +3,23 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import logoImg from "@assets/logoo.png";
 import { useToast } from "@/hooks/use-toast";
 
 export default function SignUp() {
   const { toast } = useToast();
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     setError("");
-    setSuccess("");
     
     try {
       // Use the snake_case field name for full_name to match the API expectations
@@ -30,6 +28,7 @@ export default function SignUp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           username, 
+          email,
           password, 
           full_name: fullName 
         }),
@@ -43,7 +42,7 @@ export default function SignUp() {
           description: "Redirecting to login...",
         });
         setTimeout(() => {
-          setLocation("/auth/signin");
+          window.location.href = "/auth/signin";
         }, 2000);
       } else {
         console.error("Signup error:", data);
@@ -53,60 +52,122 @@ export default function SignUp() {
       console.error("Signup exception:", err);
       setError("Failed to sign up. Please try again.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-[400px]">
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-4xl flex overflow-hidden rounded-lg shadow-lg">
+        {/* Left side - form */}
+        <div className="w-full md:w-1/2 bg-white p-8">
+          <div className="flex justify-center mb-6">
+            <img src={logoImg} alt="Dblytics Logo" className="h-12 w-12" />
+          </div>
+          
+          <h1 className="text-2xl font-bold text-center mb-6">Create your account</h1>
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
               <Input
+                id="fullName"
                 type="text"
-                placeholder="Full Name"
+                placeholder="Enter your full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
+            
             <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
               <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubmitting}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
                 type="text"
-                placeholder="Username"
+                placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
+            
             <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
               <Input
+                id="password"
                 type="password"
-                placeholder="Password"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isSubmitting}
               />
             </div>
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            {success && <p className="text-green-500 text-sm">{success}</p>}
+            
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-md text-sm">
+                {error}
+              </div>
+            )}
+            
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isLoading}
+              disabled={isSubmitting}
             >
-              {isLoading ? "Creating Account..." : "Sign Up"}
+              {isSubmitting ? "Creating Account..." : "Sign Up"}
             </Button>
-            <p className="text-sm text-center">
+            
+            <p className="text-sm text-center text-gray-600">
               Already have an account?{" "}
-              <a href="/signin" className="text-blue-500 hover:underline">
+              <a href="/auth/signin" className="text-primary hover:underline">
                 Sign In
               </a>
             </p>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+        
+        {/* Right side - hero */}
+        <div className="hidden md:block md:w-1/2 bg-primary p-8 text-white">
+          <div className="h-full flex flex-col justify-center">
+            <h2 className="text-2xl font-bold mb-4">Restaurant AI Assistant</h2>
+            <p className="mb-6">
+              Your all-in-one AI solution for managing customer interactions, reviews, 
+              orders, and social media presence. 
+            </p>
+            <ul className="space-y-2">
+              <li className="flex items-center">
+                <span className="mr-2">✓</span>
+                Automated call and chat handling
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2">✓</span>
+                AI-powered review responses
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2">✓</span>
+                Smart booking management
+              </li>
+              <li className="flex items-center">
+                <span className="mr-2">✓</span>
+                Social media engagement tools
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

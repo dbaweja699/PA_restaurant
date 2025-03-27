@@ -38,8 +38,8 @@ export function Protected({ children }: { children: React.ReactNode }) {
       if (error) {
         localStorage.removeItem('auth_token');
       }
-      // Redirect to auth page instead of signin
-      window.location.href = '/auth';
+      // Redirect to auth/signin page
+      window.location.href = '/auth/signin';
     }
   }, [user, isLoading, error, setLocation]);
 
