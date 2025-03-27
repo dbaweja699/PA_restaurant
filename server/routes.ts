@@ -451,13 +451,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User
   app.get(`${apiPrefix}/user`, async (req, res) => {
     try {
-      // Get first user with ID 1 (assuming this is the main user)
-      const user = await storage.getUser(1);
-      if (user) {
-        res.json(user);
-      } else {
-        res.status(404).json({ error: "No users found" });
+      // If user data is stored in the session, return that
+      if (req.headers.authorization) {
+        // Bearer token could contain user ID or username
+        const token = req.headers.authorization.split(' ')[1];
+        if (token) {
+          // Try to get the user by ID first
+          let user;
+          try {
+            const userId = parseInt(token);
+            if (!isNaN(userId)) {
+              user = await storage.getUser(userId);
+            }
+          } catch (err) {
+            // Not a number, try as username
+          }
+          
+          // If not found by ID, try by username
+          if (!user) {
+            user = await storage.getUserByUsername(token);
+          }
+          
+          if (user) {
+            return res.json(user);
+          }
+        }
       }
+      
+      // If no valid session found, return 401
+      return res.status(401).json({ error: "Not authenticated" });
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ error: "Server error" });

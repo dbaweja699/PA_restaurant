@@ -2,9 +2,21 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    try {
+      const data = await res.json();
+      throw new Error(data.error || `${res.status}: ${res.statusText}`);
+    } catch (e) {
+      // If the response isn't JSON
+      const text = (await res.text()) || res.statusText;
+      throw new Error(`${res.status}: ${text}`);
+    }
   }
+}
+
+// Helper to get the auth token
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('auth_token');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
 export async function apiRequest(
@@ -12,9 +24,15 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  // Combine auth headers with content-type headers
+  const headers: HeadersInit = { 
+    ...getAuthHeaders(),
+    ...(data ? { "Content-Type": "application/json" } : {})
+  };
+
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
@@ -29,12 +47,25 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    // Include auth token in all requests
+    const headers = getAuthHeaders();
+    
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+    if (res.status === 401) {
+      // Clear token on unauthorized responses
+      if (localStorage.getItem('auth_token')) {
+        localStorage.removeItem('auth_token');
+      }
+      
+      if (unauthorizedBehavior === "returnNull") {
+        return null;
+      } else {
+        throw new Error("Unauthorized");
+      }
     }
 
     await throwIfResNotOk(res);

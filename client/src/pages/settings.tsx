@@ -202,7 +202,7 @@ export default function Settings() {
                 
                 <div className="grid gap-2">
                   <Label htmlFor="email-user">Email</Label>
-                  <Input id="email-user" type="email" defaultValue="contact@dblytics.ai" />
+                  <Input id="email-user" type="email" defaultValue={user?.username || ""} />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">

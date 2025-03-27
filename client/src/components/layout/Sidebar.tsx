@@ -93,23 +93,37 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       </div>
       
       {user && (
-        <div className="flex items-center p-4 border-t border-primary-light">
-          <div className="flex-shrink-0">
-            <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center">
-              {user.avatar_url ? (
-                <img 
-                  className="h-10 w-10 rounded-full" 
-                  src={user.avatar_url} 
-                  alt={user.full_name || "User"}
-                />
-              ) : (
-                <span className="text-xl">{user.full_name && user.full_name.charAt(0) || "U"}</span>
-              )}
+        <div className="border-t border-primary-light">
+          <div className="flex items-center p-4">
+            <div className="flex-shrink-0">
+              <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center">
+                {user.avatar_url ? (
+                  <img 
+                    className="h-10 w-10 rounded-full" 
+                    src={user.avatar_url} 
+                    alt={user.full_name || "User"}
+                  />
+                ) : (
+                  <span className="text-xl">{user.full_name && user.full_name.charAt(0) || "U"}</span>
+                )}
+              </div>
             </div>
-          </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium">{user.full_name || "User"}</p>
-            <p className="text-xs text-gray-300">{user.role || "Administrator"}</p>
+            <div className="ml-3 flex-grow">
+              <p className="text-sm font-medium">{user.full_name || "User"}</p>
+              <p className="text-xs text-gray-300">{user.username}</p>
+            </div>
+            <button 
+              onClick={() => {
+                // Clear token
+                localStorage.removeItem('auth_token');
+                // Redirect to login
+                window.location.href = '/signin';
+              }}
+              className="text-sm text-gray-300 hover:text-white p-1 rounded-full"
+              title="Logout"
+            >
+              <i className="ri-logout-box-line text-lg"></i>
+            </button>
           </div>
         </div>
       )}
