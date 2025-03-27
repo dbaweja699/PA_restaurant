@@ -95,19 +95,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard stats
+  // Dashboard stats with real-time counts
   app.get(`${apiPrefix}/dashboard/stats`, async (req, res) => {
     try {
+      // Get stored stats
       const stats = await storage.getDashboardStats();
-      res.json(stats || { 
-        totalCalls: 0,
-        totalChats: 0,
-        totalReviews: 0,
-        totalOrders: 0,
-        totalBookings: 0,
-        callsHandled: 0,
-        callsAvgDuration: 0,
-        reviewsAvgRating: 0,
+      
+      // Get actual counts from tables
+      const calls = await storage.getCalls();
+      const chats = await storage.getChats();
+      const reviews = await storage.getReviews();
+      const orders = await storage.getOrders();
+      const bookings = await storage.getBookings();
+      
+      // Calculate today's bookings
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayBookings = bookings.filter(booking => {
+        const bookingDate = new Date(booking.bookingTime);
+        bookingDate.setHours(0, 0, 0, 0);
+        return bookingDate.getTime() === today.getTime();
+      }).length;
+      
+      // Calculate active chats (chats with status "active" or "pending")
+      const activeChats = chats.filter(chat => 
+        chat.status.toLowerCase() === "active" || 
+        chat.status.toLowerCase() === "pending"
+      ).length;
+      
+      // Calculate orders processed today
+      const todayOrders = orders.filter(order => {
+        const orderDate = new Date(order.orderTime);
+        orderDate.setHours(0, 0, 0, 0);
+        return orderDate.getTime() === today.getTime();
+      });
+      
+      const ordersProcessed = todayOrders.length;
+      
+      // Calculate total value of today's orders
+      const ordersTotalValue = todayOrders.reduce((total, order) => {
+        // Remove currency symbol and convert to number
+        const value = parseFloat(order.total.replace(/[^0-9.-]+/g, ""));
+        return total + (isNaN(value) ? 0 : value);
+      }, 0).toFixed(2);
+      
+      // Calculate calls handled today
+      const callsHandledToday = calls.filter(call => {
+        const callDate = new Date(call.startTime);
+        callDate.setHours(0, 0, 0, 0);
+        return callDate.getTime() === today.getTime();
+      }).length;
+      
+      // Update dashboard with real counts from database
+      res.json({
+        ...stats,
+        totalCalls: calls.length,
+        totalChats: chats.length,
+        totalReviews: reviews.length,
+        totalOrders: orders.length,
+        totalBookings: bookings.length,
+        callsHandledToday: callsHandledToday,
+        activeChats: activeChats,
+        todaysBookings: todayBookings,
+        ordersProcessed: ordersProcessed,
+        ordersTotalValue: `$${ordersTotalValue}`,
         date: new Date().toISOString()
       });
     } catch (error) {
