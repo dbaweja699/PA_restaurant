@@ -384,8 +384,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Social Media
   app.get(`${apiPrefix}/social`, async (req, res) => {
     try {
+      // First try to get social media through storage layer
       const social = await storage.getSocialMedia();
-      res.json(social || []);
+      
+      if (social && social.length > 0) {
+        console.log('Successfully retrieved social media posts:', social.length);
+        return res.json(social);
+      }
+      
+      // If storage layer returns empty, try direct database query
+      console.log('Storage layer returned empty results, trying direct query...');
+      
+      // Use the PostgreSQL connection pool
+      const { pool } = require('./db');
+      const result = await pool.query('SELECT * FROM social_media ORDER BY post_time DESC');
+      
+      if (result.rows && result.rows.length > 0) {
+        console.log('Direct query retrieved social media posts:', result.rows.length);
+        return res.json(result.rows);
+      }
+      
+      // If no social media posts exist
+      console.log('No social media posts found in database');
+      res.json([]);
     } catch (error) {
       console.error('Error fetching social media:', error);
       res.status(500).json({ error: "Error fetching social media" });

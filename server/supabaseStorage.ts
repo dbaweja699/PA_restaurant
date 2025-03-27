@@ -282,17 +282,27 @@ export class SupabaseStorage implements IStorage {
     try {
       console.log('Attempting to create review in Supabase:', insertReview);
       
+      // Create a payload that matches the database schema
+      const payload: Record<string, any> = {
+        customer_name: insertReview.customerName,
+        rating: insertReview.rating,
+        comment: insertReview.comment,
+        status: insertReview.status,
+        ai_response: insertReview.aiResponse
+      };
+      
+      // Only add fields that exist in the schema and insertReview
+      if ('source' in insertReview) {
+        payload.source = insertReview.source;
+      }
+      
+      if ('aiRespondedAt' in insertReview) {
+        payload.ai_responded_at = insertReview.aiRespondedAt;
+      }
+      
       const { data, error } = await supabase
         .from('reviews')
-        .insert({
-          customer_name: insertReview.customerName,
-          rating: insertReview.rating,
-          comment: insertReview.comment,
-          platform: insertReview.platform,
-          status: insertReview.status,
-          ai_response: insertReview.aiResponse,
-          ai_responded: insertReview.aiResponded
-        })
+        .insert(payload)
         .select()
         .single();
       
@@ -512,19 +522,58 @@ export class SupabaseStorage implements IStorage {
   // Social media methods
   async getSocialMedia(): Promise<SocialMedia[]> {
     try {
-      const { data, error } = await supabase
-        .from('social_media')
-        .select('*')
-        .order('post_time', { ascending: false });
+      // Use direct SQL query instead of Supabase ORM
+      const { data, error } = await supabase.rpc('get_social_media');
       
       if (error) {
-        console.error('Error fetching social media:', error);
-        return [];
+        console.error('Error fetching social media via RPC:', error);
+        
+        // Fallback to direct SQL
+        const { data: sqlData, error: sqlError } = await supabase.from('social_media').select('*');
+        
+        if (sqlError) {
+          console.error('Fallback SQL also failed:', sqlError);
+          return [];
+        }
+        
+        if (!sqlData || sqlData.length === 0) return [];
+        
+        return sqlData.map(item => ({
+          id: item.id,
+          platform: item.platform,
+          post_time: item.post_time, 
+          content: item.content,
+          author: item.author,
+          status: item.status,
+          ai_response: item.ai_response,
+          ai_responded_at: item.ai_responded_at
+        }));
       }
-      return data || [];
+      
+      // Map data from RPC if successful
+      if (!data || data.length === 0) return [];
+      
+      return data.map(item => ({
+        id: item.id,
+        platform: item.platform,
+        post_time: item.post_time,
+        content: item.content,
+        author: item.author,
+        status: item.status,
+        ai_response: item.ai_response,
+        ai_responded_at: item.ai_responded_at
+      }));
     } catch (error) {
       console.error('Exception in getSocialMedia:', error);
-      return [];
+      
+      // Try a direct SQL query as last resort
+      try {
+        const { data } = await supabase.from('social_media').select('*');
+        return data || [];
+      } catch (e) {
+        console.error('Last resort query failed:', e);
+        return [];
+      }
     }
   }
 
@@ -548,7 +597,18 @@ export class SupabaseStorage implements IStorage {
         }
         throw error;
       }
-      return data;
+      
+      // Transform the response to match our SocialMedia type
+      return {
+        id: data.id,
+        platform: data.platform,
+        post_time: data.post_time,
+        content: data.content,
+        author: data.author,
+        status: data.status,
+        ai_response: data.ai_response,
+        ai_responded_at: data.ai_responded_at
+      };
     } catch (error) {
       console.error(`Error retrieving social media with ID ${id}:`, error);
       return undefined;
@@ -557,19 +617,41 @@ export class SupabaseStorage implements IStorage {
 
   async createSocialMedia(insertSocial: InsertSocialMedia): Promise<SocialMedia> {
     try {
+      console.log('Attempting to create social media post in Supabase:', insertSocial);
+      
+      // Map JavaScript camelCase properties to database snake_case columns
       const { data, error } = await supabase
         .from('social_media')
-        .insert(insertSocial)
+        .insert({
+          platform: insertSocial.platform,
+          post_time: insertSocial.postTime,
+          content: insertSocial.content,
+          author: insertSocial.author,
+          status: insertSocial.status,
+          ai_response: insertSocial.aiResponse || null,
+          ai_responded_at: insertSocial.aiRespondedAt || null
+        })
         .select()
         .single();
       
       if (error) {
-        console.error('Error creating social media post:', error);
-        // Create a mock response if we can't create it in the database due to permissions
-        // or schema mismatch
+        console.error('Supabase error creating social media post:', error);
         throw new Error(`Unable to create social media post in database. Please contact administrator. Error: ${error.message}`);
       }
-      return data;
+      
+      console.log('Social media post created successfully in Supabase:', data);
+      
+      // Transform database response to match our SocialMedia type
+      return {
+        id: data.id,
+        platform: data.platform,
+        post_time: data.post_time,
+        content: data.content,
+        author: data.author,
+        status: data.status,
+        ai_response: data.ai_response,
+        ai_responded_at: data.ai_responded_at
+      };
     } catch (error) {
       console.error('Exception in createSocialMedia:', error);
       throw error;
@@ -578,9 +660,22 @@ export class SupabaseStorage implements IStorage {
 
   async updateSocialMedia(id: number, social: Partial<InsertSocialMedia>): Promise<SocialMedia | undefined> {
     try {
+      // Create object with proper snake_case keys for database
+      const updateData: any = {};
+      
+      if (social.platform !== undefined) updateData.platform = social.platform;
+      if (social.content !== undefined) updateData.content = social.content;
+      if (social.author !== undefined) updateData.author = social.author;
+      if (social.status !== undefined) updateData.status = social.status;
+      if (social.postTime !== undefined) updateData.post_time = social.postTime;
+      if (social.aiResponse !== undefined) updateData.ai_response = social.aiResponse;
+      if (social.aiRespondedAt !== undefined) updateData.ai_responded_at = social.aiRespondedAt;
+      
+      console.log(`Updating social media #${id} with data:`, updateData);
+      
       const { data, error } = await supabase
         .from('social_media')
-        .update(social)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
@@ -589,7 +684,18 @@ export class SupabaseStorage implements IStorage {
         console.error(`Error updating social media post with ID ${id}:`, error);
         return undefined;
       }
-      return data;
+      
+      // Transform the response to match our SocialMedia type
+      return {
+        id: data.id,
+        platform: data.platform,
+        post_time: data.post_time,
+        content: data.content,
+        author: data.author,
+        status: data.status,
+        ai_response: data.ai_response,
+        ai_responded_at: data.ai_responded_at
+      };
     } catch (error) {
       console.error(`Exception in updateSocialMedia for ID ${id}:`, error);
       return undefined;

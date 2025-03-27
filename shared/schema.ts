@@ -215,28 +215,24 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 export const socialMedia = pgTable("social_media", {
   id: serial("id").primaryKey(),
   platform: text("platform").notNull(),
-  postTime: timestamp("post_time").notNull(),
+  post_time: timestamp("post_time").notNull(),
   content: text("content").notNull(),
   author: text("author").notNull(),
   status: text("status").notNull().default("pending"),
-  aiResponse: text("ai_response"),
-  aiRespondedAt: timestamp("ai_responded_at"),
+  ai_response: text("ai_response"),
+  ai_responded_at: timestamp("ai_responded_at"),
 });
 
-export const insertSocialMediaSchema = createInsertSchema(socialMedia).pick({
-  platform: true,
-  content: true,
-  author: true,
-  status: true,
-  aiResponse: true,
-}).extend({
-  // Override the postTime field to accept ISO string and convert to Date
+export const insertSocialMediaSchema = z.object({
+  platform: z.string(),
+  content: z.string(),
+  author: z.string(),
+  status: z.string().default("pending"),
+  aiResponse: z.string().nullable().optional(),
+  // Convert ISO string to Date object
   postTime: z.string().transform((str) => new Date(str)),
-  // Override the aiRespondedAt field to accept ISO string and convert to Date, or undefined
-  aiRespondedAt: z
-    .string()
-    .transform((str) => new Date(str))
-    .or(z.undefined())
+  // Optional field
+  aiRespondedAt: z.string().transform((str) => new Date(str)).optional(),
 });
 
 export type InsertSocialMedia = z.infer<typeof insertSocialMediaSchema>;

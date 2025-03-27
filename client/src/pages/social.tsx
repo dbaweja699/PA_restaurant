@@ -41,8 +41,17 @@ function SocialPlatformIcon({ platform }: { platform: string }) {
   }
 }
 
-function SocialCard({ post }: { post: SocialMedia }) {
+function SocialCard({ post }: { post: SocialMedia | any }) {
   const [expanded, setExpanded] = useState(false);
+  
+  // Handle both snake_case from direct DB and camelCase from schema
+  const platform = post.platform;
+  const author = post.author;
+  const content = post.content;
+  const status = post.status;
+  const postTime = post.postTime || post.post_time;
+  const aiResponse = post.aiResponse || post.ai_response;
+  const aiRespondedAt = post.aiRespondedAt || post.ai_responded_at;
   
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -63,40 +72,40 @@ function SocialCard({ post }: { post: SocialMedia }) {
         <div className="flex justify-between items-start">
           <div className="flex items-center">
             <div className="h-10 w-10 rounded-full flex items-center justify-center mr-3 bg-neutral-100">
-              <SocialPlatformIcon platform={post.platform} />
+              <SocialPlatformIcon platform={platform} />
             </div>
             <div>
               <CardTitle className="text-base flex items-center">
-                {post.author}
-                <Badge variant="outline" className="ml-2 capitalize">{post.platform}</Badge>
+                {author}
+                <Badge variant="outline" className="ml-2 capitalize">{platform}</Badge>
               </CardTitle>
               <div className="text-xs text-neutral-500 mt-1">
-                {format(new Date(post.postTime), "MMMM d, yyyy 'at' h:mm a")}
+                {postTime && format(new Date(postTime), "MMMM d, yyyy 'at' h:mm a")}
               </div>
             </div>
           </div>
-          {getStatusBadge(post.status)}
+          {getStatusBadge(status)}
         </div>
       </CardHeader>
       <CardContent>
         <div className="text-neutral-700 mb-4">
-          {post.content}
+          {content}
         </div>
         
-        {expanded && post.aiResponse && (
+        {expanded && aiResponse && (
           <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
             <p className="font-medium mb-1 flex items-center">
               <MessageSquare className="h-4 w-4 mr-1" /> AI Response 
               <span className="text-xs text-neutral-500 ml-2">
-                {post.aiRespondedAt && format(new Date(post.aiRespondedAt), "MMM d, h:mm a")}
+                {aiRespondedAt && format(new Date(aiRespondedAt), "MMM d, h:mm a")}
               </span>
             </p>
-            <p className="italic">{post.aiResponse}</p>
+            <p className="italic">{aiResponse}</p>
           </div>
         )}
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-3">
-        {post.aiResponse ? (
+        {aiResponse ? (
           <Button variant="outline" size="sm" onClick={() => setExpanded(!expanded)}>
             {expanded ? "Hide Response" : "Show Response"}
           </Button>
@@ -147,14 +156,22 @@ export default function Social() {
   const platforms = socialPosts ? [...new Set(socialPosts.map(post => post.platform))] : [];
   
   const filteredPosts = socialPosts?.filter(post => {
+    const status = post.status || '';
+    const platform = post.platform || '';
+    
     if (activeTab === "all") return true;
-    if (activeTab === "pending") return post.status.toLowerCase() === "pending";
-    if (activeTab === "responded") return post.status.toLowerCase() === "responded";
-    return post.platform.toLowerCase() === activeTab.toLowerCase();
+    if (activeTab === "pending") return status.toLowerCase() === "pending";
+    if (activeTab === "responded") return status.toLowerCase() === "responded";
+    return platform.toLowerCase() === activeTab.toLowerCase();
   }) || [];
   
-  const pendingCount = socialPosts?.filter(post => post.status.toLowerCase() === "pending").length || 0;
-  const respondedCount = socialPosts?.filter(post => post.status.toLowerCase() === "responded").length || 0;
+  const pendingCount = socialPosts?.filter(post => 
+    (post.status || '').toLowerCase() === "pending"
+  ).length || 0;
+  
+  const respondedCount = socialPosts?.filter(post => 
+    (post.status || '').toLowerCase() === "responded"
+  ).length || 0;
   
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
