@@ -1,7 +1,7 @@
 import { Express, Request, Response } from "express";
 import fetch from "node-fetch";
 
-// System prompt to set context for the AI (used in fallback responses)
+// System prompt to set context for the AI
 const SYSTEM_PROMPT = `You are an AI assistant for a restaurant management platform called Dblytics Restaurant AI Assistant.
 
 Your role is to help restaurant owners and staff use the platform effectively. You can:
@@ -14,7 +14,7 @@ Be concise, friendly, and professional. If you don't know the answer, admit it a
 Keep responses under 150 words unless a detailed explanation is specifically requested.`;
 
 // n8n webhook URL - to be set by environment variable
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "http://redirectmeto.com/http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook-test/a8da29a8-c2cd-42ad-8b74-126ce7252b1d";
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "";
 
 // Setup route handler
 export function setupOpenAIRoutes(app: Express) {
@@ -42,18 +42,23 @@ export function setupOpenAIRoutes(app: Express) {
 
       // Check if n8n webhook URL is available
       if (!N8N_WEBHOOK_URL) {
-        console.log("n8n webhook URL not found, using fallback responses");
-        return res.status(200).json({ 
-          content: getFallbackResponse(message),
-          model: "fallback"
+        console.log("n8n webhook URL not found");
+        return res.status(503).json({ 
+          content: "The AI service is currently unavailable. Please check your n8n workflow configuration and ensure the webhook URL is provided.",
+          model: "error_config"
         });
       }
 
       // Call n8n webhook
       try {
         console.log("Calling n8n webhook URL:", N8N_WEBHOOK_URL);
+        console.log("Sending message payload:", JSON.stringify({
+          messages: messages,
+          userQuery: message,
+          timestamp: new Date().toISOString()
+        }).substring(0, 200) + "...");
         
-        const fetchTimeout = 5000; // 5 seconds timeout
+        const fetchTimeout = 10000; // 10 seconds timeout
         const controller = new AbortController();
         const timeout = setTimeout(() => {
           controller.abort();
@@ -64,6 +69,7 @@ export function setupOpenAIRoutes(app: Express) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Accept': 'application/json'
             },
             body: JSON.stringify({
               messages: messages,
@@ -77,23 +83,40 @@ export function setupOpenAIRoutes(app: Express) {
           
           console.log("n8n webhook response status:", n8nResponse.status);
           
+          // Get response as text first for debugging
+          const responseText = await n8nResponse.text();
+          console.log("n8n webhook raw response:", responseText);
+          
           if (!n8nResponse.ok) {
-            const errorText = await n8nResponse.text();
-            console.error(`n8n webhook error response (${n8nResponse.status}):`, errorText || 'No response body');
+            console.error(`n8n webhook error response (${n8nResponse.status}):`, responseText || 'No response body');
+            
+            // Return specific error message based on HTTP status
+            if (n8nResponse.status === 404) {
+              return res.status(503).json({
+                content: "The n8n webhook is not active. Please activate the workflow in n8n by clicking the 'Test workflow' button, then try again.",
+                model: "error_webhook_inactive"
+              });
+            }
+            
             throw new Error(`n8n webhook returned status ${n8nResponse.status}`);
           }
 
-          const data = await n8nResponse.json() as { 
-            response?: string; 
-            content?: string;
-            model?: string;
-          };
+          // Parse the response JSON if possible
+          let data = {};
+          try {
+            data = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error("Failed to parse n8n response as JSON:", parseError);
+            // If not JSON, use the raw text as the response
+            return res.status(200).json({
+              content: responseText,
+              model: "n8n_raw"
+            });
+          }
           
-          console.log("n8n webhook response data:", JSON.stringify(data).substring(0, 200));
-          
-          // Send response
-          res.status(200).json({
-            content: data.response || data.content || "Sorry, I couldn't process your request at this time.",
+          // Send the parsed JSON response
+          return res.status(200).json({
+            content: data.response || data.content || "The n8n workflow responded but did not provide a content field.",
             model: data.model || "n8n"
           });
         } catch (fetchError: any) {
@@ -101,7 +124,10 @@ export function setupOpenAIRoutes(app: Express) {
           
           if (fetchError.name === 'AbortError') {
             console.error("n8n webhook request timed out after", fetchTimeout, "ms");
-            throw new Error(`n8n webhook request timed out after ${fetchTimeout}ms`);
+            return res.status(504).json({
+              content: `The request to the n8n workflow timed out after ${fetchTimeout}ms. Please try again later or check if the n8n server is running.`,
+              model: "error_timeout"
+            });
           } else {
             throw fetchError;
           }
@@ -113,65 +139,20 @@ export function setupOpenAIRoutes(app: Express) {
           console.error("Error cause:", error.cause);
         }
         
-        // Fall back to predefined responses if n8n fails
-        return res.status(200).json({ 
-          content: getFallbackResponse(message),
-          model: "fallback_n8n_error"
+        // Return error message
+        return res.status(502).json({ 
+          content: `Unable to connect to the n8n workflow: ${error.message}. Please ensure the n8n server is running and the workflow is properly configured.`,
+          model: "error_connection"
         });
       }
     } catch (error: any) {
       console.error("Chatbot API error:", error);
       
-      // Return fallback response on error
-      res.status(200).json({ 
-        content: "I apologize, but I'm having trouble connecting to my knowledge base at the moment. Please try again later, or contact support if this issue persists.",
-        model: "error_fallback"
+      // Return error message
+      res.status(500).json({ 
+        content: "An internal server error occurred while processing your request. Please try again later.",
+        model: "error_internal"
       });
     }
   });
-}
-
-// Fallback responses when n8n webhook is not available
-function getFallbackResponse(message: string): string {
-  const lowerCaseMessage = message.toLowerCase();
-  
-  // Simple keyword matching for fallback responses
-  if (lowerCaseMessage.includes("hello") || lowerCaseMessage.includes("hi")) {
-    return "Hello! I'm your Dblytics Restaurant AI Assistant. How can I help you manage your restaurant operations today?";
-  }
-  
-  if (lowerCaseMessage.includes("help")) {
-    return "I can help you with various tasks like explaining features, managing bookings, answering questions about calls, chats, reviews, and more. What would you like to know?";
-  }
-  
-  if (lowerCaseMessage.includes("feature")) {
-    return "Dblytics Restaurant AI Assistant includes several features: AI-powered call answering, automated chat responses, review management, booking system, and analytics dashboard. Would you like to learn more about any specific feature?";
-  }
-  
-  if (lowerCaseMessage.includes("booking")) {
-    return "You can manage all your restaurant bookings in the Bookings section. The AI system can automatically handle new booking requests coming in through calls or chats.";
-  }
-  
-  if (lowerCaseMessage.includes("call")) {
-    return "Our AI-powered call system answers customer calls automatically. It can take reservations, answer questions about your restaurant, and collect customer information. You can view all call recordings and transcripts in the Calls section.";
-  }
-  
-  if (lowerCaseMessage.includes("review")) {
-    return "The AI review response system automatically responds to customer reviews across multiple platforms. You can view and manage all reviews in the Reviews section.";
-  }
-  
-  if (lowerCaseMessage.includes("dashboard")) {
-    return "The dashboard gives you an overview of your restaurant's performance. It shows metrics like call volume, active chats, upcoming bookings, and reviews. The charts help you track trends over time.";
-  }
-  
-  if (lowerCaseMessage.includes("notification")) {
-    return "Notifications keep you updated about important events like new bookings, calls, or reviews. You can access them by clicking the bell icon in the top navigation bar.";
-  }
-  
-  if (lowerCaseMessage.includes("n8n")) {
-    return "n8n is a powerful workflow automation platform that powers many of the automation features in Dblytics Restaurant AI Assistant. It helps connect different services and automate tasks for your restaurant.";
-  }
-
-  // Default fallback response
-  return "I'm your restaurant management assistant. I can help you understand how to use the Dblytics platform, manage bookings, calls, and reviews. What specific information are you looking for?";
 }
