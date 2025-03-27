@@ -41,20 +41,54 @@ export class SupabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     try {
-      const { data, error } = await supabase
+      // First try: exact match (case-sensitive)
+      let { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('username', username)
         .single();
       
-      if (error) {
-        // Handle "no rows returned" error gracefully
-        if (error.code === 'PGRST116') {
-          console.log(`No user found with username "${username}"`);
-          return undefined;
+      // If no exact match found, try case-insensitive match
+      if (error && error.code === 'PGRST116') {
+        console.log(`No exact match found for username "${username}", trying case-insensitive search...`);
+        
+        const { data: users, error: listError } = await supabase
+          .from('users')
+          .select('*');
+          
+        if (listError) {
+          console.error('Error retrieving users list:', listError);
+        } else if (users && users.length > 0) {
+          // Manual case-insensitive search among all users
+          const foundUser = users.find(user => 
+            user.username.toLowerCase().trim() === username.toLowerCase().trim()
+          );
+          
+          if (foundUser) {
+            console.log(`Found user "${foundUser.username}" via case-insensitive search for "${username}"`);
+            return foundUser;
+          }
+          
+          // Try with partial match as a last resort
+          const partialMatches = users.filter(user => 
+            user.username.toLowerCase().includes(username.toLowerCase().trim()) ||
+            (user.full_name && user.full_name.toLowerCase().includes(username.toLowerCase().trim()))
+          );
+          
+          if (partialMatches.length === 1) {
+            console.log(`Found user "${partialMatches[0].username}" via partial match for "${username}"`);
+            return partialMatches[0];
+          } else if (partialMatches.length > 1) {
+            console.log(`Multiple partial matches found for "${username}": ${partialMatches.map(u => u.username).join(', ')}`);
+          }
         }
-        throw error;
+        
+        console.log(`No user found with username "${username}" after exhaustive search`);
+        return undefined;
       }
+      
+      if (error) throw error;
+      
       return data;
     } catch (error) {
       console.error(`Error retrieving user with username "${username}":`, error);
