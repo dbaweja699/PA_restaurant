@@ -42,12 +42,15 @@ export default function SignIn() {
     }
     
     try {
-      // First, try to authenticate
+      // First, trim the username to handle any whitespace
+      const trimmedUsername = usernameOrEmail.trim();
+      
+      // Authenticate with trimmed username
       const response = await fetch("/api/auth/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          username: usernameOrEmail, // Send as username first
+          username: trimmedUsername,
           password 
         }),
       });

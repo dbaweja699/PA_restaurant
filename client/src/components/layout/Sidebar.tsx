@@ -116,21 +116,31 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               <p className="text-xs text-gray-300">{user.username}</p>
             </div>
             <button 
-              onClick={() => {
-                // Clear token
-                localStorage.removeItem('auth_token');
-                
-                // Use queryClient to clear all cached data
-                queryClient.clear();
-                
-                // Notify user
-                toast({
-                  title: "Logged out successfully",
-                  description: "You have been logged out of your account",
-                });
-                
-                // Redirect to login page
-                setLocation('/signin');
+              onClick={async () => {
+                try {
+                  // Clear token
+                  localStorage.removeItem('auth_token');
+                  
+                  // Use queryClient to clear all cached data
+                  queryClient.clear();
+                  
+                  // Notify user
+                  toast({
+                    title: "Logged out successfully",
+                    description: "You have been logged out of your account",
+                  });
+                  
+                  // Redirect to login page using window.location for hard refresh
+                  // This is more reliable than wouter's setLocation for auth state changes
+                  window.location.href = '/signin';
+                } catch (error) {
+                  console.error("Logout error:", error);
+                  toast({
+                    title: "Error",
+                    description: "There was a problem logging out. Please try again.",
+                    variant: "destructive",
+                  });
+                }
               }}
               className="text-sm text-gray-300 hover:text-white p-1 rounded-full"
               title="Logout"
