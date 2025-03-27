@@ -1,8 +1,17 @@
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import type { User } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import logoImg from "@/assets/logo.png";
+
+// Define the user interface to match the actual API response
+interface UserResponse {
+  id: number;
+  username: string;
+  password: string;
+  full_name: string;
+  role: string;
+  avatar_url: string;
+}
 
 type SidebarProps = {
   isOpen: boolean;
@@ -11,7 +20,7 @@ type SidebarProps = {
 
 export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [location] = useLocation();
-  const { data: user } = useQuery<User>({ 
+  const { data: user } = useQuery<UserResponse>({ 
     queryKey: ['/api/user'],
   });
 
@@ -87,19 +96,19 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         <div className="flex items-center p-4 border-t border-primary-light">
           <div className="flex-shrink-0">
             <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center">
-              {user.avatarUrl ? (
+              {user.avatar_url ? (
                 <img 
                   className="h-10 w-10 rounded-full" 
-                  src={user.avatarUrl} 
-                  alt={user.fullName || "User"}
+                  src={user.avatar_url} 
+                  alt={user.full_name || "User"}
                 />
               ) : (
-                <span className="text-xl">{user.fullName && user.fullName.charAt(0) || "U"}</span>
+                <span className="text-xl">{user.full_name && user.full_name.charAt(0) || "U"}</span>
               )}
             </div>
           </div>
           <div className="ml-3">
-            <p className="text-sm font-medium">{user.fullName || "User"}</p>
+            <p className="text-sm font-medium">{user.full_name || "User"}</p>
             <p className="text-xs text-gray-300">{user.role || "Administrator"}</p>
           </div>
         </div>
