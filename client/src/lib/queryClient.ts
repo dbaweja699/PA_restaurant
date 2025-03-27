@@ -19,6 +19,26 @@ function getAuthHeaders(): HeadersInit {
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 }
 
+// Convert snake_case keys to camelCase
+export function toCamelCase(obj: any): any {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(v => toCamelCase(v));
+  }
+
+  return Object.keys(obj).reduce((result, key) => {
+    // Convert the key from snake_case to camelCase
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    
+    // Convert the value recursively
+    result[camelKey] = toCamelCase(obj[key]);
+    return result;
+  }, {} as Record<string, any>);
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -38,7 +58,22 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
-  return res;
+  
+  // Create a proxy to modify the json method to convert snake_case to camelCase
+  const responseProxy = new Proxy(res, {
+    get(target, prop) {
+      // When accessing the json method, wrap it to convert the data
+      if (prop === 'json') {
+        return async () => {
+          const data = await target.json();
+          return toCamelCase(data);
+        };
+      }
+      return Reflect.get(target, prop);
+    }
+  });
+  
+  return responseProxy;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -69,7 +104,9 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    const data = await res.json();
+    // Convert snake_case keys to camelCase before returning
+    return toCamelCase(data);
   };
 
 export const queryClient = new QueryClient({
