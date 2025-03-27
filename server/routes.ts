@@ -488,8 +488,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If no valid session found, return 401
       return res.status(401).json({ error: "Not authenticated" });
+    
     } catch (error) {
       console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+
+  // Add endpoint to update user data
+  app.patch(`${apiPrefix}/user`, async (req, res) => {
+    try {
+      // Check if user is authenticated
+      if (!req.headers.authorization) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // Get user from token
+      const token = req.headers.authorization.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+
+      // Try to get the user by ID first
+      let user;
+      try {
+        const userId = parseInt(token);
+        if (!isNaN(userId)) {
+          user = await storage.getUser(userId);
+        }
+      } catch (err) {
+        // Not a number, try as username
+      }
+      
+      // If not found by ID, try by username
+      if (!user) {
+        user = await storage.getUserByUsername(token);
+      }
+      
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      // Extract fields that are allowed to be updated
+      const { username, email, full_name } = req.body;
+      const updateData: Partial<{ username: string, email: string, full_name: string }> = {};
+
+      // Only include fields that are provided and changed
+      if (username && username !== user.username) {
+        updateData.username = username;
+      }
+
+      if (email) {
+        updateData.email = email; 
+      }
+
+      if (full_name && full_name !== user.full_name) {
+        updateData.full_name = full_name;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: "No changes detected" });
+      }
+
+      // Update user in Supabase/database
+      try {
+        console.log('Updating user:', user.id, 'with data:', updateData);
+        
+        // Update in Supabase through storage layer
+        // If your storage doesn't have updateUser, you'll need to modify IStorage and implement it
+        if (storage.updateUser) {
+          const updatedUser = await storage.updateUser(user.id, updateData);
+          console.log('User updated successfully:', updatedUser);
+          return res.json(updatedUser);
+        } else {
+          // Fallback if no updateUser method exists
+          // This is a workaround and should be replaced with proper storage implementation
+          return res.status(501).json({ 
+            error: "Update not implemented",
+            message: "The updateUser method is not implemented in the storage layer"
+          });
+        }
+      } catch (error) {
+        console.error('Error updating user:', error);
+        return res.status(500).json({ error: "Failed to update user" });
+      }
+    } catch (error) {
+      console.error('Error processing user update:', error);
       res.status(500).json({ error: "Server error" });
     }
   });

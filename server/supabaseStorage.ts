@@ -143,6 +143,39 @@ export class SupabaseStorage implements IStorage {
     }
   }
 
+  async updateUser(id: number, userData: Partial<{ username: string, email: string, full_name: string }>): Promise<User | undefined> {
+    try {
+      console.log('Attempting to update user in Supabase:', {
+        id,
+        ...userData
+      });
+      
+      // Update the user data in Supabase
+      const { data, error } = await supabase
+        .from('users')
+        .update(userData)
+        .eq('id', id)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error updating user in Supabase:', error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.log(`No user found with id ${id} to update`);
+        return undefined;
+      }
+      
+      console.log('User updated successfully in Supabase:', data);
+      return data;
+    } catch (error) {
+      console.error('Exception in updateUser:', error);
+      throw error;
+    }
+  }
+
   // Call methods
   async getCalls(): Promise<Call[]> {
     try {

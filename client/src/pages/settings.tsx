@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { type User } from "@shared/schema";
 import { 
   Card, 
@@ -40,26 +40,56 @@ import {
   Save,
   Loader2
 } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 // Settings form with unsaved changes warning
 function SettingsForm({
   title,
   description,
   children,
+  onSave,
 }: {
   title: string;
   description: string;
   children: React.ReactNode;
+  onSave?: () => Promise<void>;
 }) {
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
   
   const handleInputChange = () => {
     setHasChanges(true);
   };
   
-  const handleSave = () => {
-    // Save changes
-    setHasChanges(false);
+  const handleSave = async () => {
+    if (onSave) {
+      setIsSaving(true);
+      try {
+        await onSave();
+        setHasChanges(false);
+        toast({
+          title: "Changes saved",
+          description: "Your changes have been saved successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Error saving changes",
+          description: error instanceof Error ? error.message : "An unknown error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      // No save handler provided, just reset state
+      setHasChanges(false);
+      toast({
+        title: "Changes saved",
+        description: "Your changes have been saved successfully.",
+      });
+    }
   };
   
   // Add onChange event to all children
@@ -83,11 +113,20 @@ function SettingsForm({
       </CardContent>
       <CardFooter className="flex justify-end">
         <Button 
-          disabled={!hasChanges}
+          disabled={!hasChanges || isSaving}
           onClick={handleSave}
         >
-          <Save className="mr-2 h-4 w-4" />
-          Save Changes
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>
@@ -99,6 +138,52 @@ export default function Settings() {
   const { data: user, isLoading, error } = useQuery<User>({ 
     queryKey: ['/api/user'],
   });
+  
+  // Refs for the input fields
+  const fullNameRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  
+  // User update mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: Partial<{ username: string, email: string, full_name: string }>) => {
+      const response = await apiRequest('PATCH', '/api/user', userData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update user');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Invalidate the user query to refetch the data
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    }
+  });
+  
+  // Handler for saving user preferences
+  const handleSaveUserPreferences = async () => {
+    if (!user) return;
+    
+    const fullName = fullNameRef.current?.value || '';
+    const email = emailRef.current?.value || '';
+    
+    const userData: Partial<{ username: string, email: string, full_name: string }> = {};
+    
+    // Only include changed fields
+    if (fullName !== user.full_name) {
+      userData.full_name = fullName;
+    }
+    
+    if (email !== user.username) {
+      userData.username = email; // In this implementation, username is used as email
+      userData.email = email;
+    }
+    
+    if (Object.keys(userData).length === 0) {
+      throw new Error('No changes detected');
+    }
+    
+    await updateUserMutation.mutateAsync(userData);
+  };
   
   if (isLoading) {
     return (
@@ -193,22 +278,32 @@ export default function Settings() {
             <SettingsForm 
               title="User Preferences" 
               description="Update your account settings"
+              onSave={handleSaveUserPreferences}
             >
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" defaultValue={user?.full_name || ""} />
+                  <Input 
+                    id="name" 
+                    ref={fullNameRef}
+                    defaultValue={user?.full_name || ""} 
+                  />
                 </div>
                 
                 <div className="grid gap-2">
                   <Label htmlFor="email-user">Email</Label>
-                  <Input id="email-user" type="email" defaultValue={user?.username || ""} />
+                  <Input 
+                    id="email-user" 
+                    type="email" 
+                    ref={emailRef}
+                    defaultValue={user?.username || ""} 
+                  />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="role">Role</Label>
-                    <Select defaultValue={user?.role || "user"}>
+                    <Select defaultValue={user?.role || "user"} disabled>
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
@@ -219,6 +314,7 @@ export default function Settings() {
                         <SelectItem value="user">User</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-neutral-500">Role changes require administrator approval</p>
                   </div>
                   
                   <div className="grid gap-2">

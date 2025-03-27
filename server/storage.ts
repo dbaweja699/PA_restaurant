@@ -16,6 +16,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, userData: Partial<{ username: string, email: string, full_name: string }>): Promise<User | undefined>;
   
   // Call operations
   getCalls(): Promise<Call[]>;
@@ -321,9 +322,9 @@ export class MemStorage implements IStorage {
         id,
         username: insertUser.username,
         password: insertUser.password,
-        fullName: insertUser.full_name,
+        full_name: insertUser.full_name,
         role: insertUser.role || 'user',
-        avatarUrl: insertUser.avatar_url || null
+        avatar_url: insertUser.avatar_url || null
       };
       
       console.log("Creating user in MemStorage:", user);
@@ -331,6 +332,29 @@ export class MemStorage implements IStorage {
       return user;
     } catch (error) {
       console.error("Error creating user in MemStorage:", error);
+      throw error;
+    }
+  }
+  
+  async updateUser(id: number, userData: Partial<{ username: string, email: string, full_name: string }>): Promise<User | undefined> {
+    try {
+      const existingUser = this.users.get(id);
+      if (!existingUser) {
+        console.log(`No user found with id ${id} to update`);
+        return undefined;
+      }
+
+      // Update the user with the new data
+      const updatedUser = { 
+        ...existingUser,
+        ...userData 
+      };
+      
+      console.log("Updating user in MemStorage:", updatedUser);
+      this.users.set(id, updatedUser);
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user in MemStorage:", error);
       throw error;
     }
   }
