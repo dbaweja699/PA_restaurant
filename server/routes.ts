@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertCallSchema, insertChatSchema, insertReviewSchema, insertOrderSchema, insertBookingSchema, insertSocialMediaSchema, insertNotificationSchema } from "../shared/schema";
+import { setupOpenAIRoutes } from "./openai";
 import { pool } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -723,6 +724,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Setup AI chatbot routes
+  setupOpenAIRoutes(app);
+  
   const httpServer = createServer(app);
   return httpServer;
 }

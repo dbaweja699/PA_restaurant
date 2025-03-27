@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { MainLayout } from "./components/layout/MainLayout";
 import { AuthLayout } from "./components/layout/AuthLayout";
 import { Protected } from "@/components/layout/Protected";
+import { AIChatbot } from "@/components/chat/AIChatbot";
 
 // Dashboard pages
 import Dashboard from "@/pages/dashboard";
@@ -62,6 +63,7 @@ function App() {
         </Route>
       </Switch>
       <Toaster />
+      <AIChatbot />
     </QueryClientProvider>
   );
 }
