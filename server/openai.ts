@@ -51,30 +51,68 @@ export function setupOpenAIRoutes(app: Express) {
 
       // Call n8n webhook
       try {
-        const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messages: messages,
-            userQuery: message
-          }),
-        });
-
-        if (!n8nResponse.ok) {
-          throw new Error(`n8n webhook returned status ${n8nResponse.status}`);
-        }
-
-        const data = await n8nResponse.json();
+        console.log("Calling n8n webhook URL:", N8N_WEBHOOK_URL);
         
-        // Send response
-        res.status(200).json({
-          content: data.response || data.content || "Sorry, I couldn't process your request at this time.",
-          model: data.model || "n8n"
-        });
-      } catch (error) {
-        console.error("n8n webhook error:", error);
+        const fetchTimeout = 5000; // 5 seconds timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => {
+          controller.abort();
+        }, fetchTimeout);
+        
+        try {
+          const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messages: messages,
+              userQuery: message,
+              timestamp: new Date().toISOString()
+            }),
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeout);
+          
+          console.log("n8n webhook response status:", n8nResponse.status);
+          
+          if (!n8nResponse.ok) {
+            const errorText = await n8nResponse.text();
+            console.error(`n8n webhook error response (${n8nResponse.status}):`, errorText || 'No response body');
+            throw new Error(`n8n webhook returned status ${n8nResponse.status}`);
+          }
+
+          const data = await n8nResponse.json() as { 
+            response?: string; 
+            content?: string;
+            model?: string;
+          };
+          
+          console.log("n8n webhook response data:", JSON.stringify(data).substring(0, 200));
+          
+          // Send response
+          res.status(200).json({
+            content: data.response || data.content || "Sorry, I couldn't process your request at this time.",
+            model: data.model || "n8n"
+          });
+        } catch (fetchError: any) {
+          clearTimeout(timeout);
+          
+          if (fetchError.name === 'AbortError') {
+            console.error("n8n webhook request timed out after", fetchTimeout, "ms");
+            throw new Error(`n8n webhook request timed out after ${fetchTimeout}ms`);
+          } else {
+            throw fetchError;
+          }
+        }
+      } catch (error: any) {
+        console.error("n8n webhook error:", error.message);
+        // Log detailed error information for debugging
+        if (error.cause) {
+          console.error("Error cause:", error.cause);
+        }
+        
         // Fall back to predefined responses if n8n fails
         return res.status(200).json({ 
           content: getFallbackResponse(message),
