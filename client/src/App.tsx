@@ -47,7 +47,6 @@ function App() {
           <AuthLayout>
             <Switch>
               <Route path="/auth/signin" component={SignIn} />
-              <Route path="/auth/signup" component={SignUp} />
               <Route path="/auth" component={SignIn} />
             </Switch>
           </AuthLayout>

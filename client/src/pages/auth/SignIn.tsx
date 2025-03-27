@@ -135,10 +135,7 @@ export default function SignIn() {
             </Button>
             
             <p className="text-sm text-center text-gray-600">
-              Don't have an account?{" "}
-              <a href="/auth/signup" className="text-primary hover:underline">
-                Sign Up
-              </a>
+              Contact your administrator for credentials.
             </p>
           </form>
         </div>
