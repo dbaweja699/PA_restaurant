@@ -34,8 +34,8 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       description: "You have been logged out of your account",
     });
     
-    // Redirect to login page using plain window.location for a complete refresh
-    window.location.href = '/auth/signin';
+    // Use setLocation instead of window.location for smoother transition
+    setLocation('/auth/signin');
   };
 
   return (

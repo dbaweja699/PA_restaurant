@@ -21,7 +21,7 @@ export default function SignIn() {
   const { data: user } = useQuery({ 
     queryKey: ['/api/user'],
     retry: false,
-    enabled: false  // Initially disabled
+    enabled: !!localStorage.getItem('auth_token')  // Only check if we have a token
   });
   
   useEffect(() => {

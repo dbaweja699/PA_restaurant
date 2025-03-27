@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import logoImg from "@/assets/logo.png";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 // Define the user interface to match the actual API response
 interface UserResponse {
@@ -129,8 +130,8 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   description: "You have been logged out of your account",
                 });
                 
-                // Redirect to login page using plain window.location
-                window.location.href = '/auth/signin';
+                // Use setLocation instead of window.location for smoother transition
+                setLocation('/auth/signin');
               }}
               className="text-sm text-gray-300 hover:text-white p-1 rounded-full"
               title="Logout"

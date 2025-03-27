@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { type User } from "@shared/schema";
@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 
 export function Protected({ children }: { children: React.ReactNode }) {
   const [, setLocation] = useLocation();
+  const [redirecting, setRedirecting] = useState(false);
   
   // Get the token from localStorage if available
   const authToken = localStorage.getItem('auth_token');
@@ -28,20 +29,24 @@ export function Protected({ children }: { children: React.ReactNode }) {
       }
       
       return response.json();
-    }
+    },
+    retry: false // Don't retry if the request fails
   });
 
   useEffect(() => {
     // If not loading and either no user or error, redirect to signin
-    if (!isLoading && (!user || error)) {
+    if (!isLoading && (!user || error) && !redirecting) {
+      setRedirecting(true);
+      
       // Clear localStorage if there was an auth error
-      if (error) {
+      if (error || !user) {
         localStorage.removeItem('auth_token');
       }
-      // Redirect to auth/signin page
-      window.location.href = '/auth/signin';
+      
+      // Use the wouter setLocation rather than window.location.href to avoid hard refresh
+      setLocation('/auth/signin');
     }
-  }, [user, isLoading, error, setLocation]);
+  }, [user, isLoading, error, setLocation, redirecting]);
 
   if (isLoading) {
     return (
