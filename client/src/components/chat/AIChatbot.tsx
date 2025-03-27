@@ -21,7 +21,7 @@ interface ChatMessage {
   model?: string;
 }
 
-// OpenAI API integration
+// n8n API integration
 const getAIResponse = async (message: string, chatHistory: ChatMessage[]): Promise<{ content: string, model?: string }> => {
   try {
     // Filter out system messages and only keep the most recent messages (max 10)
@@ -39,22 +39,39 @@ const getAIResponse = async (message: string, chatHistory: ChatMessage[]): Promi
       chatHistory: recentMessages
     });
 
-    if (!response.ok) {
-      throw new Error('Failed to get AI response');
+    // Get the response as text first for debugging
+    const responseText = await response.text();
+    console.log('API response:', responseText);
+    
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse API response as JSON:', parseError);
+      return {
+        content: "Received invalid response format from the server. Please contact support.",
+        model: "error_format"
+      };
     }
 
-    const data = await response.json();
+    if (!response.ok) {
+      return {
+        content: data.content || "The server responded with an error. Please try again later.",
+        model: data.model || "error_api"
+      };
+    }
+
     return {
       content: data.content,
-      model: data.model
+      model: data.model || "n8n"
     };
   } catch (error) {
     console.error('Error getting AI response:', error);
     
-    // Fallback response if API call fails
+    // Error response if API call fails
     return {
-      content: "I'm having trouble connecting to my knowledge base. Please try again later.",
-      model: "error_fallback"
+      content: "Unable to connect to the AI service. Please ensure n8n is running and properly configured.",
+      model: "error_connection"
     };
   }
 };
