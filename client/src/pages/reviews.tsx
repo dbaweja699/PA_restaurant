@@ -29,8 +29,20 @@ function StarRating({ rating }: { rating: number }) {
 
 function ReviewCard({ review }: { review: Review }) {
   const [expanded, setExpanded] = useState(false);
+  
+  // Handle both snake_case from direct DB and camelCase from schema
+  const source = review.source || review.source;
+  const content = review.content || review.content;
+  const rating = review.rating || review.rating;
+  const status = review.status || review.status || 'new';
+  const customerName = review.customerName || review.customer_name || 'Anonymous';
+  const reviewTime = review.reviewTime || review.review_time;
+  const aiResponse = review.aiResponse || review.ai_response;
+  const aiRespondedAt = review.aiRespondedAt || review.ai_responded_at;
 
   const getSourceIcon = (source: string) => {
+    if (!source) return <i className="ri-star-line mr-1"></i>;
+    
     switch (source.toLowerCase()) {
       case "google":
         return <i className="ri-google-line mr-1"></i>;
@@ -48,7 +60,9 @@ function ReviewCard({ review }: { review: Review }) {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    if (!status) return <Badge variant="outline">Unknown</Badge>;
+    
+    switch (status.toLowerCase()) {
       case "new":
         return <Badge variant="secondary">New</Badge>;
       case "responded":
@@ -66,44 +80,44 @@ function ReviewCard({ review }: { review: Review }) {
         <div className="flex justify-between items-start">
           <div className="flex items-center">
             <div className="h-10 w-10 bg-neutral-100 rounded-full flex items-center justify-center mr-3">
-              {review.customer_name?.charAt(0) || '?'}
+              {customerName.charAt(0) || '?'}
             </div>
             <div>
               <CardTitle className="text-base">
-                {review.customer_name || 'Anonymous'}
+                {customerName}
               </CardTitle>
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center text-xs text-neutral-500">
-                  {getSourceIcon(review.source)}
-                  {review.source.charAt(0).toUpperCase() + review.source.slice(1)}
+                  {getSourceIcon(source)}
+                  {source && source.charAt(0).toUpperCase() + source.slice(1)}
                   <span className="mx-2">•</span>
-                  {format(new Date(review.date), "MMM d, yyyy")}
+                  {reviewTime && format(new Date(reviewTime), "MMM d, yyyy")}
                 </div>
               </div>
             </div>
           </div>
           <div className="flex flex-col items-end">
-            <StarRating rating={review.rating} />
+            <StarRating rating={rating} />
             <div className="mt-1">
-              {getStatusBadge(review.status)}
+              {getStatusBadge(status)}
             </div>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <p className="text-neutral-700">
-          "{review.comment}"
+          "{content}"
         </p>
 
-        {expanded && review.aiResponse && (
+        {expanded && aiResponse && (
           <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
             <p className="font-medium mb-1 flex items-center">
               <MessageSquare className="h-4 w-4 mr-1" /> AI Response 
               <span className="text-xs text-neutral-500 ml-2">
-                {review.aiRespondedAt && formatDistanceToNow(new Date(review.aiRespondedAt), { addSuffix: true })}
+                {aiRespondedAt && formatDistanceToNow(new Date(aiRespondedAt), { addSuffix: true })}
               </span>
             </p>
-            <p className="italic">"{review.aiResponse}"</p>
+            <p className="italic">"{aiResponse}"</p>
           </div>
         )}
       </CardContent>

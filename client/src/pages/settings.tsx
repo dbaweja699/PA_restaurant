@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { type User } from "@shared/schema";
 import { 
   Card, 
   CardContent, 
@@ -35,7 +37,8 @@ import {
   Users,
   Globe,
   Lock,
-  Save
+  Save,
+  Loader2
 } from "lucide-react";
 
 // Settings form with unsaved changes warning
@@ -92,6 +95,28 @@ function SettingsForm({
 }
 
 export default function Settings() {
+  // Fetch user data
+  const { data: user, isLoading, error } = useQuery<User>({ 
+    queryKey: ['/api/user'],
+  });
+  
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  if (error) {
+    console.error("Error loading user data:", error);
+    return (
+      <div className="py-6 px-4 text-red-500">
+        Error loading user data. Please try refreshing the page.
+      </div>
+    );
+  }
+  
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
@@ -172,25 +197,26 @@ export default function Settings() {
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" defaultValue="Sam Wilson" />
+                  <Input id="name" defaultValue={user?.full_name || ""} />
                 </div>
                 
                 <div className="grid gap-2">
                   <Label htmlFor="email-user">Email</Label>
-                  <Input id="email-user" type="email" defaultValue="sam.wilson@example.com" />
+                  <Input id="email-user" type="email" defaultValue="contact@dblytics.ai" />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="role">Role</Label>
-                    <Select defaultValue="manager">
+                    <Select defaultValue={user?.role || "user"}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="owner">Owner</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="staff">Staff</SelectItem>
+                        <SelectItem value="agent">Agent</SelectItem>
+                        <SelectItem value="user">User</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

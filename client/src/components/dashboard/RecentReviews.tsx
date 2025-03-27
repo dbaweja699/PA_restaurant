@@ -6,6 +6,13 @@ import { type Review } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "wouter";
 
+// Extended type to handle both camelCase and snake_case fields
+interface ReviewWithSnakeCase extends Review {
+  customer_name?: string;
+  ai_response?: string | null;
+  ai_responded_at?: Date | null;
+}
+
 function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex text-secondary">
@@ -17,7 +24,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export function RecentReviews() {
-  const { data: reviews, isLoading } = useQuery<Review[]>({ 
+  const { data: reviews, isLoading } = useQuery<ReviewWithSnakeCase[]>({ 
     queryKey: ['/api/reviews'],
   });
   
@@ -80,35 +87,51 @@ export function RecentReviews() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4 max-h-64 overflow-y-auto scrollbar-hide">
-          {sortedReviews.map((review) => (
-            <div key={review.id} className="border-b border-neutral-200 pb-3 last:border-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center mr-2">
-                    <span>{review.customerName && review.customerName.charAt(0)}</span>
+          {sortedReviews.map((review) => {
+            // Type assertion to fix TypeScript errors
+            const reviewData = review as ReviewWithSnakeCase;
+            return (
+              <div key={reviewData.id} className="border-b border-neutral-200 pb-3 last:border-0">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-8 w-8 rounded-full bg-neutral-200 flex items-center justify-center mr-2">
+                      <span>
+                        {/* Handle both camelCase and snake_case field names */}
+                        {((reviewData.customerName || reviewData.customer_name) || "").charAt(0)}
+                      </span>
+                    </div>
+                    <span className="font-medium text-neutral-800">
+                      {/* Prefer the actual customer name over placeholder */}
+                      {reviewData.customerName || reviewData.customer_name || "Customer"}
+                    </span>
                   </div>
-                  <span className="font-medium text-neutral-800">
-                    {review.customerName || "Anonymous"}
-                  </span>
+                  <StarRating rating={reviewData.rating} />
                 </div>
-                <StarRating rating={review.rating} />
+                <p className="mt-2 text-sm text-neutral-600">
+                  "{reviewData.comment}"
+                </p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  {reviewData.status === "responded" ? (
+                    <>
+                      <i className="ri-checkbox-circle-line text-accent"></i> AI responded {
+                        (() => {
+                          const respondedDate = reviewData.aiRespondedAt || reviewData.ai_responded_at;
+                          if (respondedDate) {
+                            return formatDistanceToNow(new Date(respondedDate), { addSuffix: true });
+                          }
+                          return "";
+                        })()
+                      }
+                    </>
+                  ) : (
+                    <span className="text-accent">
+                      <i className="ri-time-line"></i> Awaiting AI response
+                    </span>
+                  )}
+                </p>
               </div>
-              <p className="mt-2 text-sm text-neutral-600">
-                "{review.comment}"
-              </p>
-              <p className="mt-1 text-xs text-neutral-500">
-                {review.status === "responded" ? (
-                  <>
-                    <i className="ri-checkbox-circle-line text-accent"></i> AI responded {review.aiRespondedAt ? formatDistanceToNow(new Date(review.aiRespondedAt), { addSuffix: true }) : ""}
-                  </>
-                ) : (
-                  <span className="text-accent">
-                    <i className="ri-time-line"></i> Awaiting AI response
-                  </span>
-                )}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardContent>
       <CardFooter className="justify-center">

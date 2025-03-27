@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertCallSchema, insertChatSchema, insertReviewSchema, insertOrderSchema, insertBookingSchema, insertSocialMediaSchema } from "../shared/schema";
+import { pool } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for RestaurantAI Assistant
@@ -395,8 +396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If storage layer returns empty, try direct database query
       console.log('Storage layer returned empty results, trying direct query...');
       
-      // Use the PostgreSQL connection pool
-      const { pool } = require('./db');
+      // Use the PostgreSQL connection pool already imported at the top
       const result = await pool.query('SELECT * FROM social_media ORDER BY post_time DESC');
       
       if (result.rows && result.rows.length > 0) {
