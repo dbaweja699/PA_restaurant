@@ -1,7 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import logoImg from "@/assets/logo.png";
+import { useToast } from "@/hooks/use-toast";
 
 // Define the user interface to match the actual API response
 interface UserResponse {
@@ -19,10 +20,12 @@ type SidebarProps = {
 };
 
 export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { data: user } = useQuery<UserResponse>({ 
     queryKey: ['/api/user'],
   });
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const navigationItems = [
     { icon: "ri-dashboard-line", label: "Dashboard", path: "/" },
@@ -97,7 +100,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           <div className="flex items-center p-4">
             <div className="flex-shrink-0">
               <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center">
-                {user.avatar_url ? (
+                {user.avatar_url && !user.avatar_url.includes("images.app.goo.gl") ? (
                   <img 
                     className="h-10 w-10 rounded-full" 
                     src={user.avatar_url} 
@@ -116,8 +119,18 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               onClick={() => {
                 // Clear token
                 localStorage.removeItem('auth_token');
-                // Redirect to login
-                window.location.href = '/signin';
+                
+                // Use queryClient to clear all cached data
+                queryClient.clear();
+                
+                // Notify user
+                toast({
+                  title: "Logged out successfully",
+                  description: "You have been logged out of your account",
+                });
+                
+                // Redirect to login page
+                setLocation('/signin');
               }}
               className="text-sm text-gray-300 hover:text-white p-1 rounded-full"
               title="Logout"
