@@ -14,7 +14,7 @@ Be concise, friendly, and professional. If you don't know the answer, admit it a
 Keep responses under 150 words unless a detailed explanation is specifically requested.`;
 
 // n8n webhook URL - to be set by environment variable
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "";
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook-test/a8da29a8-c2cd-42ad-8b74-126ce7252b1d";
 
 // Setup route handler
 export function setupOpenAIRoutes(app: Express) {
