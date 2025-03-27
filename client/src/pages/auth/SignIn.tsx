@@ -12,6 +12,8 @@ export default function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    
     try {
       const response = await fetch("/api/auth/signin", {
         method: "POST",
@@ -20,12 +22,15 @@ export default function SignIn() {
       });
 
       if (response.ok) {
+        console.log("Sign in successful");
         setLocation("/");
       } else {
         const data = await response.json();
+        console.error("Sign in failed:", data);
         setError(data.error || "Invalid credentials");
       }
     } catch (err) {
+      console.error("Sign in exception:", err);
       setError("Failed to sign in");
     }
   };

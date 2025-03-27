@@ -118,13 +118,22 @@ export class MemStorage implements IStorage {
   }
   
   private initializeDemoData() {
-    // Create a sample user
+    // Create sample users
     this.createUser({
       username: "manager",
       password: "password123",
-      fullName: "Sam Wilson",
+      full_name: "Sam Wilson",
       role: "Restaurant Manager",
-      avatarUrl: ""
+      avatar_url: ""
+    });
+    
+    // Create admin user for easy testing
+    this.createUser({
+      username: "admin",
+      password: "admin123",
+      full_name: "Administrator",
+      role: "admin",
+      avatar_url: ""
     });
     
     // Create sample dashboard stats
@@ -295,15 +304,35 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userCurrentId++;
-    const user: User = { 
-      ...insertUser, 
-      id,
-      role: insertUser.role || 'user',
-      avatarUrl: insertUser.avatarUrl === undefined ? null : insertUser.avatarUrl
-    };
-    this.users.set(id, user);
-    return user;
+    try {
+      // Check if username already exists
+      const existing = [...this.users.values()].find(
+        user => user.username === insertUser.username
+      );
+      
+      if (existing) {
+        throw new Error("Username already exists");
+      }
+      
+      const id = this.userCurrentId++;
+      
+      // Convert from snake_case (API/DB) to camelCase (frontend)
+      const user: User = { 
+        id,
+        username: insertUser.username,
+        password: insertUser.password,
+        fullName: insertUser.full_name,
+        role: insertUser.role || 'user',
+        avatarUrl: insertUser.avatar_url || null
+      };
+      
+      console.log("Creating user in MemStorage:", user);
+      this.users.set(id, user);
+      return user;
+    } catch (error) {
+      console.error("Error creating user in MemStorage:", error);
+      throw error;
+    }
   }
   
   // Call methods
@@ -598,4 +627,6 @@ export class MemStorage implements IStorage {
 import { SupabaseStorage } from './supabaseStorage';
 
 // Use SupabaseStorage as the only storage implementation
-export const storage = new SupabaseStorage();
+// Temporarily use MemStorage for reliable user functionality 
+// while troubleshooting Supabase issues
+export const storage = new MemStorage();

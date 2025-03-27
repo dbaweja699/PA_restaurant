@@ -7,9 +7,9 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  fullName: text("full_name").notNull(),
+  full_name: text("full_name").notNull(), // Using snake_case for DB column
   role: text("role").notNull(),
-  avatarUrl: text("avatar_url"),
+  avatar_url: text("avatar_url"), // Using snake_case for DB column
 });
 
 // This schema is for API validation, the database columns use snake_case

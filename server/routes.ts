@@ -15,9 +15,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password, full_name } = req.body;
       
+      console.log("Received signup request:", { username, full_name });
+      
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
+        console.log("Username already exists:", username);
         return res.status(400).json({ error: "Username already exists" });
       }
       
@@ -28,9 +31,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           password,
           full_name: full_name || 'New User',
           role: 'user',
-          avatar_url: null  // Make avatar optional
+          avatar_url: null
         });
         
+        console.log("User created successfully:", user);
         res.status(201).json({ message: "User created successfully", user });
       } catch (err) {
         console.error('Database error creating user:', err);
@@ -45,6 +49,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/auth/signin`, async (req, res) => {
     try {
       const { username, password } = req.body;
+      
+      console.log(`Login attempt for user: ${username}`);
       
       // Verify user exists in our database
       const user = await storage.getUserByUsername(username);
@@ -61,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: "Invalid credentials" });
       }
       
-      console.log(`User "${username}" authenticated successfully`);
+      console.log(`User "${username}" authenticated successfully:`, user);
       
       // For security, don't send the password back
       const { password: _, ...userWithoutPassword } = user;
