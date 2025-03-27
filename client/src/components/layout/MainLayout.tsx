@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Sidebar } from "./Sidebar";
-import { TopNav } from "./TopNav";
+import TopNav from "./TopNav";
 
 export function MainLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
