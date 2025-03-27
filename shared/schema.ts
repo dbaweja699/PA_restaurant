@@ -12,12 +12,13 @@ export const users = pgTable("users", {
   avatarUrl: text("avatar_url"),
 });
 
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  fullName: true,
-  role: true,
-  avatarUrl: true,
+// This schema is for API validation, the database columns use snake_case
+export const insertUserSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+  full_name: z.string(),
+  role: z.string(),
+  avatar_url: z.string().optional().nullable(),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

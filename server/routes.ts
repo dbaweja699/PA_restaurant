@@ -13,7 +13,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post(`${apiPrefix}/auth/signup`, async (req, res) => {
     try {
-      const { username, password, fullName } = req.body;
+      const { username, password, full_name } = req.body;
       
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(username);
@@ -21,15 +21,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Username already exists" });
       }
       
-      // Create new user
-      const user = await storage.createUser({
-        username,
-        password,
-        fullName,
-        role: 'user'
-      });
-      
-      res.status(201).json({ message: "User created successfully" });
+      try {
+        // Create new user with proper field names that match schema
+        const user = await storage.createUser({
+          username,
+          password,
+          full_name: full_name || 'New User',
+          role: 'user',
+          avatar_url: null  // Make avatar optional
+        });
+        
+        res.status(201).json({ message: "User created successfully", user });
+      } catch (err) {
+        console.error('Database error creating user:', err);
+        res.status(500).json({ error: "Database error creating user" });
+      }
     } catch (error) {
       console.error('Error creating user:', error);
       res.status(500).json({ error: "Failed to create user" });

@@ -39,14 +39,30 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const { data, error } = await supabase
-      .from('users')
-      .insert(insertUser)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    return data;
+    try {
+      // Ensure we use snake_case field names for the database
+      const { data, error } = await supabase
+        .from('users')
+        .insert({
+          username: insertUser.username,
+          password: insertUser.password,
+          full_name: insertUser.full_name,
+          role: insertUser.role,
+          avatar_url: insertUser.avatar_url
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Supabase error creating user:', error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Exception in createUser:', error);
+      throw error;
+    }
   }
 
   // Call methods

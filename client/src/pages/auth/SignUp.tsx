@@ -9,25 +9,44 @@ export default function SignUp() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    setSuccess("");
+    
     try {
+      // Use the snake_case field name for full_name to match the API expectations
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, fullName }),
+        body: JSON.stringify({ 
+          username, 
+          password, 
+          full_name: fullName 
+        }),
       });
 
+      const data = await response.json();
+      
       if (response.ok) {
-        setLocation("/signin");
+        setSuccess("Account created successfully! Redirecting to login...");
+        setTimeout(() => {
+          setLocation("/signin");
+        }, 2000);
       } else {
-        const data = await response.json();
+        console.error("Signup error:", data);
         setError(data.error || "Failed to sign up");
       }
     } catch (err) {
-      setError("Failed to sign up");
+      console.error("Signup exception:", err);
+      setError("Failed to sign up. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,7 +83,14 @@ export default function SignUp() {
               />
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
-            <Button type="submit" className="w-full">Sign Up</Button>
+            {success && <p className="text-green-500 text-sm">{success}</p>}
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Account..." : "Sign Up"}
+            </Button>
             <p className="text-sm text-center">
               Already have an account?{" "}
               <a href="/signin" className="text-blue-500 hover:underline">
