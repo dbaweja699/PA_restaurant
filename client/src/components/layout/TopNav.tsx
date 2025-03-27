@@ -9,17 +9,33 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
 type TopNavProps = {
   openSidebar: () => void;
 };
 
 export default function TopNav({ openSidebar }: TopNavProps) {
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [, setLocation] = useLocation();
 
   const handleSignOut = () => {
-    setLocation('/signin');
+    // Clear token
+    localStorage.removeItem('auth_token');
+    
+    // Use queryClient to clear all cached data
+    queryClient.clear();
+    
+    // Notify user
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account",
+    });
+    
+    // Redirect to login page using plain window.location for a complete refresh
+    window.location.href = '/auth/signin';
   };
 
   return (

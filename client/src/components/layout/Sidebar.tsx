@@ -130,7 +130,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 });
                 
                 // Redirect to login page using plain window.location
-                window.location.href = '/auth';
+                window.location.href = '/auth/signin';
               }}
               className="text-sm text-gray-300 hover:text-white p-1 rounded-full"
               title="Logout"
