@@ -55,8 +55,12 @@ export default function Bookings() {
     queryKey: ['/api/bookings'],
   });
   
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  // Debug log to see what data we're getting from the API
+  console.log("Bookings data received:", bookings);
+  
+  // Initialize with undefined to show all bookings by default
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   
   if (isLoading) {
@@ -79,9 +83,14 @@ export default function Bookings() {
     );
   }
   
+  // Debug the dates to see what's going on
+  console.log("Selected date:", selectedDate);
+  
   const filteredBookings = bookings?.filter(booking => {
     if (!selectedDate) return true;
-    return isSameDay(new Date(booking.bookingTime), selectedDate);
+    const bookingDate = new Date(booking.bookingTime);
+    console.log(`Comparing booking date ${bookingDate} with selected date ${selectedDate}`);
+    return isSameDay(bookingDate, selectedDate);
   }) || [];
   
   // Group bookings by time slot for calendar view
