@@ -27,18 +27,25 @@ function StarRating({ rating }: { rating: number }) {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+// Helper function to safely access review data with database field name fallbacks
+const getReviewData = (review: any) => {
+  return {
+    source: review.source || '',
+    comment: review.comment || '',
+    rating: review.rating || 0,
+    status: review.status || 'new',
+    customerName: review.customerName || review.customer_name || 'Anonymous',
+    date: review.date || new Date(),
+    aiResponse: review.aiResponse || review.ai_response,
+    aiRespondedAt: review.aiRespondedAt || review.ai_responded_at
+  };
+};
+
+function ReviewCard({ review }: { review: Review | any }) {
   const [expanded, setExpanded] = useState(false);
   
   // Handle both snake_case from direct DB and camelCase from schema
-  const source = review.source || review.source;
-  const content = review.content || review.content;
-  const rating = review.rating || review.rating;
-  const status = review.status || review.status || 'new';
-  const customerName = review.customerName || review.customer_name || 'Anonymous';
-  const reviewTime = review.reviewTime || review.review_time;
-  const aiResponse = review.aiResponse || review.ai_response;
-  const aiRespondedAt = review.aiRespondedAt || review.ai_responded_at;
+  const { source, comment, rating, status, customerName, date, aiResponse, aiRespondedAt } = getReviewData(review);
 
   const getSourceIcon = (source: string) => {
     if (!source) return <i className="ri-star-line mr-1"></i>;
@@ -91,7 +98,7 @@ function ReviewCard({ review }: { review: Review }) {
                   {getSourceIcon(source)}
                   {source && source.charAt(0).toUpperCase() + source.slice(1)}
                   <span className="mx-2">•</span>
-                  {reviewTime && format(new Date(reviewTime), "MMM d, yyyy")}
+                  {date && format(new Date(date), "MMM d, yyyy")}
                 </div>
               </div>
             </div>
@@ -106,7 +113,7 @@ function ReviewCard({ review }: { review: Review }) {
       </CardHeader>
       <CardContent>
         <p className="text-neutral-700">
-          "{content}"
+          "{comment}"
         </p>
 
         {expanded && aiResponse && (
@@ -122,7 +129,7 @@ function ReviewCard({ review }: { review: Review }) {
         )}
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-3">
-        {review.aiResponse ? (
+        {aiResponse ? (
           <Button variant="outline" size="sm" onClick={() => setExpanded(!expanded)}>
             {expanded ? "Hide Response" : "Show Response"}
           </Button>

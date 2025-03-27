@@ -41,17 +41,24 @@ function SocialPlatformIcon({ platform }: { platform: string }) {
   }
 }
 
+// Helper function to safely access social media data with database field name fallbacks
+const getSocialData = (post: any) => {
+  return {
+    platform: post.platform || '',
+    author: post.author || '',
+    content: post.content || '',
+    status: post.status || 'pending',
+    postTime: post.postTime || post.post_time || new Date(),
+    aiResponse: post.aiResponse || post.ai_response,
+    aiRespondedAt: post.aiRespondedAt || post.ai_responded_at
+  };
+};
+
 function SocialCard({ post }: { post: SocialMedia | any }) {
   const [expanded, setExpanded] = useState(false);
   
   // Handle both snake_case from direct DB and camelCase from schema
-  const platform = post.platform;
-  const author = post.author;
-  const content = post.content;
-  const status = post.status;
-  const postTime = post.postTime || post.post_time;
-  const aiResponse = post.aiResponse || post.ai_response;
-  const aiRespondedAt = post.aiRespondedAt || post.ai_responded_at;
+  const { platform, author, content, status, postTime, aiResponse, aiRespondedAt } = getSocialData(post);
   
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -153,11 +160,12 @@ export default function Social() {
   }
   
   // Group posts by platform
-  const platforms = socialPosts ? [...new Set(socialPosts.map(post => post.platform))] : [];
+  const platforms = socialPosts ? 
+    [...new Set(socialPosts.map(post => getSocialData(post).platform))] : 
+    [];
   
   const filteredPosts = socialPosts?.filter(post => {
-    const status = post.status || '';
-    const platform = post.platform || '';
+    const { status, platform } = getSocialData(post);
     
     if (activeTab === "all") return true;
     if (activeTab === "pending") return status.toLowerCase() === "pending";
@@ -166,11 +174,11 @@ export default function Social() {
   }) || [];
   
   const pendingCount = socialPosts?.filter(post => 
-    (post.status || '').toLowerCase() === "pending"
+    getSocialData(post).status.toLowerCase() === "pending"
   ).length || 0;
   
   const respondedCount = socialPosts?.filter(post => 
-    (post.status || '').toLowerCase() === "responded"
+    getSocialData(post).status.toLowerCase() === "responded"
   ).length || 0;
   
   return (
