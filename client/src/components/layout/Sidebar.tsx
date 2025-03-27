@@ -131,7 +131,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 });
                 
                 // Use setLocation instead of window.location for smoother transition
-                setLocation('/auth/signin');
+                setLocation('/auth');
               }}
               className="text-sm text-gray-300 hover:text-white p-1 rounded-full"
               title="Logout"

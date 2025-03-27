@@ -35,7 +35,7 @@ export default function TopNav({ openSidebar }: TopNavProps) {
     });
     
     // Use setLocation instead of window.location for smoother transition
-    setLocation('/auth/signin');
+    setLocation('/auth');
   };
 
   return (

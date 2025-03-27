@@ -42,7 +42,7 @@ export default function SignUp() {
           description: "Redirecting to login...",
         });
         setTimeout(() => {
-          window.location.href = "/auth/signin";
+          window.location.href = "/auth";
         }, 2000);
       } else {
         console.error("Signup error:", data);
@@ -132,7 +132,7 @@ export default function SignUp() {
             
             <p className="text-sm text-center text-gray-600">
               Already have an account?{" "}
-              <a href="/auth/signin" className="text-primary hover:underline">
+              <a href="/auth" className="text-primary hover:underline">
                 Sign In
               </a>
             </p>

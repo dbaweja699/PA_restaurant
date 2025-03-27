@@ -44,7 +44,7 @@ export function Protected({ children }: { children: React.ReactNode }) {
       }
       
       // Use the wouter setLocation rather than window.location.href to avoid hard refresh
-      setLocation('/auth/signin');
+      setLocation('/auth');
     }
   }, [user, isLoading, error, setLocation, redirecting]);
 
