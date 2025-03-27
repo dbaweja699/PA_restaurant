@@ -14,9 +14,14 @@ type TopNavProps = {
   openSidebar: () => void;
 };
 
-export function TopNav({ openSidebar }: TopNavProps) {
+export default function TopNav({ openSidebar }: TopNavProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [, setLocation] = useLocation();
+
+  const handleSignOut = () => {
+    setLocation('/signin');
+  };
+
   return (
     <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
       <button 
@@ -26,7 +31,7 @@ export function TopNav({ openSidebar }: TopNavProps) {
       >
         <MenuIcon className="h-6 w-6" />
       </button>
-      
+
       <div className="flex-1 px-4 flex justify-between">
         <div className="flex-1 flex items-center">
           <div className="max-w-2xl w-full">
@@ -43,53 +48,21 @@ export function TopNav({ openSidebar }: TopNavProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="ml-4 flex items-center md:ml-6 space-x-4">
-          <button className="p-1 rounded-full hover:bg-neutral-100 relative">
-            <BellIcon className="h-5 w-5 text-neutral-500" />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-secondary rounded-full"></span>
-          </button>
-          
-          <button className="p-1 rounded-full hover:bg-neutral-100">
-            <HelpCircleIcon className="h-5 w-5 text-neutral-500" />
-          </button>
-          
-          <div className="md:hidden flex items-center">
-            {/* This will be populated with user avatar for mobile, 
-                but we're handling the user profile in the Sidebar component */}
-          </div>
+          <Button variant="ghost" size="icon">
+            <BellIcon className="h-5 w-5" />
+          </Button>
+
+          <Button variant="ghost" size="icon">
+            <HelpCircleIcon className="h-5 w-5" />
+          </Button>
+
+          <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <LogOutIcon className="h-5 w-5" />
+          </Button>
         </div>
       </div>
     </div>
-  );
-}
-export default function TopNav() {
-  const [, setLocation] = useLocation();
-
-  const handleSignOut = () => {
-    // Clear any auth tokens/state if needed
-    setLocation('/signin');
-  };
-
-  return (
-    <header className="flex h-16 items-center gap-4 border-b bg-background px-6">
-      <Input
-        type="search"
-        placeholder="Search..."
-        className="w-[300px]"
-        prefix={<SearchIcon className="h-4 w-4 text-muted-foreground" />}
-      />
-      <div className="ml-auto flex items-center gap-4">
-        <Button variant="ghost" size="icon">
-          <BellIcon className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon">
-          <HelpCircleIcon className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" onClick={handleSignOut}>
-          <LogOutIcon className="h-4 w-4" />
-        </Button>
-      </div>
-    </header>
   );
 }
