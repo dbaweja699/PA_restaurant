@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import logoImg from "@assets/logoo.png";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SignUp() {
+  const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -34,9 +38,12 @@ export default function SignUp() {
       const data = await response.json();
       
       if (response.ok) {
-        setSuccess("Account created successfully! Redirecting to login...");
+        toast({
+          title: "Account created successfully!",
+          description: "Redirecting to login...",
+        });
         setTimeout(() => {
-          setLocation("/signin");
+          setLocation("/auth/signin");
         }, 2000);
       } else {
         console.error("Signup error:", data);

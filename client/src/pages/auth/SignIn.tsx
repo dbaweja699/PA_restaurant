@@ -69,7 +69,8 @@ export default function SignIn() {
           description: `Welcome back, ${userData.full_name || userData.username}!`,
         });
         
-        setLocation("/");
+        // Use window.location for a hard refresh to ensure all state is updated
+        window.location.href = "/";
       } else {
         const data = await response.json();
         console.error("Sign in failed:", data);
@@ -135,7 +136,7 @@ export default function SignIn() {
             
             <p className="text-sm text-center text-gray-600">
               Don't have an account?{" "}
-              <a href="/signup" className="text-primary hover:underline">
+              <a href="/auth/signup" className="text-primary hover:underline">
                 Sign Up
               </a>
             </p>
