@@ -2,14 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
-import { insertCallSchema, insertChatSchema, insertReviewSchema, insertOrderSchema, insertBookingSchema, insertSocialMediaSchema } from "@shared/schema";
+import { insertCallSchema, insertChatSchema, insertReviewSchema, insertOrderSchema, insertBookingSchema, insertSocialMediaSchema } from "../shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for RestaurantAI Assistant
   const apiPrefix = "/api";
   
-  // Dashboard
-  app.get(`${apiPrefix}/dashboard/stats`, async (req, res) => {
+  // Dashboard stats endpoint will be implemented below
 
   // Auth routes
   app.post(`${apiPrefix}/auth/signup`, async (req, res) => {
@@ -41,10 +40,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       
+      // Verify user exists in our database
       const user = await storage.getUserByUsername(username);
-      if (!user || user.password !== password) {
+      
+      if (!user) {
+        console.log(`Authentication failed: Username "${username}" not found in database`);
         return res.status(401).json({ error: "Invalid credentials" });
       }
+      
+      // Check if password matches 
+      // In production, we would use bcrypt to compare hashed passwords
+      if (user.password !== password) {
+        console.log(`Authentication failed: Incorrect password for user "${username}"`);
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+      
+      console.log(`User "${username}" authenticated successfully`);
       
       // For security, don't send the password back
       const { password: _, ...userWithoutPassword } = user;
@@ -55,7 +66,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // Dashboard stats
+  app.get(`${apiPrefix}/dashboard/stats`, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats || { 
@@ -105,8 +117,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Calls
   app.get(`${apiPrefix}/calls`, async (req, res) => {
-    const calls = await storage.getCalls();
-    res.json(calls);
+    try {
+      const calls = await storage.getCalls();
+      res.json(calls || []);
+    } catch (error) {
+      console.error('Error fetching calls:', error);
+      res.status(500).json({ error: "Error fetching calls" });
+    }
   });
   
   app.get(`${apiPrefix}/calls/:id`, async (req, res) => {
@@ -146,8 +163,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Chats
   app.get(`${apiPrefix}/chats`, async (req, res) => {
-    const chats = await storage.getChats();
-    res.json(chats);
+    try {
+      const chats = await storage.getChats();
+      res.json(chats || []);
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      res.status(500).json({ error: "Error fetching chats" });
+    }
   });
   
   app.get(`${apiPrefix}/chats/:id`, async (req, res) => {
@@ -233,8 +255,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Orders
   app.get(`${apiPrefix}/orders`, async (req, res) => {
-    const orders = await storage.getOrders();
-    res.json(orders);
+    try {
+      const orders = await storage.getOrders();
+      res.json(orders || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      res.status(500).json({ error: "Error fetching orders" });
+    }
   });
   
   app.get(`${apiPrefix}/orders/:id`, async (req, res) => {
@@ -320,8 +347,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Social Media
   app.get(`${apiPrefix}/social`, async (req, res) => {
-    const social = await storage.getSocialMedia();
-    res.json(social);
+    try {
+      const social = await storage.getSocialMedia();
+      res.json(social || []);
+    } catch (error) {
+      console.error('Error fetching social media:', error);
+      res.status(500).json({ error: "Error fetching social media" });
+    }
   });
   
   app.get(`${apiPrefix}/social/:id`, async (req, res) => {

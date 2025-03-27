@@ -9,7 +9,7 @@ import {
   type ActivityLog, type InsertActivityLog,
   type SocialMedia, type InsertSocialMedia,
   type DashboardStats, type InsertDashboardStats
-} from "@shared/schema";
+} from "../shared/schema";
 
 export interface IStorage {
   // User operations

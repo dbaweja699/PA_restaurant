@@ -12,7 +12,7 @@ import {
   ActivityLog, InsertActivityLog,
   SocialMedia, InsertSocialMedia,
   DashboardStats, InsertDashboardStats
-} from "@shared/schema";
+} from "../shared/schema";
 
 export class SupabaseStorage implements IStorage {
   // User methods
