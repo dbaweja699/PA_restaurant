@@ -84,8 +84,8 @@ export default {
           to: { transform: "scale(1)", opacity: "1" },
         },
         "pulse-glow": {
-          "0%, 100%": { opacity: "1", boxShadow: "0 0 15px rgba(59, 130, 246, 0.5)" },
-          "50%": { opacity: "0.8", boxShadow: "0 0 25px rgba(59, 130, 246, 0.8)" }
+          "0%, 100%": { opacity: "1", boxShadow: "0 0 15px rgba(82, 41, 189, 0.5)" },
+          "50%": { opacity: "0.8", boxShadow: "0 0 25px rgba(19, 87, 191, 0.8)" }
         }
       },
       animation: {
