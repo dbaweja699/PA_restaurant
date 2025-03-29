@@ -38,38 +38,29 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { icon: "ri-global-line", label: "Social Media", path: "/social" },
     { icon: "ri-settings-line", label: "Settings", path: "/settings" },
   ];
-  
+
   const handleCloseSidebar = () => {
     setIsOpen(false);
   };
-  
+
   // Base classes for the sidebar
   const sidebarClasses = cn(
     "bg-primary text-white w-64 flex flex-col",
     isOpen ? "fixed inset-y-0 left-0 z-50" : "hidden md:flex md:flex-shrink-0"
   );
-  
+
   return (
     <div className={sidebarClasses}>
-      <div className="flex items-center justify-center h-24 px-4 border-b border-primary-light">
-        <div className="flex flex-col items-center">
-          <img src={logoImg} alt="Dblytics Logo" className="h-28 w-28 mb-1" />
+      <div className="flex items-center justify-start h-auto py-6 px-6 border-b border-primary-light">
+        <div className="flex flex-col items-start w-full">
+          <img src={logoImg} alt="Dblytics Logo" className="h-20 w-20 mb-3" />
           <h1 className="text-sm font-display font-bold tracking-wide">
             <span className="text-white">Dblytics</span>
-            <span className="block text-xs text-center text-gray-300">Restaurant AI Assistant</span>
+            <span className="block text-xs text-gray-300 mt-1">Restaurant AI Assistant</span>
           </h1>
         </div>
-        
-        {isOpen && (
-          <button 
-            className="md:hidden absolute right-4 text-white"
-            onClick={handleCloseSidebar}
-          >
-            <i className="ri-close-line text-xl"></i>
-          </button>
-        )}
       </div>
-      
+
       <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
         <nav className="flex-1 px-2 space-y-1">
           {navigationItems.map((item) => {
@@ -80,7 +71,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 ? "bg-primary-light"
                 : "hover:bg-primary-light"
             );
-            
+
             return (
               <Link 
                 key={item.path} 
@@ -95,7 +86,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           })}
         </nav>
       </div>
-      
+
       {user && (
         <div className="border-t border-primary-light">
           <div className="flex items-center p-4">
@@ -120,16 +111,16 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               onClick={() => {
                 // Clear token
                 localStorage.removeItem('auth_token');
-                
+
                 // Use queryClient to clear all cached data
                 queryClient.clear();
-                
+
                 // Notify user
                 toast({
                   title: "Logged out successfully",
                   description: "You have been logged out of your account",
                 });
-                
+
                 // Use setLocation instead of window.location for smoother transition
                 setLocation('/auth');
               }}
