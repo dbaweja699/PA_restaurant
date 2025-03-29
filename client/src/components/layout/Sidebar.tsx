@@ -53,7 +53,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     <div className={sidebarClasses}>
       <div className="flex items-center justify-center h-24 px-4 border-b border-primary-light">
         <div className="flex flex-col items-center">
-          <img src={logoImg} alt="Dblytics Logo" className="h-14 w-14 mb-1" />
+          <img src={logoImg} alt="Dblytics Logo" className="h-28 w-28 mb-1" />
           <h1 className="text-sm font-display font-bold tracking-wide">
             <span className="text-white">Dblytics</span>
             <span className="block text-xs text-center text-gray-300">Restaurant AI Assistant</span>
