@@ -116,6 +116,7 @@ export const orders = pgTable("orders", {
   orderTime: timestamp("order_time").notNull().defaultNow(),
   status: text("status").notNull().default("processing"),
   type: text("type").notNull(), // delivery, takeout, dine-in
+  tableNumber: text("table_number"), // Table number for dine-in orders
   items: json("items").notNull(),
   total: text("total").notNull(),
   aiProcessed: boolean("ai_processed").notNull().default(true),
@@ -126,6 +127,7 @@ export const insertOrderSchema = createInsertSchema(orders).pick({
   orderTime: true,
   status: true,
   type: true,
+  tableNumber: true,
   items: true,
   total: true,
   aiProcessed: true,

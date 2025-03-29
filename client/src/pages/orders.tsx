@@ -20,8 +20,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { ShoppingCart, Truck, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingCart, Truck, Users, ChevronDown, ChevronUp, Plus, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { OrderForm } from "@/components/order/OrderForm";
 
 function OrderDetailsRow({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
@@ -67,6 +68,11 @@ function OrderDetailsRow({ order }: { order: Order }) {
           <div className="flex items-center">
             {getTypeIcon()}
             <span className="ml-2">{order.type}</span>
+            {order.type === "dine-in" && order.tableNumber && (
+              <span className="ml-1 text-xs text-muted-foreground">
+                (Table {order.tableNumber})
+              </span>
+            )}
           </div>
         </TableCell>
         <TableCell>
@@ -111,7 +117,13 @@ function OrderDetailsRow({ order }: { order: Order }) {
               </div>
 
               <div className="mt-4 pt-2 border-t border-neutral-200">
-                <h4 className="font-medium mb-2">Processing Details</h4>
+                <h4 className="font-medium mb-2">Order Details</h4>
+                {order.type === "dine-in" && order.tableNumber && (
+                  <div className="flex justify-between mb-2">
+                    <span className="text-neutral-600">Table Number</span>
+                    <span className="font-medium">{order.tableNumber}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-neutral-600">AI Processed</span>
                   <Badge variant={order.aiProcessed ? "default" : "outline"} className="bg-accent">
@@ -138,6 +150,7 @@ export default function Orders() {
   });
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showOrderForm, setShowOrderForm] = useState(false);
 
   if (isLoading) {
     return (
@@ -174,11 +187,24 @@ export default function Orders() {
 
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-display font-bold text-neutral-900">Orders</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Track and manage orders processed by the AI assistant
-        </p>
+      <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-neutral-900">Orders</h1>
+          <p className="mt-1 text-sm text-neutral-600">
+            Track and manage orders processed by the AI assistant
+          </p>
+        </div>
+        
+        <div className="mt-4 md:mt-0 flex items-center space-x-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setShowOrderForm(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Order
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -278,6 +304,12 @@ export default function Orders() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Add Order Form */}
+      <OrderForm
+        open={showOrderForm}
+        onOpenChange={setShowOrderForm}
+      />
     </div>
   );
 }

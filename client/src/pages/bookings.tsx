@@ -33,7 +33,8 @@ import {
   Users, 
   Clock, 
   Info,
-  CalendarDays
+  CalendarDays,
+  Plus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -49,6 +50,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { BookingForm } from "@/components/booking/BookingForm";
 
 export default function Bookings() {
   const { data: bookings, isLoading } = useQuery<Booking[]>({ 
@@ -62,6 +64,7 @@ export default function Bookings() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showBookingForm, setShowBookingForm] = useState(false);
   
   if (isLoading) {
     return (
@@ -132,6 +135,15 @@ export default function Bookings() {
         </div>
         
         <div className="mt-4 md:mt-0 flex items-center space-x-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setShowBookingForm(true)}
+            className="mr-2"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Booking
+          </Button>
           <Button
             variant={viewMode === "calendar" ? "default" : "outline"}
             size="sm"
@@ -379,6 +391,12 @@ export default function Bookings() {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Add Booking Form */}
+      <BookingForm
+        open={showBookingForm}
+        onOpenChange={setShowBookingForm}
+      />
     </div>
   );
 }
