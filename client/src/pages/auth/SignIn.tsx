@@ -89,8 +89,8 @@ export default function SignIn() {
       <div className="w-full max-w-4xl flex overflow-hidden rounded-lg shadow-lg">
         {/* Left side - form */}
         <div className="w-full md:w-1/2 bg-white p-8">
-          <div className="flex justify-center mb-6">
-            <img src={logoImg} alt="Dblytics Logo" className="h-12 w-12" />
+          <div className="flex justify-start px-8 py-6">
+            <img src={logoImg} alt="Dblytics Logo" className="h-24 w-24" />
           </div>
           
           <h1 className="text-2xl font-bold text-center mb-6">Sign in to your account</h1>
