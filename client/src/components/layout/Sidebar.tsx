@@ -43,18 +43,18 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     setIsOpen(false);
   };
 
-  // Base classes for the sidebar
+  // Base classes for the sidebar - matching the exact logo gradient
   const sidebarClasses = cn(
-    "bg-gradient-to-r from-[hsl(270,80%,55%)] to-[hsl(210,80%,55%)] text-white w-72 flex flex-col",
+    "bg-gradient-to-r from-[#5229bd] to-[#1357bf] text-white w-72 flex flex-col",
     isOpen ? "fixed inset-y-0 left-0 z-50" : "hidden md:flex md:flex-shrink-0"
   );
 
   return (
     <div className={sidebarClasses}>
-      <div className="flex items-center justify-start h-auto py-6 px-6">
-        <div className="flex flex-col items-start w-full">
-          <img src={logoImg} alt="Restaurant AI Assistant Logo" className="w-20 h-auto mb-2" />
-          <h1 className="text-xl font-bold mt-2 px-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+      <div className="flex items-center justify-start h-auto py-6 px-4">
+        <div className="flex flex-col items-center w-full">
+          <img src={logoImg} alt="Restaurant AI Assistant Logo" className="w-full h-auto mb-4" />
+          <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent tracking-tight">
             Restaurant AI Assistant
           </h1>
         </div>
