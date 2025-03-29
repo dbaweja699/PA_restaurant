@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import logoImg from "@/assets/logo.png";
+import logoImg from "@/assets/dblytics-logo.png";
 
 export default function SignIn() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
@@ -89,11 +89,14 @@ export default function SignIn() {
       <div className="w-full max-w-4xl flex overflow-hidden rounded-lg shadow-lg">
         {/* Left side - form */}
         <div className="w-full md:w-1/2 bg-white p-8">
-          <div className="flex justify-center mb-6">
-            <img src={logoImg} alt="Dblytics Logo" className="h-24 w-24" />
+          <div className="flex flex-col items-center mb-6">
+            <img src={logoImg} alt="Restaurant AI Assistant Logo" className="h-20 w-20 mb-2" />
+            <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+              Restaurant AI Assistant
+            </h1>
           </div>
           
-          <h1 className="text-2xl font-bold text-center mb-6">Sign in to your account</h1>
+          <h2 className="text-xl font-medium text-center mb-6">Sign in to your account</h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -141,12 +144,12 @@ export default function SignIn() {
         </div>
         
         {/* Right side - hero */}
-        <div className="hidden md:block md:w-1/2 bg-primary p-8 text-white">
+        <div className="hidden md:block md:w-1/2 bg-gradient-to-r from-[hsl(270,80%,55%)] to-[hsl(210,80%,55%)] p-8 text-white">
           <div className="h-full flex flex-col justify-center">
-            <h2 className="text-2xl font-bold mb-4">Restaurant AI Assistant</h2>
-            <p className="mb-6">
+            <h2 className="text-3xl font-bold mb-4 text-white">Restaurant AI Assistant</h2>
+            <p className="mb-6 text-white/90">
               Your all-in-one AI solution for managing customer interactions, reviews, 
-              orders, and social media presence. 
+              orders, and social media presence.
             </p>
             <ul className="space-y-2">
               <li className="flex items-center">

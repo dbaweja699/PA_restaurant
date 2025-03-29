@@ -39,10 +39,10 @@ export default function TopNav({ openSidebar }: TopNavProps) {
   };
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+    <div className="relative z-10 flex-shrink-0 flex h-16 bg-gradient-to-r from-[hsl(270,80%,55%)] via-[hsl(240,80%,55%)] to-[hsl(210,80%,55%)] shadow">
       <button 
         type="button" 
-        className="md:hidden px-4 text-primary"
+        className="md:hidden px-4 text-white"
         onClick={openSidebar}
       >
         <MenuIcon className="h-6 w-6" />
@@ -68,11 +68,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
         <div className="ml-4 flex items-center md:ml-6 space-x-4">
           <NotificationCenter />
 
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
             <HelpCircleIcon className="h-5 w-5" />
           </Button>
 
-          <Button variant="ghost" size="icon" onClick={handleSignOut}>
+          <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-white hover:bg-white/10">
             <LogOutIcon className="h-5 w-5" />
           </Button>
         </div>
