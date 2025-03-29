@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,20 +40,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 
-// Define the booking schema
 const bookingSchema = z.object({
-  customerName: z.string().min(2, { message: "Customer name is required" }),
-  bookingTime: z.date({
-    required_error: "Please select a date and time",
-  }),
-  partySize: z.coerce.number().min(1, { message: "Must be at least 1 person" }),
-  specialOccasion: z.string().optional(),
+  customerName: z.string().min(1, "Customer name is required"),
+  partySize: z.number().min(1, "Party size must be at least 1"),
   notes: z.string().optional(),
-  status: z.string().default("confirmed"),
-  source: z.string().default("website"),
-  aiProcessed: z.boolean().default(false),
+  status: z.string(),
+  specialOccasion: z.string().optional(),
+  source: z.string(),
+  bookingTime: z.date(),
+  aiProcessed: z.boolean().default(false)
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
@@ -65,9 +63,8 @@ interface BookingFormProps {
 export function BookingForm({ open, onOpenChange }: BookingFormProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [timeValue, setTimeValue] = useState<string>("18:00");
+  const [timeValue, setTimeValue] = useState("18:00");
 
-  // Default values for the form
   const defaultValues: Partial<BookingFormValues> = {
     bookingTime: new Date(),
     partySize: 2,
@@ -81,50 +78,30 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
     defaultValues,
   });
 
-  // Create booking mutation
   const mutation = useMutation({
-    mutationFn: async (data: BookingFormValues) => {
-      // Combine date and time
-      const selectedDate = data.bookingTime;
-      const [hours, minutes] = timeValue.split(':').map(Number);
+    mutationFn: (data: BookingFormValues) => {
+      const formattedDate = new Date(data.bookingTime);
+      const [hours, minutes] = timeValue.split(':');
+      formattedDate.setHours(parseInt(hours), parseInt(minutes));
       
-      // Create a new date with the selected time
-      const bookingDateTime = new Date(selectedDate);
-      bookingDateTime.setHours(hours, minutes);
-      
-      // Format the data to send to the server
-      const bookingData = {
+      return apiRequest.post('/api/bookings', {
         ...data,
-        bookingTime: bookingDateTime.toISOString(),
-      };
-      
-      const response = await apiRequest("POST", "/api/bookings", bookingData);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create booking");
-      }
-      
-      return await response.json();
+        bookingTime: formattedDate.toISOString()
+      });
     },
     onSuccess: () => {
-      // Invalidate queries to refetch data
-      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
-      
-      // Show success message and close the form
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
       toast({
-        title: "Booking Created",
-        description: "The booking has been successfully created.",
-        variant: "default",
+        title: "Success",
+        description: "Booking created successfully",
       });
-      
-      form.reset();
       onOpenChange(false);
+      form.reset(defaultValues);
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create booking",
+        description: "Failed to create booking",
         variant: "destructive",
       });
     },
@@ -188,6 +165,9 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date() || date < new Date("1900-01-01")
+                          }
                           initialFocus
                         />
                       </PopoverContent>
@@ -196,88 +176,100 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
                   </FormItem>
                 )}
               />
-              
-              <FormItem className="flex flex-col">
-                <FormLabel>Time</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
+
+              <FormField
+                control={form.control}
+                name="partySize"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Party Size</FormLabel>
                     <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className="w-full pl-3 text-left font-normal"
-                      >
-                        {timeValue || <span>Pick a time</span>}
-                        <Clock className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        {...field}
+                        onChange={e => field.onChange(parseInt(e.target.value))}
+                      />
                     </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <div className="p-3 space-y-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        {["17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00"].map((time) => (
-                          <Button
-                            key={time}
-                            type="button"
-                            variant={timeValue === time ? "default" : "outline"}
-                            className="text-center"
-                            onClick={() => setTimeValue(time)}
-                          >
-                            {time}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </FormItem>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="partySize"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Party Size</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number" 
-                      min={1}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="source"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select source" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="website">Website</SelectItem>
+                        <SelectItem value="phone">Phone</SelectItem>
+                        <SelectItem value="walk-in">Walk-in</SelectItem>
+                        <SelectItem value="app">App</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="specialOccasion"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Special Occasion</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select value={field.value || ""} onValueChange={field.onChange}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select an occasion (optional)" />
+                        <SelectValue placeholder="Select occasion (optional)" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
-                      <SelectItem value="Birthday">Birthday</SelectItem>
-                      <SelectItem value="Anniversary">Anniversary</SelectItem>
-                      <SelectItem value="Business Meeting">Business Meeting</SelectItem>
-                      <SelectItem value="Celebration">Celebration</SelectItem>
+                      <SelectItem value="birthday">Birthday</SelectItem>
+                      <SelectItem value="anniversary">Anniversary</SelectItem>
+                      <SelectItem value="business">Business Meeting</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="notes"
