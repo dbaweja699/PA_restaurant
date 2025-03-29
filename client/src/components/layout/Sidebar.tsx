@@ -51,9 +51,9 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   return (
     <div className={sidebarClasses}>
-      <div className="flex items-center justify-start h-auto py-6 px-4">
+      <div className="flex items-center justify-center h-auto py-6 px-0">
         <div className="flex flex-col items-center w-full">
-          <img src={logoImg} alt="Restaurant AI Assistant Logo" className="w-full h-auto mb-4" />
+          <img src={logoImg} alt="Restaurant AI Assistant Logo" className="w-[100%] max-w-full h-auto mb-4" />
           <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent tracking-tight">
             Restaurant AI Assistant
           </h1>
