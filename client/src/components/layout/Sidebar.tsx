@@ -45,19 +45,15 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   // Base classes for the sidebar
   const sidebarClasses = cn(
-    "bg-primary text-white w-64 flex flex-col",
+    "bg-gradient-to-r from-[hsl(270,65%,50%)] to-[hsl(200,65%,50%)] text-white w-72 flex flex-col",
     isOpen ? "fixed inset-y-0 left-0 z-50" : "hidden md:flex md:flex-shrink-0"
   );
 
   return (
     <div className={sidebarClasses}>
-      <div className="flex items-center justify-start h-auto py-6 px-6 border-b border-primary-light">
+      <div className="flex items-center justify-start h-auto py-8 px-6">
         <div className="flex flex-col items-start w-full">
-          <img src={logoImg} alt="Dblytics Logo" className="w-full h-auto max-h-20 px-4 mb-3" />
-          <h1 className="text-sm font-display font-bold tracking-wide">
-            <span className="text-white">Dblytics</span>
-            <span className="block text-xs text-gray-300 mt-1">Restaurant AI Assistant</span>
-          </h1>
+          <img src={logoImg} alt="Dblytics Logo" className="w-full h-auto px-4" />
         </div>
       </div>
 

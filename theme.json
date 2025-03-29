@@ -1,6 +1,10 @@
 {
-  "variant": "tint",
-  "primary": "oklch(70% 0.1 290)",
-  "appearance": "light",
+  "variant": "gradient",
+  "primary": "oklch(65% 0.2 280)",
+  "gradient": {
+    "from": "hsl(270 65% 50%)",
+    "to": "hsl(200 65% 50%)"
+  },
+  "appearance": "dark",
   "radius": 1
 }
