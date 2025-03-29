@@ -90,7 +90,7 @@ export default function SignIn() {
         {/* Left side - form */}
         <div className="w-full md:w-1/2 bg-white p-8">
           <div className="flex flex-col items-center mb-6">
-            <img src={logoImg} alt="Restaurant AI Assistant Logo" className="h-20 w-20 mb-2" />
+            <img src={logoImg} alt="Restaurant AI Assistant Logo" className="h-20 w-40 mb-2 mx-auto" />
             <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
               Restaurant AI Assistant
             </h1>
