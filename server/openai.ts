@@ -94,6 +94,16 @@ export function setupOpenAIRoutes(app: Express) {
 
       const data = await response.json() as { content?: string; message?: string };
 
+      // Validate response from n8n
+      if (!data.content && !data.message) {
+        console.error('Invalid response from n8n webhook:', data);
+        return res.status(502).json({
+          content: "I apologize, but I'm having trouble processing your request right now. Could you please try again?",
+          model: "error_response",
+          sessionId: payload.sessionId
+        });
+      }
+
       // Try to create chat record in database, but don't fail if it doesn't work
       try {
         await storage.createChat({
@@ -112,7 +122,7 @@ export function setupOpenAIRoutes(app: Express) {
       }
 
       return res.json({
-        content: data.content || data.message || "Received your message. How can I assist you?",
+        content: data.content || data.message,
         model: "n8n",
         sessionId: payload.sessionId,
       });
