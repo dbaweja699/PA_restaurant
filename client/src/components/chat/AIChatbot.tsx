@@ -22,7 +22,7 @@ interface ChatMessage {
 }
 
 // n8n API integration
-const getAIResponse = async (message: string, chatHistory: ChatMessage[]): Promise<{ content: string, model?: string }> => {
+const getAIResponse = async (message: string, chatHistory: ChatMessage[], sessionId?: string): Promise<{ content: string, model?: string, sessionId?: string }> => {
   try {
     // Filter out system messages and only keep the most recent messages (max 10)
     const recentMessages = chatHistory
@@ -36,7 +36,9 @@ const getAIResponse = async (message: string, chatHistory: ChatMessage[]): Promi
     // Call our backend API
     const response = await apiRequest('POST', '/api/chatbot', {
       message,
-      chatHistory: recentMessages
+      chatHistory: recentMessages,
+      sessionId: sessionId || `user-${Date.now()}`,
+      customerName: localStorage.getItem('customerName') || 'Guest'
     });
 
     // Get the response as text first for debugging
