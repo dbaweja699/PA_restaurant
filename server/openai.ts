@@ -92,10 +92,11 @@ export function setupOpenAIRoutes(app: Express) {
         });
       }
 
-      const data = await response.json() as { content?: string; message?: string };
+      const data = await response.json() as { content?: string; message?: string; output?: string };
 
       // Validate response from n8n
-      if (!data.content && !data.message) {
+      const responseContent = data.content || data.message || data.output;
+      if (!responseContent) {
         console.error('Invalid response from n8n webhook:', data);
         return res.status(502).json({
           content: "I apologize, but I'm having trouble processing your request right now. Could you please try again?",
@@ -122,7 +123,7 @@ export function setupOpenAIRoutes(app: Express) {
       }
 
       return res.json({
-        content: data.content || data.message,
+        content: responseContent,
         model: "n8n",
         sessionId: payload.sessionId,
       });
