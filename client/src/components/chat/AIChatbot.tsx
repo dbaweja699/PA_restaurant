@@ -22,7 +22,30 @@ interface ChatMessage {
 }
 
 // n8n API integration
-const getAIResponse = async (message: string, chatHistory: ChatMessage[], sessionId?: string): Promise<{ content: string, model?: string, sessionId?: string }> => {
+// Get user info for session management
+const getUserInfo = () => {
+  const userInfo = {
+    id: localStorage.getItem('userId') || undefined,
+    name: localStorage.getItem('customerName') || localStorage.getItem('fullName') || 'Guest'
+  };
+  return userInfo;
+};
+
+// Create or retrieve session ID for chat continuity 
+const getChatSessionId = (): string => {
+  let sessionId = localStorage.getItem('chatSessionId');
+  
+  // Create a new session ID if one doesn't exist
+  if (!sessionId) {
+    const user = getUserInfo();
+    sessionId = `user-${user.id || 'guest'}-${Date.now()}`;
+    localStorage.setItem('chatSessionId', sessionId);
+  }
+  
+  return sessionId;
+};
+
+const getAIResponse = async (message: string, chatHistory: ChatMessage[]): Promise<{ content: string, model?: string, sessionId?: string }> => {
   try {
     // Filter out system messages and only keep the most recent messages (max 10)
     const recentMessages = chatHistory
@@ -33,28 +56,22 @@ const getAIResponse = async (message: string, chatHistory: ChatMessage[], sessio
         content: msg.content
       }));
 
-    // Call our backend API
+    const userInfo = getUserInfo();
+    const sessionId = getChatSessionId();
+
+    // Call our backend API with the exact format needed for n8n webhook
     const response = await apiRequest('POST', '/api/chatbot', {
       message,
       chatHistory: recentMessages,
-      sessionId: sessionId || `user-${Date.now()}`,
-      customerName: localStorage.getItem('customerName') || 'Guest'
+      sessionId: sessionId,
+      userId: userInfo.id,
+      customerName: userInfo.name,
+      timestamp: new Date().toISOString(),
+      source: "Website"
     });
 
-    // Get the response as text first for debugging
-    const responseText = await response.text();
-    console.log('API response:', responseText);
-    
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('Failed to parse API response as JSON:', parseError);
-      return {
-        content: "Received invalid response format from the server. Please contact support.",
-        model: "error_format"
-      };
-    }
+    // Get the response directly as JSON
+    const data = await response.json();
 
     if (!response.ok) {
       return {

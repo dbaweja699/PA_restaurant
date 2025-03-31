@@ -14,42 +14,73 @@ Your role is to help restaurant owners and staff use the platform effectively. Y
 Be concise, friendly, and professional. If you don't know the answer, admit it and suggest where they might find the information.
 Keep responses under 150 words unless a detailed explanation is specifically requested.`;
 
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/a8da29a8-c2cd-42ad-8b74-126ce7252b1d";
+const N8N_WEBHOOK_URL =
+  "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/a8da29a8-c2cd-42ad-8b74-126ce7252b1d";
+
+// Keep track of active sessions
+const activeSessions = new Map<string, {
+  userId?: number;
+  customerName: string;
+  status: string;
+  lastActive: Date;
+}>();
 
 // Setup route handler
 export function setupOpenAIRoutes(app: Express) {
   // Chat completion endpoint
   app.post("/api/chatbot", async (req: Request, res: Response) => {
     try {
-      const { message, chatHistory, customerName, sessionId } = req.body;
+      const { message, chatHistory, customerName, sessionId: requestSessionId, userId } = req.body;
 
       if (!message) {
         return res.status(400).json({ error: "Message is required" });
       }
 
-      // Format chat history for n8n (keeping original formatting)
-      const formattedHistory = chatHistory?.map((msg: any) => ({
-        role: msg.role,
-        content: msg.content,
-      })) || [];
+      // Create or retrieve session ID
+      const sessionId = requestSessionId || `user-${userId || 'guest'}-${Date.now()}`;
+      
+      // Get user info if available
+      let userInfo = null;
+      if (userId) {
+        try {
+          userInfo = await storage.getUser(userId);
+        } catch (error) {
+          console.warn("Could not retrieve user information:", error);
+        }
+      }
+      
+      // Update or create session information
+      activeSessions.set(sessionId, {
+        userId: userId,
+        customerName: customerName || (userInfo?.full_name || "Guest"),
+        status: "active",
+        lastActive: new Date()
+      });
+      
+      // Log active sessions occasionally (for debugging)
+      if (Math.random() < 0.1) {
+        console.log(`Active sessions: ${activeSessions.size}`);
+      }
 
-      // Create webhook request payload (using edited code's payload structure)
+      // Create webhook request payload with exact format needed for n8n
       const payload = {
         message,
-        sessionId: sessionId || `user-${Date.now()}`,
+        sessionId,
         timestamp: new Date().toISOString(),
         source: "Website",
-        customerName: customerName || "Guest",
-        status: "active"
+        customerName: customerName || (userInfo?.full_name || "Guest"),
+        status: activeSessions.get(sessionId)?.status || "active"
       };
 
-      // Send request to n8n webhook (using edited code's simpler fetch call)
+      console.log("Sending to n8n webhook:", JSON.stringify(payload));
+
+      // Send request to n8n webhook
       const response = await fetch(N8N_WEBHOOK_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -57,34 +88,40 @@ export function setupOpenAIRoutes(app: Express) {
         console.error(`n8n webhook returned ${response.status}`);
         return res.status(502).json({
           content: `Unable to connect to the n8n workflow. Status: ${response.status}`,
-          model: "error_connection"
+          model: "error_connection",
         });
       }
 
-      const data = await response.json();
+      const data = await response.json() as { content?: string; message?: string };
 
-      // Create chat record in database (using edited code's database interaction)
-      await storage.createChat({
-        customerName: payload.customerName,
-        status: "active",
-        startTime: new Date(),
-        topic: "General Inquiry",
-        source: "website",
-        summary: message.substring(0, 100),
-        aiHandled: true
-      });
+      // Try to create chat record in database, but don't fail if it doesn't work
+      try {
+        await storage.createChat({
+          customerName: payload.customerName,
+          status: "active",
+          startTime: new Date(),
+          topic: "General Inquiry",
+          source: "website",
+          summary: message.substring(0, 100),
+          aiHandled: true,
+        });
+        console.log("Chat record created successfully");
+      } catch (error) {
+        console.warn("Could not create chat record in database:", error);
+        // Continue without failing the request
+      }
 
       return res.json({
-        content: data.content || data.message,
+        content: data.content || data.message || "Received your message. How can I assist you?",
         model: "n8n",
-        sessionId: payload.sessionId
+        sessionId: payload.sessionId,
       });
-
     } catch (error: any) {
       console.error("Chatbot API error:", error);
-      return res.status(500).json({ 
-        content: "An error occurred while processing your request. Please try again later.",
-        model: "error_internal"
+      return res.status(500).json({
+        content:
+          "An error occurred while processing your request. Please try again later.",
+        model: "error_internal",
       });
     }
   });
