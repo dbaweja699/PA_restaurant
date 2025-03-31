@@ -14,7 +14,7 @@ Your role is to help restaurant owners and staff use the platform effectively. Y
 Be concise, friendly, and professional. If you don't know the answer, admit it and suggest where they might find the information.
 Keep responses under 150 words unless a detailed explanation is specifically requested.`;
 
-const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/a8da29a8-c2cd-42ad-8b74-126ce7252b1d";
+const N8N_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL || "https://n8n.yourdomain.com/webhook/ai-restaurant";
 
 // Setup route handler
 export function setupOpenAIRoutes(app: Express) {
