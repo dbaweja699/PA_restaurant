@@ -74,7 +74,9 @@ export function UpcomingBookings() {
     return "bg-neutral-100 text-neutral-800";
   };
   
-  const getStatusClass = (status: string) => {
+  const getStatusClass = (status: string | null | undefined) => {
+    if (!status) return "bg-neutral-100 text-neutral-600";
+    
     switch (status.toLowerCase()) {
       case "confirmed":
         return "bg-green-100 text-green-800";
@@ -116,7 +118,10 @@ export function UpcomingBookings() {
                 "text-xs px-2 py-1 rounded-md",
                 getStatusClass(booking.status)
               )}>
-                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                {booking.status ? 
+                  booking.status.charAt(0).toUpperCase() + booking.status.slice(1) : 
+                  "Unknown"
+                }
               </div>
             </div>
           ))}

@@ -120,8 +120,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Calculate active chats (chats with status "active" or "pending")
       const activeChats = chats.filter(chat => 
-        chat.status.toLowerCase() === "active" || 
-        chat.status.toLowerCase() === "pending"
+        chat && chat.status && (
+          chat.status.toLowerCase() === "active" || 
+          chat.status.toLowerCase() === "pending"
+        )
       ).length;
       
       // Calculate orders processed today
