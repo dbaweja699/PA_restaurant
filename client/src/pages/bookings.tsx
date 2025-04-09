@@ -399,7 +399,7 @@ export default function Bookings() {
             </div>
 
             <div className="flex justify-between border-t pt-4">
-              <Select defaultValue={selectedBooking.status.toLowerCase()}>
+              <Select defaultValue={selectedBooking.status?.toLowerCase() || "pending"}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Update Status" />
                 </SelectTrigger>
