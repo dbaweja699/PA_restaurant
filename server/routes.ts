@@ -9,23 +9,23 @@ import { pool } from "./db";
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for RestaurantAI Assistant
   const apiPrefix = "/api";
-  
+
   // Dashboard stats endpoint will be implemented below
 
   // Auth routes
   app.post(`${apiPrefix}/auth/signup`, async (req, res) => {
     try {
       const { username, password, full_name } = req.body;
-      
+
       console.log("Received signup request:", { username, full_name });
-      
+
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
         console.log("Username already exists:", username);
         return res.status(400).json({ error: "Username already exists" });
       }
-      
+
       try {
         // Create new user with proper field names that match schema
         const user = await storage.createUser({
@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           role: 'user',
           avatar_url: null
         });
-        
+
         console.log("User created successfully:", user);
         res.status(201).json({ message: "User created successfully", user });
       } catch (err: any) {
@@ -59,34 +59,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/auth/signin`, async (req, res) => {
     try {
       const { username, password } = req.body;
-      
+
       // Trim username to handle any whitespace issues
       const trimmedUsername = username.trim();
-      
+
       console.log(`Login attempt for user: ${trimmedUsername}`);
-      
+
       // Verify user exists in our database
       let user = await storage.getUserByUsername(trimmedUsername);
-      
+
       // If not found with trimmed username, try exact match
       if (!user) {
         user = await storage.getUserByUsername(username);
       }
-      
+
       if (!user) {
         console.log(`Authentication failed: Username "${trimmedUsername}" not found in database`);
         return res.status(401).json({ error: "Invalid credentials" });
       }
-      
+
       // Check if password matches 
       // In production, we would use bcrypt to compare hashed passwords
       if (user.password !== password) {
         console.log(`Authentication failed: Incorrect password for user "${trimmedUsername}"`);
         return res.status(401).json({ error: "Invalid credentials" });
       }
-      
+
       console.log(`User "${username}" authenticated successfully:`, user);
-      
+
       // For security, don't send the password back
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
@@ -101,14 +101,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Get stored stats
       const stats = await storage.getDashboardStats();
-      
+
       // Get actual counts from tables
       const calls = await storage.getCalls();
       const chats = await storage.getChats();
       const reviews = await storage.getReviews();
       const orders = await storage.getOrders();
       const bookings = await storage.getBookings();
-      
+
       // Calculate today's bookings
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -117,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bookingDate.setHours(0, 0, 0, 0);
         return bookingDate.getTime() === today.getTime();
       }).length;
-      
+
       // Calculate active chats (chats with status "active" or "pending")
       const activeChats = chats.filter(chat => 
         chat && chat.status && (
@@ -125,23 +125,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           chat.status.toLowerCase() === "pending"
         )
       ).length;
-      
+
       // Calculate orders processed today
       const todayOrders = orders.filter(order => {
         const orderDate = new Date(order.orderTime);
         orderDate.setHours(0, 0, 0, 0);
         return orderDate.getTime() === today.getTime();
       });
-      
+
       const ordersProcessed = todayOrders.length;
-      
+
       // Calculate total value of today's orders
       const ordersTotalValue = todayOrders.reduce((total, order) => {
         // Remove currency symbol and convert to number
         const value = parseFloat(order.total.replace(/[^0-9.-]+/g, ""));
         return total + (isNaN(value) ? 0 : value);
       }, 0).toFixed(2);
-      
+
       // Calculate calls handled today
       const callsHandledToday = calls.filter(call => {
         if (!call.startTime) return false;
@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const today = new Date();
         return callDate.toDateString() === today.toDateString();
       }).length;
-      
+
       // Update dashboard with real counts from database
       res.json({
         ...stats,
@@ -170,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching dashboard stats" });
     }
   });
-  
+
   app.get(`${apiPrefix}/dashboard/performance`, async (req, res) => {
     try {
       const metrics = await storage.getLatestPerformanceMetrics();
@@ -187,7 +187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching performance metrics" });
     }
   });
-  
+
   app.get(`${apiPrefix}/dashboard/activity`, async (req, res) => {
     try {
       const limit = parseInt(req.query.limit as string) || 10;
@@ -198,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching activity logs" });
     }
   });
-  
+
   // Calls
   app.get(`${apiPrefix}/calls`, async (req, res) => {
     try {
@@ -209,7 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching calls" });
     }
   });
-  
+
   app.get(`${apiPrefix}/calls/:id`, async (req, res) => {
     const id = parseInt(req.params.id);
     const call = await storage.getCallById(id);
@@ -218,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json(call);
   });
-  
+
   app.post(`${apiPrefix}/calls`, async (req, res) => {
     try {
       const validatedData = insertCallSchema.parse(req.body);
@@ -228,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid call data" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/calls/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -236,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!call) {
         return res.status(404).json({ error: "Call not found" });
       }
-      
+
       const validatedData = insertCallSchema.partial().parse(req.body);
       const updatedCall = await storage.updateCall(id, validatedData);
       res.json(updatedCall);
@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid call data" });
     }
   });
-  
+
   // Chats
   app.get(`${apiPrefix}/chats`, async (req, res) => {
     try {
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching chats" });
     }
   });
-  
+
   app.get(`${apiPrefix}/chats/:id`, async (req, res) => {
     const id = parseInt(req.params.id);
     const chat = await storage.getChatById(id);
@@ -264,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json(chat);
   });
-  
+
   app.post(`${apiPrefix}/chats`, async (req, res) => {
     try {
       const validatedData = insertChatSchema.parse(req.body);
@@ -274,7 +274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid chat data" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/chats/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -282,7 +282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!chat) {
         return res.status(404).json({ error: "Chat not found" });
       }
-      
+
       const validatedData = insertChatSchema.partial().parse(req.body);
       const updatedChat = await storage.updateChat(id, validatedData);
       res.json(updatedChat);
@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid chat data" });
     }
   });
-  
+
   // Reviews
   app.get(`${apiPrefix}/reviews`, async (req, res) => {
     try {
@@ -301,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching reviews" });
     }
   });
-  
+
   app.get(`${apiPrefix}/reviews/:id`, async (req, res) => {
     const id = parseInt(req.params.id);
     const review = await storage.getReviewById(id);
@@ -310,7 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json(review);
   });
-  
+
   app.post(`${apiPrefix}/reviews`, async (req, res) => {
     try {
       const validatedData = insertReviewSchema.parse(req.body);
@@ -320,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid review data" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/reviews/:id`, async (req, res) => {
     try {
       console.log(`PATCH request for review ID: ${req.params.id}`, req.body);
@@ -328,22 +328,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid review ID, must be a number" });
       }
-      
+
       const review = await storage.getReviewById(id);
       if (!review) {
         console.log(`Review with ID ${id} not found`);
         return res.status(404).json({ error: "Review not found" });
       }
-      
+
       console.log(`Found review:`, review);
-      
+
       try {
-        const validatedData = insertReviewSchema.partial().parse(req.body);
+        // Check each field explicitly in validation
+        const validatedData = {
+          status: req.body.status,
+          posted_response: req.body.posted_response,
+          response_type: req.body.response_type
+        };
         console.log(`Validated data:`, validatedData);
-        
+
         const updatedReview = await storage.updateReview(id, validatedData);
         console.log(`Updated review:`, updatedReview);
-        
+
         res.json(updatedReview);
       } catch (validationError) {
         console.error('Validation error:', validationError);
@@ -360,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Orders
   app.get(`${apiPrefix}/orders`, async (req, res) => {
     try {
@@ -371,7 +376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching orders" });
     }
   });
-  
+
   app.get(`${apiPrefix}/orders/:id`, async (req, res) => {
     const id = parseInt(req.params.id);
     const order = await storage.getOrderById(id);
@@ -380,7 +385,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json(order);
   });
-  
+
   app.post(`${apiPrefix}/orders`, async (req, res) => {
     try {
       const validatedData = insertOrderSchema.parse(req.body);
@@ -390,7 +395,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid order data" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/orders/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -398,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
-      
+
       const validatedData = insertOrderSchema.partial().parse(req.body);
       const updatedOrder = await storage.updateOrder(id, validatedData);
       res.json(updatedOrder);
@@ -406,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid order data" });
     }
   });
-  
+
   // Bookings
   app.get(`${apiPrefix}/bookings`, async (req, res) => {
     try {
@@ -417,7 +422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching bookings" });
     }
   });
-  
+
   app.get(`${apiPrefix}/bookings/:id`, async (req, res) => {
     const id = parseInt(req.params.id);
     const booking = await storage.getBookingById(id);
@@ -426,7 +431,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json(booking);
   });
-  
+
   app.post(`${apiPrefix}/bookings`, async (req, res) => {
     try {
       console.log('Attempting to create booking with data:', req.body);
@@ -452,7 +457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid booking data" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/bookings/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -460,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!booking) {
         return res.status(404).json({ error: "Booking not found" });
       }
-      
+
       const validatedData = insertBookingSchema.partial().parse(req.body);
       const updatedBooking = await storage.updateBooking(id, validatedData);
       res.json(updatedBooking);
@@ -468,29 +473,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid booking data" });
     }
   });
-  
+
   // Social Media
   app.get(`${apiPrefix}/social`, async (req, res) => {
     try {
       // First try to get social media through storage layer
       const social = await storage.getSocialMedia();
-      
+
       if (social && social.length > 0) {
         console.log('Successfully retrieved social media posts:', social.length);
         return res.json(social);
       }
-      
+
       // If storage layer returns empty, try direct database query
       console.log('Storage layer returned empty results, trying direct query...');
-      
+
       // Use the PostgreSQL connection pool already imported at the top
       const result = await pool.query('SELECT * FROM social_media ORDER BY post_time DESC');
-      
+
       if (result.rows && result.rows.length > 0) {
         console.log('Direct query retrieved social media posts:', result.rows.length);
         return res.json(result.rows);
       }
-      
+
       // If no social media posts exist
       console.log('No social media posts found in database');
       res.json([]);
@@ -499,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching social media" });
     }
   });
-  
+
   app.get(`${apiPrefix}/social/:id`, async (req, res) => {
     const id = parseInt(req.params.id);
     const social = await storage.getSocialMediaById(id);
@@ -508,7 +513,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json(social);
   });
-  
+
   app.post(`${apiPrefix}/social`, async (req, res) => {
     try {
       const validatedData = insertSocialMediaSchema.parse(req.body);
@@ -518,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid social media data" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/social/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -526,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!social) {
         return res.status(404).json({ error: "Social media post not found" });
       }
-      
+
       const validatedData = insertSocialMediaSchema.partial().parse(req.body);
       const updatedSocial = await storage.updateSocialMedia(id, validatedData);
       res.json(updatedSocial);
@@ -534,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid social media data" });
     }
   });
-  
+
   // User
   app.get(`${apiPrefix}/user`, async (req, res) => {
     try {
@@ -553,21 +558,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (err) {
             // Not a number, try as username
           }
-          
+
           // If not found by ID, try by username
           if (!user) {
             user = await storage.getUserByUsername(token);
           }
-          
+
           if (user) {
             return res.json(user);
           }
         }
       }
-      
+
       // If no valid session found, return 401
       return res.status(401).json({ error: "Not authenticated" });
-    
+
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ error: "Server error" });
@@ -598,12 +603,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (err) {
         // Not a number, try as username
       }
-      
+
       // If not found by ID, try by username
       if (!user) {
         user = await storage.getUserByUsername(token);
       }
-      
+
       if (!user) {
         return res.status(401).json({ error: "User not found" });
       }
@@ -632,7 +637,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user in Supabase/database
       try {
         console.log('Updating user:', user.id, 'with data:', updateData);
-        
+
         // Update in Supabase through storage layer
         // If your storage doesn't have updateUser, you'll need to modify IStorage and implement it
         if (storage.updateUser) {
@@ -656,7 +661,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Server error" });
     }
   });
-  
+
   // Notifications API routes
   app.get(`${apiPrefix}/notifications`, async (req, res) => {
     try {
@@ -668,7 +673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching notifications" });
     }
   });
-  
+
   app.get(`${apiPrefix}/notifications/unread`, async (req, res) => {
     try {
       const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
@@ -679,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Error fetching unread notifications" });
     }
   });
-  
+
   app.post(`${apiPrefix}/notifications`, async (req, res) => {
     try {
       const validatedData = insertNotificationSchema.parse(req.body);
@@ -693,7 +698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid notification data" });
     }
   });
-  
+
   app.patch(`${apiPrefix}/notifications/:id/read`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -707,7 +712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to mark notification as read" });
     }
   });
-  
+
   app.post(`${apiPrefix}/notifications/read-all`, async (req, res) => {
     try {
       const userId = req.body.userId ? parseInt(req.body.userId) : undefined;
@@ -718,7 +723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to mark all notifications as read" });
     }
   });
-  
+
   // Special endpoint for the n8n webhook to create AI agent notifications
   app.post(`${apiPrefix}/ai-agent/notify`, async (req, res) => {
     try {
@@ -726,7 +731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.body.message || !req.body.type) {
         return res.status(400).json({ error: "Missing required fields" });
       }
-      
+
       // Create notification from n8n webhook data
       const notification = await storage.createNotification({
         type: req.body.type,
@@ -735,7 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isRead: false,
         userId: req.body.userId || null
       });
-      
+
       res.status(201).json({ 
         success: true, 
         message: "Notification created successfully",
@@ -752,7 +757,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup AI chatbot routes
   setupOpenAIRoutes(app);
-  
+
   const httpServer = createServer(app);
   return httpServer;
 }
