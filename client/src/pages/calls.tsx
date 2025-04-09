@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Call } from "@shared/schema";
+import { useLocation } from 'react-router-dom';
 
 // TypeScript interface to handle both camelCase and snake_case formats
 interface CallData extends Partial<Call> {
@@ -37,7 +38,18 @@ export default function Calls() {
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+  const [, params] = useLocation();
+
+  useEffect(() => {
+    // Extract call ID from URL parameters
+    const urlParams = new URLSearchParams(params);
+    const callId = urlParams.get('id');
+    if (callId) {
+      // Set searchQuery to the call ID
+      setSearchQuery(callId);
+    }
+  }, [params]);
+
   const [expandedCallIds, setExpandedCallIds] = useState<Set<number>>(new Set());
   const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -63,11 +75,11 @@ export default function Calls() {
         },
         body: JSON.stringify({ status }),
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to update call status");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -114,7 +126,7 @@ export default function Calls() {
 
   const getStatusBadge = (status: string | null | undefined) => {
     if (!status) return <Badge variant="outline">Unknown</Badge>;
-    
+
     switch(status.toLowerCase()) {
       case 'completed':
         return <Badge variant="outline" className="bg-green-500 text-white hover:bg-green-600">Completed</Badge>;
@@ -154,15 +166,15 @@ export default function Calls() {
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      
+
       // Create a new audio element
       const audio = new Audio(url);
       audioRef.current = audio;
-      
+
       audio.onplay = () => setPlayingAudioId(id);
       audio.onpause = () => setPlayingAudioId(null);
       audio.onended = () => setPlayingAudioId(null);
-      
+
       audio.play().catch(error => {
         console.error("Error playing audio:", error);
         toast({
@@ -190,10 +202,12 @@ export default function Calls() {
     const phoneNum = (call.phone_number || call.phoneNumber || '').toString().toLowerCase();
     const topicText = (call.topic || '').toString().toLowerCase();
     const summaryText = (call.summary || '').toString().toLowerCase();
-    
+    const idString = (call.id || '').toString().toLowerCase();
+
     return phoneNum.includes(searchQuery.toLowerCase()) ||
       topicText.includes(searchQuery.toLowerCase()) ||
-      summaryText.includes(searchQuery.toLowerCase());
+      summaryText.includes(searchQuery.toLowerCase()) ||
+      idString.includes(searchQuery.toLowerCase());
   }) || [];
 
   return (
@@ -257,7 +271,7 @@ export default function Calls() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                  
+
                   {expandedCallIds.has(call.id!) && (
                     <TableRow>
                       <TableCell colSpan={6} className="bg-muted/30 px-4 pb-4">
@@ -268,7 +282,7 @@ export default function Calls() {
                               <p className="text-sm text-muted-foreground">{call.summary}</p>
                             </div>
                           )}
-                          
+
                           {(call.call_recording_url || call.callRecordingUrl) && (
                             <div>
                               <h4 className="font-medium mb-1">Call Recording</h4>
@@ -291,7 +305,7 @@ export default function Calls() {
                                     </>
                                   )}
                                 </Button>
-                                
+
                                 {playingAudioId === call.id && (
                                   <span className="text-sm font-medium text-primary animate-pulse">
                                     <Volume2 size={16} className="inline mr-1" />
@@ -307,7 +321,7 @@ export default function Calls() {
                   )}
                 </Fragment>
               ))}
-              
+
               {filteredCalls.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">
