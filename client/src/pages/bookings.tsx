@@ -56,16 +56,16 @@ export default function Bookings() {
   const { data: bookings, isLoading } = useQuery<Booking[]>({ 
     queryKey: ['/api/bookings'],
   });
-  
+
   // Debug log to see what data we're getting from the API
   console.log("Bookings data received:", bookings);
-  
+
   // Initialize with undefined to show all bookings by default
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
-  
+
   if (isLoading) {
     return (
       <div className="py-6 px-4 sm:px-6 lg:px-8">
@@ -73,7 +73,7 @@ export default function Bookings() {
           <Skeleton className="h-8 w-64 mb-2" />
           <Skeleton className="h-4 w-96" />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">
             <Skeleton className="h-80 w-full" />
@@ -85,17 +85,17 @@ export default function Bookings() {
       </div>
     );
   }
-  
+
   // Debug the dates to see what's going on
   console.log("Selected date:", selectedDate);
-  
+
   const filteredBookings = bookings?.filter(booking => {
     if (!selectedDate) return true;
     const bookingDate = new Date(booking.bookingTime);
     console.log(`Comparing booking date ${bookingDate} with selected date ${selectedDate}`);
     return isSameDay(bookingDate, selectedDate);
   }) || [];
-  
+
   // Group bookings by time slot for calendar view
   const bookingsByTime: Record<string, Booking[]> = {};
   filteredBookings.forEach(booking => {
@@ -105,12 +105,12 @@ export default function Bookings() {
     }
     bookingsByTime[timeKey].push(booking);
   });
-  
+
   // Sort time slots
   const sortedTimeSlots = Object.keys(bookingsByTime).sort((a, b) => {
     return new Date(`01/01/2023 ${a}`).getTime() - new Date(`01/01/2023 ${b}`).getTime();
   });
-  
+
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "confirmed":
@@ -123,7 +123,7 @@ export default function Bookings() {
         return <Badge className="bg-neutral-100 text-neutral-800">{status}</Badge>;
     }
   };
-  
+
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
@@ -133,7 +133,7 @@ export default function Bookings() {
             Manage reservations and bookings handled by your AI assistant
           </p>
         </div>
-        
+
         <div className="mt-4 md:mt-0 flex items-center space-x-2">
           <Button
             variant="default"
@@ -162,7 +162,7 @@ export default function Bookings() {
           </Button>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Calendar Sidebar */}
         <div className="md:col-span-1">
@@ -177,7 +177,7 @@ export default function Bookings() {
                 onSelect={setSelectedDate}
                 className="rounded-md border"
               />
-              
+
               <div className="mt-6">
                 <h3 className="text-sm font-medium mb-2">Summary</h3>
                 <div className="space-y-2 text-sm">
@@ -202,7 +202,7 @@ export default function Bookings() {
             </CardContent>
           </Card>
         </div>
-        
+
         {/* Main Content */}
         <div className="md:col-span-2">
           <Card>
@@ -236,7 +236,7 @@ export default function Bookings() {
                           >
                             <div className="flex justify-between items-start">
                               <div>
-                                <h4 className="font-medium">{booking.customerName}</h4>
+                                <h4 className="font-medium">{booking.customer_name || booking.customerName}</h4>
                                 <div className="flex items-center text-sm text-neutral-600 mt-1">
                                   <Users className="h-3 w-3 mr-1" />
                                   {booking.partySize} {booking.partySize > 1 ? 'people' : 'person'}
@@ -282,7 +282,7 @@ export default function Bookings() {
                             {format(new Date(booking.bookingTime), "h:mm a")}
                           </div>
                         </TableCell>
-                        <TableCell>{booking.customerName}</TableCell>
+                        <TableCell>{booking.customer_name || booking.customerName}</TableCell>
                         <TableCell>{booking.partySize}</TableCell>
                         <TableCell>
                           {booking.notes || booking.specialOccasion || "-"}
@@ -313,7 +313,7 @@ export default function Bookings() {
           </Card>
         </div>
       </div>
-      
+
       {/* Booking Details Dialog */}
       {selectedBooking && (
         <Dialog 
@@ -324,10 +324,10 @@ export default function Bookings() {
             <DialogHeader>
               <DialogTitle>Booking Details</DialogTitle>
               <DialogDescription>
-                Reservation information for {selectedBooking.customerName}
+                Reservation information for {selectedBooking.customer_name || selectedBooking.customerName}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4 py-4">
               <div className="flex flex-col space-y-1.5">
                 <h3 className="text-sm font-semibold">Date & Time</h3>
@@ -340,7 +340,7 @@ export default function Bookings() {
                   {format(new Date(selectedBooking.bookingTime), "h:mm a")}
                 </p>
               </div>
-              
+
               <div className="flex flex-col space-y-1.5">
                 <h3 className="text-sm font-semibold">Customer Details</h3>
                 <p className="flex items-center text-sm">
@@ -358,7 +358,7 @@ export default function Bookings() {
                   </p>
                 )}
               </div>
-              
+
               <div className="flex flex-col space-y-1.5">
                 <h3 className="text-sm font-semibold">Booking Information</h3>
                 <p className="flex items-center text-sm">
@@ -374,7 +374,7 @@ export default function Bookings() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex justify-between border-t pt-4">
               <Select defaultValue={selectedBooking.status.toLowerCase()}>
                 <SelectTrigger className="w-[180px]">
@@ -391,7 +391,7 @@ export default function Bookings() {
           </DialogContent>
         </Dialog>
       )}
-      
+
       {/* Add Booking Form */}
       <BookingForm
         open={showBookingForm}
