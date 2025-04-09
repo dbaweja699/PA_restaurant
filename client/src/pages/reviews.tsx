@@ -29,7 +29,10 @@ function StarRating({ rating }: { rating: number }) {
 
 // Helper function to safely access review data with database field name fallbacks
 const getReviewData = (review: any) => {
+  console.log("Processing review:", review);
+  
   return {
+    id: review.id,
     source: review.source || '',
     comment: review.comment || '',
     rating: review.rating || 0,
@@ -48,24 +51,33 @@ function ReviewCard({ review }: { review: Review | any }) {
   
   // Handle both snake_case from direct DB and camelCase from schema
   const { 
-    source, comment, rating, status, customerName, date, 
+    id, source, comment, rating, status, customerName, date, 
     aiResponse, aiRespondedAt, postedResponse, responseType 
   } = getReviewData(review);
   
   // Function to approve AI response
   const approveAIResponse = async () => {
     try {
-      const response = await fetch(`/api/reviews/${review.id}`, {
+      console.log(`Approving AI response for review ID: ${id}`);
+      
+      const updateData = {
+        status: 'responded',
+        postedResponse: aiResponse,
+        responseType: 'ai_approved'
+      };
+      
+      console.log("Update payload:", updateData);
+      
+      const response = await fetch(`/api/reviews/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          status: 'responded',
-          postedResponse: aiResponse,
-          responseType: 'ai_approved'
-        }),
+        body: JSON.stringify(updateData),
       });
+      
+      const responseData = await response.json();
+      console.log("Server response:", responseData);
       
       if (!response.ok) {
         throw new Error(`Error updating review: ${response.statusText}`);
@@ -84,17 +96,26 @@ function ReviewCard({ review }: { review: Review | any }) {
   // Function to submit manual response
   const submitManualResponse = async (manualResponse: string) => {
     try {
-      const response = await fetch(`/api/reviews/${review.id}`, {
+      console.log(`Submitting manual response for review ID: ${id}`);
+      
+      const updateData = {
+        status: 'responded',
+        postedResponse: manualResponse,
+        responseType: 'manual'
+      };
+      
+      console.log("Manual update payload:", updateData);
+      
+      const response = await fetch(`/api/reviews/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          status: 'responded',
-          postedResponse: manualResponse,
-          responseType: 'manual'
-        }),
+        body: JSON.stringify(updateData),
       });
+      
+      const responseData = await response.json();
+      console.log("Manual response server response:", responseData);
       
       if (!response.ok) {
         throw new Error(`Error updating review: ${response.statusText}`);

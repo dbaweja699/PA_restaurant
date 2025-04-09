@@ -323,17 +323,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.patch(`${apiPrefix}/reviews/:id`, async (req, res) => {
     try {
+      console.log(`PATCH request for review ID: ${req.params.id}`, req.body);
       const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid review ID, must be a number" });
+      }
+      
       const review = await storage.getReviewById(id);
       if (!review) {
+        console.log(`Review with ID ${id} not found`);
         return res.status(404).json({ error: "Review not found" });
       }
       
-      const validatedData = insertReviewSchema.partial().parse(req.body);
-      const updatedReview = await storage.updateReview(id, validatedData);
-      res.json(updatedReview);
+      console.log(`Found review:`, review);
+      
+      try {
+        const validatedData = insertReviewSchema.partial().parse(req.body);
+        console.log(`Validated data:`, validatedData);
+        
+        const updatedReview = await storage.updateReview(id, validatedData);
+        console.log(`Updated review:`, updatedReview);
+        
+        res.json(updatedReview);
+      } catch (validationError) {
+        console.error('Validation error:', validationError);
+        return res.status(400).json({ 
+          error: "Invalid review data",
+          details: validationError instanceof Error ? validationError.message : "Unknown validation error"
+        });
+      }
     } catch (error) {
-      res.status(400).json({ error: "Invalid review data" });
+      console.error('Error updating review:', error);
+      res.status(500).json({ 
+        error: "Error updating review",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
   

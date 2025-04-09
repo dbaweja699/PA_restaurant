@@ -1,0 +1,12 @@
+id,customer_name,rating,comment,source,date,status,ai_response,ai_responded_at,user_id,order_id,call_id,chat_id,posted_response,response_type
+1,John Doe,5,Great service!,Website,2025-03-26 22:52:34.351952+00,responded,Thank you!,2025-03-26 22:52:34.351952+00,,,,,,
+2,Jane Smith,3,Average experience.,Mobile App,2025-03-26 22:52:34.351952+00,new,,,,,,,,
+3,Alice Johnson,4,Helpful support.,Website,2025-03-26 22:52:34.351952+00,responded,Glad we could help!,2025-03-26 22:52:34.351952+00,,,,,,
+4,Bob Brown,2,Took too long.,Phone,2025-03-26 22:52:34.351952+00,new,,,,,,,,
+5,Charlie Davis,5,Excellent service.,Web Chat,2025-03-26 22:52:34.351952+00,responded,We appreciate your feedback!,2025-03-26 22:52:34.351952+00,,,,,,
+6,David Wilson,1,Terrible experience.,Website,2025-03-26 22:52:34.351952+00,new,,,,,,,,
+7,Emily White,4,"Good, but slow response.",Phone,2025-03-26 22:52:34.351952+00,new,,,,,,,,
+8,Frank Harris,3,Okay experience.,Website,2025-03-26 22:52:34.351952+00,new,,,,,,,,
+9,Grace Lewis,5,Fantastic!,Mobile App,2025-03-26 22:52:34.351952+00,responded,Happy to help!,2025-03-26 22:52:34.351952+00,,,,,,
+10,Henry Young,2,Could be better.,Phone,2025-03-26 22:52:34.351952+00,new,,,,,,,,
+11,API Test Customer,5,This is a test review from API,,2025-03-27 00:46:32.320563+00,pending,,,,,,,,
