@@ -45,17 +45,18 @@ export default function Calls() {
   const [searchQuery, setSearchQuery] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [location] = useLocation();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
-    // Extract call ID from URL parameters
-    const searchParams = new URLSearchParams(location.split("?")[1]);
-    const callId = searchParams.get("id");
+    // Get id from URL query params
+    const params = new URLSearchParams(window.location.search);
+    const callId = params.get('id');
     if (callId) {
       // Set searchQuery to the call ID
       setSearchQuery(callId);
+      // Load specific call data if needed
     }
-  }, [location]);
+  }, []);
 
   const [expandedCallIds, setExpandedCallIds] = useState<Set<number>>(
     new Set(),
