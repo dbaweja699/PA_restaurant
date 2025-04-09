@@ -93,6 +93,8 @@ export const reviews = pgTable("reviews", {
   status: text("status").notNull().default("new"), // new, responded, archived
   aiResponse: text("ai_response"),
   aiRespondedAt: timestamp("ai_responded_at"),
+  postedResponse: text("posted_response"),  // The actual response that was posted
+  responseType: text("response_type").default("ai_approved"), // manual or ai_approved
 });
 
 export const insertReviewSchema = createInsertSchema(reviews).pick({
@@ -104,6 +106,8 @@ export const insertReviewSchema = createInsertSchema(reviews).pick({
   status: true,
   aiResponse: true,
   aiRespondedAt: true,
+  postedResponse: true,
+  responseType: true,
 });
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;

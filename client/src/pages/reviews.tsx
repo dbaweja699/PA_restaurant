@@ -37,7 +37,9 @@ const getReviewData = (review: any) => {
     customerName: review.customerName || review.customer_name || 'Anonymous',
     date: review.date || new Date(),
     aiResponse: review.aiResponse || review.ai_response,
-    aiRespondedAt: review.aiRespondedAt || review.ai_responded_at
+    aiRespondedAt: review.aiRespondedAt || review.ai_responded_at,
+    postedResponse: review.postedResponse || review.posted_response,
+    responseType: review.responseType || review.response_type || 'ai_approved'
   };
 };
 
@@ -45,7 +47,68 @@ function ReviewCard({ review }: { review: Review | any }) {
   const [expanded, setExpanded] = useState(false);
   
   // Handle both snake_case from direct DB and camelCase from schema
-  const { source, comment, rating, status, customerName, date, aiResponse, aiRespondedAt } = getReviewData(review);
+  const { 
+    source, comment, rating, status, customerName, date, 
+    aiResponse, aiRespondedAt, postedResponse, responseType 
+  } = getReviewData(review);
+  
+  // Function to approve AI response
+  const approveAIResponse = async () => {
+    try {
+      const response = await fetch(`/api/reviews/${review.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'responded',
+          postedResponse: aiResponse,
+          responseType: 'ai_approved'
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating review: ${response.statusText}`);
+      }
+      
+      // In a real app, we'd use queryClient to invalidate and refetch
+      alert('AI response approved and posted successfully!');
+      window.location.reload();
+    } catch (err) {
+      console.error('Error approving AI response:', err);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert('Failed to approve AI response: ' + message);
+    }
+  };
+  
+  // Function to submit manual response
+  const submitManualResponse = async (manualResponse: string) => {
+    try {
+      const response = await fetch(`/api/reviews/${review.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'responded',
+          postedResponse: manualResponse,
+          responseType: 'manual'
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error updating review: ${response.statusText}`);
+      }
+      
+      // In a real app, we'd use queryClient to invalidate and refetch
+      alert('Manual response posted successfully!');
+      window.location.reload();
+    } catch (err) {
+      console.error('Error posting manual response:', err);
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      alert('Failed to post manual response: ' + message);
+    }
+  };
 
   const getSourceIcon = (source: string) => {
     if (!source) return <i className="ri-star-line mr-1"></i>;
@@ -116,16 +179,32 @@ function ReviewCard({ review }: { review: Review | any }) {
           "{comment}"
         </p>
 
-        {expanded && aiResponse && (
-          <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
-            <p className="font-medium mb-1 flex items-center">
-              <MessageSquare className="h-4 w-4 mr-1" /> AI Response 
-              <span className="text-xs text-neutral-500 ml-2">
-                {aiRespondedAt && formatDistanceToNow(new Date(aiRespondedAt), { addSuffix: true })}
-              </span>
-            </p>
-            <p className="italic">"{aiResponse}"</p>
-          </div>
+        {expanded && (
+          <>
+            {aiResponse && (
+              <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
+                <p className="font-medium mb-1 flex items-center">
+                  <MessageSquare className="h-4 w-4 mr-1" /> AI Suggested Response 
+                  <span className="text-xs text-neutral-500 ml-2">
+                    {aiRespondedAt && formatDistanceToNow(new Date(aiRespondedAt), { addSuffix: true })}
+                  </span>
+                </p>
+                <p className="italic">"{aiResponse}"</p>
+              </div>
+            )}
+            
+            {postedResponse && (
+              <div className="mt-4 bg-green-50 p-3 rounded-md text-sm">
+                <p className="font-medium mb-1 flex items-center">
+                  <ThumbsUp className="h-4 w-4 mr-1" /> Posted Response 
+                  <Badge className="ml-2" variant="outline">
+                    {responseType === 'manual' ? 'Manual' : 'AI Approved'}
+                  </Badge>
+                </p>
+                <p className="italic">"{postedResponse}"</p>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-3">
@@ -140,10 +219,38 @@ function ReviewCard({ review }: { review: Review | any }) {
         )}
 
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex items-center">
-            <ThumbsUp className="h-4 w-4 mr-1" /> Approve
-          </Button>
-          <Button size="sm">Respond Manually</Button>
+          {aiResponse && !postedResponse && (
+            <>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="flex items-center"
+                onClick={approveAIResponse}
+              >
+                <ThumbsUp className="h-4 w-4 mr-1" /> Approve AI Response
+              </Button>
+              <Button 
+                size="sm"
+                onClick={() => {
+                  const manualResponse = prompt('Enter your manual response:', aiResponse);
+                  if (manualResponse) {
+                    submitManualResponse(manualResponse);
+                  }
+                }}
+              >
+                Respond Manually
+              </Button>
+            </>
+          )}
+          {postedResponse && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              disabled
+            >
+              {responseType === 'manual' ? 'Manually Responded' : 'AI Response Approved'}
+            </Button>
+          )}
         </div>
       </CardFooter>
     </Card>

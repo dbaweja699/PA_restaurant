@@ -11,6 +11,8 @@ interface ReviewWithSnakeCase extends Review {
   customer_name?: string;
   ai_response?: string | null;
   ai_responded_at?: Date | null;
+  posted_response?: string | null;
+  response_type?: string;
 }
 
 function StarRating({ rating }: { rating: number }) {
@@ -113,15 +115,36 @@ export function RecentReviews() {
                 <p className="mt-1 text-xs text-neutral-500">
                   {reviewData.status === "responded" ? (
                     <>
-                      <i className="ri-checkbox-circle-line text-accent"></i> AI responded {
-                        (() => {
-                          const respondedDate = reviewData.aiRespondedAt || reviewData.ai_responded_at;
-                          if (respondedDate) {
-                            return formatDistanceToNow(new Date(respondedDate), { addSuffix: true });
+                      <i className="ri-checkbox-circle-line text-accent"></i> 
+                      {(reviewData.postedResponse || reviewData.posted_response) ? (
+                        <>
+                          <span className="font-medium">
+                            {(reviewData.responseType || reviewData.response_type) === 'manual' 
+                              ? 'Manually responded' 
+                              : 'AI response approved'}
+                          </span> {
+                            (() => {
+                              const respondedDate = reviewData.aiRespondedAt || reviewData.ai_responded_at;
+                              if (respondedDate) {
+                                return formatDistanceToNow(new Date(respondedDate), { addSuffix: true });
+                              }
+                              return "";
+                            })()
                           }
-                          return "";
-                        })()
-                      }
+                        </>
+                      ) : (
+                        <>
+                          AI responded {
+                            (() => {
+                              const respondedDate = reviewData.aiRespondedAt || reviewData.ai_responded_at;
+                              if (respondedDate) {
+                                return formatDistanceToNow(new Date(respondedDate), { addSuffix: true });
+                              }
+                              return "";
+                            })()
+                          }
+                        </>
+                      )}
                     </>
                   ) : (
                     <span className="text-accent">
