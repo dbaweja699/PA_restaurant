@@ -315,58 +315,28 @@ export default function Bookings() {
                               </DropdownMenuItem>
                               <DropdownMenuItem onSelect={async () => {
                                 try {
-                                  const response = await fetch(`/api/bookings/${booking.id}`, {
-                                    method: 'PATCH',
+                                  await fetch(`/api/bookings/${booking.id}/status`, {
+                                    method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ status: 'confirmed' })
                                   });
-                                  
-                                  if (!response.ok) {
-                                    throw new Error('Failed to confirm booking');
-                                  }
-                                  
                                   await refetch();
-                                  toast({
-                                    title: "Booking Confirmed",
-                                    description: `Booking for ${booking.customerName} has been confirmed.`,
-                                    variant: "default",
-                                  });
                                 } catch (error) {
-                                  console.error('Failed to confirm booking:', error);
-                                  toast({
-                                    title: "Error",
-                                    description: "Failed to confirm booking. Please try again.",
-                                    variant: "destructive",
-                                  });
+                                  console.error('Failed to update status:', error);
                                 }
                               }}>
                                 Mark as Confirmed
                               </DropdownMenuItem>
                               <DropdownMenuItem onSelect={async () => {
                                 try {
-                                  const response = await fetch(`/api/bookings/${booking.id}`, {
-                                    method: 'PATCH',
+                                  await fetch(`/api/bookings/${booking.id}/status`, {
+                                    method: 'PUT',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ status: 'cancelled' })
                                   });
-                                  
-                                  if (!response.ok) {
-                                    throw new Error('Failed to cancel booking');
-                                  }
-                                  
                                   await refetch();
-                                  toast({
-                                    title: "Booking Cancelled",
-                                    description: `Booking for ${booking.customerName} has been cancelled.`,
-                                    variant: "default",
-                                  });
                                 } catch (error) {
-                                  console.error('Failed to cancel booking:', error);
-                                  toast({
-                                    title: "Error",
-                                    description: "Failed to cancel booking. Please try again.",
-                                    variant: "destructive",
-                                  });
+                                  console.error('Failed to update status:', error);
                                 }
                               }}>
                                 Cancel Booking
