@@ -320,8 +320,7 @@ export default function Bookings() {
                                 onSelect={async () => {
                                   try {
                                     const response = await fetch(`/api/bookings/${booking.id}`, {
-                                      method: 'DELETE',
-                                      headers: { 'Content-Type': 'application/json' }
+                                      method: 'DELETE'
                                     });
                                     
                                     if (!response.ok) {
@@ -330,8 +329,8 @@ export default function Bookings() {
                                     
                                     await refetch();
                                     toast({
-                                      title: "Booking Cancelled",
-                                      description: `Booking for ${booking.customerName} has been cancelled.`,
+                                      title: "Success",
+                                      description: `Booking for ${booking.customer_name || booking.customerName} has been cancelled.`,
                                       variant: "default",
                                     });
                                   } catch (error) {

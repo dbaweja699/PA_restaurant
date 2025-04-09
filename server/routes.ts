@@ -522,6 +522,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete(`${apiPrefix}/bookings/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const booking = await storage.getBookingById(id);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+
+      await supabase.from('bookings').delete().eq('id', id);
+      res.status(200).json({ message: "Booking deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      res.status(500).json({ error: "Failed to delete booking" });
+    }
+  });
+
   // Social Media
   app.get(`${apiPrefix}/social`, async (req, res) => {
     try {
