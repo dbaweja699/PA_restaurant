@@ -30,7 +30,7 @@ function StarRating({ rating }: { rating: number }) {
 // Helper function to safely access review data with database field name fallbacks
 const getReviewData = (review: any) => {
   console.log("Processing review:", review);
-  
+
   return {
     id: review.id,
     source: review.source || '',
@@ -48,26 +48,26 @@ const getReviewData = (review: any) => {
 
 function ReviewCard({ review }: { review: Review | any }) {
   const [expanded, setExpanded] = useState(false);
-  
+
   // Handle both snake_case from direct DB and camelCase from schema
   const { 
     id, source, comment, rating, status, customerName, date, 
     aiResponse, aiRespondedAt, postedResponse, responseType 
   } = getReviewData(review);
-  
+
   // Function to approve AI response
   const approveAIResponse = async () => {
     try {
       console.log(`Approving AI response for review ID: ${id}`);
-      
+
       const updateData = {
         status: 'responded',
-        postedResponse: aiResponse,
-        responseType: 'ai_approved'
+        posted_response: aiResponse, // Updated to snake_case
+        response_type: 'ai_approved' // Updated to snake_case
       };
-      
+
       console.log("Update payload:", updateData);
-      
+
       const response = await fetch(`/api/reviews/${id}`, {
         method: 'PATCH',
         headers: {
@@ -75,14 +75,14 @@ function ReviewCard({ review }: { review: Review | any }) {
         },
         body: JSON.stringify(updateData),
       });
-      
+
       const responseData = await response.json();
       console.log("Server response:", responseData);
-      
+
       if (!response.ok) {
         throw new Error(`Error updating review: ${response.statusText}`);
       }
-      
+
       // In a real app, we'd use queryClient to invalidate and refetch
       alert('AI response approved and posted successfully!');
       window.location.reload();
@@ -92,20 +92,20 @@ function ReviewCard({ review }: { review: Review | any }) {
       alert('Failed to approve AI response: ' + message);
     }
   };
-  
+
   // Function to submit manual response
   const submitManualResponse = async (manualResponse: string) => {
     try {
       console.log(`Submitting manual response for review ID: ${id}`);
-      
+
       const updateData = {
         status: 'responded',
-        postedResponse: manualResponse,
-        responseType: 'manual'
+        posted_response: manualResponse, // Updated to snake_case
+        response_type: 'manual' // Updated to snake_case
       };
-      
+
       console.log("Manual update payload:", updateData);
-      
+
       const response = await fetch(`/api/reviews/${id}`, {
         method: 'PATCH',
         headers: {
@@ -113,14 +113,14 @@ function ReviewCard({ review }: { review: Review | any }) {
         },
         body: JSON.stringify(updateData),
       });
-      
+
       const responseData = await response.json();
       console.log("Manual response server response:", responseData);
-      
+
       if (!response.ok) {
         throw new Error(`Error updating review: ${response.statusText}`);
       }
-      
+
       // In a real app, we'd use queryClient to invalidate and refetch
       alert('Manual response posted successfully!');
       window.location.reload();
@@ -133,7 +133,7 @@ function ReviewCard({ review }: { review: Review | any }) {
 
   const getSourceIcon = (source: string) => {
     if (!source) return <i className="ri-star-line mr-1"></i>;
-    
+
     switch (source.toLowerCase()) {
       case "google":
         return <i className="ri-google-line mr-1"></i>;
@@ -152,7 +152,7 @@ function ReviewCard({ review }: { review: Review | any }) {
 
   const getStatusBadge = (status: string) => {
     if (!status) return <Badge variant="outline">Unknown</Badge>;
-    
+
     switch (status.toLowerCase()) {
       case "new":
         return <Badge variant="secondary">New</Badge>;
@@ -213,7 +213,7 @@ function ReviewCard({ review }: { review: Review | any }) {
                 <p className="italic">"{aiResponse}"</p>
               </div>
             )}
-            
+
             {postedResponse && (
               <div className="mt-4 bg-green-50 p-3 rounded-md text-sm">
                 <p className="font-medium mb-1 flex items-center">
