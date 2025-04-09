@@ -255,6 +255,7 @@ export default function Calls() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID</TableHead>
                 <TableHead>Phone Number</TableHead>
                 <TableHead>Start Time</TableHead>
                 <TableHead>Status</TableHead>
@@ -271,6 +272,7 @@ export default function Calls() {
                       expandedCallIds.has(call.id!) ? "border-b-0" : ""
                     }
                   >
+                    <TableCell>{call.id}</TableCell>
                     <TableCell>
                       {formatPhoneNumber(call.phone_number || call.phoneNumber)}
                     </TableCell>
@@ -326,7 +328,7 @@ export default function Calls() {
 
                   {expandedCallIds.has(call.id!) && (
                     <TableRow>
-                      <TableCell colSpan={6} className="bg-muted/30 px-4 pb-4">
+                      <TableCell colSpan={7} className="bg-muted/30 px-4 pb-4">
                         <div className="grid gap-4 py-2">
                           {call.summary && (
                             <div>
@@ -390,7 +392,7 @@ export default function Calls() {
 
               {filteredCalls.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     No calls found matching your search criteria.
                   </TableCell>
                 </TableRow>
