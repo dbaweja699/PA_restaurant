@@ -36,6 +36,7 @@ export const calls = pgTable("calls", {
   summary: text("summary"),
   aiHandled: boolean("ai_handled").notNull().default(true),
   transferredToHuman: boolean("transferred_to_human").notNull().default(false),
+  callRecordingUrl: text("call_recording_url"),
 });
 
 export const insertCallSchema = createInsertSchema(calls).pick({
@@ -48,6 +49,7 @@ export const insertCallSchema = createInsertSchema(calls).pick({
   summary: true,
   aiHandled: true,
   transferredToHuman: true,
+  callRecordingUrl: true,
 });
 
 export type InsertCall = z.infer<typeof insertCallSchema>;

@@ -1,0 +1,28 @@
+id,phone_number,start_time,status,topic,summary,ai_handled,transferred_to_human,user_id,call_recording_url
+1,+1234567890,2025-03-26 22:52:34.351952+00,completed,Billing Inquiry,Resolved billing issue.,true,false,2,
+2,+1987654321,2025-03-26 22:52:34.351952+00,pending,Tech Support,Troubleshooting device issue.,false,true,3,
+3,+1122334455,2025-03-26 22:52:34.351952+00,completed,Service Upgrade,Upgraded to premium service.,true,false,2,
+4,+1444555666,2025-03-26 22:52:34.351952+00,in_progress,Cancellation Request,Customer wants to cancel subscription.,false,true,4,
+5,+1555666777,2025-03-26 22:52:34.351952+00,completed,Payment Issue,Fixed incorrect charge.,true,false,3,
+6,+1666777888,2025-03-26 22:52:34.351952+00,pending,Order Inquiry,Checking order status.,false,true,4,
+7,+1777888999,2025-03-26 22:52:34.351952+00,completed,Subscription Renewal,Renewed plan for customer.,true,false,2,
+8,+1888999000,2025-03-26 22:52:34.351952+00,in_progress,Account Locked,Helping user regain access.,false,true,3,
+9,+1999000111,2025-03-26 22:52:34.351952+00,completed,Feedback,User provided positive feedback.,true,false,4,
+10,+2111222333,2025-03-26 22:52:34.351952+00,pending,Refund Request,Processing refund request.,false,true,3,
+12,+123456789,2025-04-09 07:23:46.738249+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/John.mp3
+13,+123456789,2025-04-09 07:23:47.338749+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/John.mp3
+14,+123456789,2025-04-09 08:00:06.089461+00,pending,placing order,"The user, John, places an order for one garlic naan and one paneer butter masala at Bawarchi restaurant. The total cost is two hundred and ninety rupees and the order is placed successfully.",true,false,1,{{ $json.Key }}
+15,+123456789,2025-04-09 09:29:30.111386+00,pending,placing order,"John places an order for one garlic naan and one paneer butter masala, costing 290 rupees. The order is successfully placed.",true,false,1,{{ $json.Key }}
+16,+123456789,2025-04-09 09:39:18.135606+00,pending,placing order,"The user wants to place an order for one garlic naan and one paneer butter masala. The agent confirms the order and the total amount is two hundred and ninety rupees, then the order is placed by the agent.",true,false,1,{{ $json.Key }}
+17,+123456789,2025-04-09 09:48:29.209134+00,pending,placing order,"John places an order for one garlic naan and one paneer butter masala, totaling 290 rupees. The order is placed under the name John and will be prepared shortly.",true,false,1,
+18,+123456789,2025-04-09 09:49:18.786429+00,pending,placing order,"John places an order for one garlic naan and one paneer butter masala, totaling 290 rupees. The order is placed under the name John and will be prepared shortly.",true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/pat.mp3
+19,+123456789,2025-04-09 10:01:36.0013+00,pending,placing order,"The customer wants to order one garlic naan and one paneer butter masala. The agent confirms the order and the total bill amount, then places the order under the name John.",true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/.mp3
+20,+123456789,2025-04-09 10:18:12.213842+00,pending,,,true,false,1,
+21,+123456789,2025-04-09 10:20:17.489332+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/2TaCxaI1s1ESw1kAWZM7.mp3
+22,+123456789,2025-04-09 10:23:20.851179+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/2TaCxaI1s1ESw1kAWZM7.mp3
+23,+123456789,2025-04-09 10:25:29.114067+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/2TaCxaI1s1ESw1kAWZM7.mp3
+24,+123456789,2025-04-09 10:27:37.978313+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/2TaCxaI1s1ESw1kAWZM7.mp3
+25,+123456789,2025-04-09 10:29:37.554328+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/2TaCxaI1s1ESw1kAWZM7.mp3
+26,+123456789,2025-04-09 10:39:54.95756+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/2TaCxaI1s1ESw1kAWZM7.mp3
+27,+123456789,2025-04-09 11:43:48.936781+00,pending,,,true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/jC8gNQMjU2LRiPi2WNiR.mp3
+28,+123456789,2025-04-09 11:58:20.157216+00,pending,reservation,"Kate wants to book a reservation for 5 people on April 12th, 2025 at 9 pm. The agent confirms the reservation under Kate's name with no special occasion noted.",true,false,1,https://oxfsxpmpqjnrrewobabj.supabase.co/storage/v1/object/callrecordings/qU83XzeDrCxYnfvjISdG.mp3
