@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { type Order } from "@shared/schema";
+import { useLocation } from "wouter";
 import { 
   Table, 
   TableHeader, 
@@ -20,15 +21,38 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { ShoppingCart, Truck, Users, ChevronDown, ChevronUp, Plus, Mic } from "lucide-react";
+import { ShoppingCart, Truck, Users, ChevronDown, ChevronUp, Plus, Mic, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OrderForm } from "@/components/order/OrderForm";
 
 function OrderDetailsRow({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
+  const [, setLocation] = useLocation();
 
-  // @ts-ignore - items is defined as json in schema
-  const items = Array.isArray(order.items) ? order.items : [];
+  // Parse items based on format (could be array or object)
+  let items = [];
+  if (order.items) {
+    if (Array.isArray(order.items)) {
+      items = order.items;
+    } else if (typeof order.items === 'object') {
+      // Handle object format like {"Paneer Butter Masala": 1, "Garlic Naan": 1}
+      try {
+        // If it's a string representation of JSON object
+        const itemsObject = typeof order.items === 'string' 
+          ? JSON.parse(order.items) 
+          : order.items;
+        
+        items = Object.entries(itemsObject).map(([name, quantity]) => ({
+          name,
+          quantity,
+          price: '' // We don't have individual prices in this format
+        }));
+      } catch (e) {
+        console.error("Error parsing order items:", e);
+        items = [];
+      }
+    }
+  }
 
   const getTypeIcon = () => {
     switch (order.type.toLowerCase()) {
@@ -130,6 +154,24 @@ function OrderDetailsRow({ order }: { order: Order }) {
                     {order.aiProcessed ? "Yes" : "No"}
                   </Badge>
                 </div>
+                
+                {order.callId && (
+                  <div className="flex justify-between mt-2">
+                    <span className="text-neutral-600">Phone Order</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLocation(`/calls?id=${order.callId}`);
+                      }}
+                    >
+                      <Phone className="h-3 w-3 mr-1" />
+                      View Call
+                    </Button>
+                  </div>
+                )}
 
                 <div className="mt-4 flex justify-end space-x-2">
                   <Button variant="outline" size="sm">Edit Order</Button>

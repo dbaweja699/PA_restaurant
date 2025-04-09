@@ -53,6 +53,7 @@ const orderSchema = z.object({
   total: z.string(),
   status: z.string().default("processing"),
   aiProcessed: z.boolean().default(false),
+  callId: z.number().optional(),
 });
 
 type OrderItem = z.infer<typeof orderItemSchema>;
@@ -78,7 +79,8 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
     status: "processing",
     aiProcessed: false,
     items: [{ name: "", price: "", quantity: 1 }],
-    total: "0.00"
+    total: "0.00",
+    callId: undefined
   };
 
   const form = useForm<OrderFormValues>({

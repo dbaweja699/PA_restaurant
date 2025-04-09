@@ -1,0 +1,15 @@
+id,customer_name,order_time,status,type,items,total,ai_processed,user_id,call_id
+1,John Doe,2025-03-26 22:52:34.351952+00,completed,Online,"[{""qty"":1,""item"":""Laptop""}]",1200.00,true,2,
+2,Jane Smith,2025-03-26 22:52:34.351952+00,pending,Phone,"[{""qty"":2,""item"":""Tablet""}]",600.00,false,3,
+3,Alice Johnson,2025-03-26 22:52:34.351952+00,completed,Website,"[{""qty"":1,""item"":""Headphones""}]",200.00,true,4,
+4,Bob Brown,2025-03-26 22:52:34.351952+00,completed,Mobile App,"[{""qty"":1,""item"":""Mouse""}]",50.00,true,2,
+5,Charlie Davis,2025-03-26 22:52:34.351952+00,pending,Online,"[{""qty"":1,""item"":""Keyboard""}]",80.00,false,3,
+6,David Wilson,2025-03-26 22:52:34.351952+00,completed,Website,"[{""qty"":1,""item"":""Monitor""}]",300.00,true,4,
+7,Emily White,2025-03-26 22:52:34.351952+00,in_progress,Phone,"[{""qty"":1,""item"":""Printer""}]",250.00,false,2,
+8,Frank Harris,2025-03-26 22:52:34.351952+00,completed,Mobile App,"[{""qty"":1,""item"":""Speakers""}]",150.00,true,3,
+9,Grace Lewis,2025-03-26 22:52:34.351952+00,pending,Website,"[{""qty"":1,""item"":""Router""}]",100.00,false,4,
+10,Henry Young,2025-03-26 22:52:34.351952+00,completed,Phone,"[{""qty"":1,""item"":""SSD""}]",130.00,true,2,
+12,Raj,2025-04-08 12:49:38.36929+00,pending,Phone,"{""Veg Manchurian"":1}",200,true,1,
+29,Jason,2025-04-09 12:40:03.556211+00,pending,Phone,"{""Paneer Butter Masala"": 1, ""Garlic Naan"": 1}",290,true,1,31
+30,Raj,2025-04-09 13:15:18.629988+00,pending,Phone,"{""Veg Manchurian"": 1, ""Paneer Butter Masala"": 1}",440,true,1,34
+31,Raj,2025-04-09 13:15:18.759871+00,pending,Phone,"{""Veg Manchurian"": 1, ""Paneer Butter Masala"": 1}",440,true,1,33

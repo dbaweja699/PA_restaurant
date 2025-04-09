@@ -126,6 +126,7 @@ export const orders = pgTable("orders", {
   items: json("items").notNull(),
   total: text("total").notNull(),
   aiProcessed: boolean("ai_processed").notNull().default(true),
+  callId: integer("call_id"), // Reference to call ID for orders made via phone
 });
 
 export const insertOrderSchema = createInsertSchema(orders).pick({
@@ -137,6 +138,7 @@ export const insertOrderSchema = createInsertSchema(orders).pick({
   items: true,
   total: true,
   aiProcessed: true,
+  callId: true,
 });
 
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
