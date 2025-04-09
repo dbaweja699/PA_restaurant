@@ -111,7 +111,9 @@ export default function Bookings() {
     return new Date(`01/01/2023 ${a}`).getTime() - new Date(`01/01/2023 ${b}`).getTime();
   });
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null | undefined) => {
+    if (!status) return <Badge className="bg-neutral-100 text-neutral-800">Unknown</Badge>;
+    
     switch (status.toLowerCase()) {
       case "confirmed":
         return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
