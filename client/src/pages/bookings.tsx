@@ -280,7 +280,6 @@ export default function Bookings() {
                       <TableHead>Customer</TableHead>
                       <TableHead>Party Size</TableHead>
                       <TableHead>Special Request</TableHead>
-                      <TableHead>Status</TableHead>
                       <TableHead>Source</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -299,9 +298,6 @@ export default function Bookings() {
                           {booking.notes || booking.specialOccasion || "-"}
                         </TableCell>
                         <TableCell>
-                          {getStatusBadge(booking.status)}
-                        </TableCell>
-                        <TableCell>
                           <Badge variant="outline" className="capitalize">
                             {booking.source}
                           </Badge>
@@ -315,7 +311,35 @@ export default function Bookings() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onSelect={() => setSelectedBooking(booking)}>
-                                Update Status
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={async () => {
+                                try {
+                                  await fetch(`/api/bookings/${booking.id}/status`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: 'confirmed' })
+                                  });
+                                  await refetch();
+                                } catch (error) {
+                                  console.error('Failed to update status:', error);
+                                }
+                              }}>
+                                Mark as Confirmed
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={async () => {
+                                try {
+                                  await fetch(`/api/bookings/${booking.id}/status`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ status: 'cancelled' })
+                                  });
+                                  await refetch();
+                                } catch (error) {
+                                  console.error('Failed to update status:', error);
+                                }
+                              }}>
+                                Cancel Booking
                               </DropdownMenuItem>
                               {booking.source === "Phone Call" && booking.callId && (
                                 <DropdownMenuItem 
