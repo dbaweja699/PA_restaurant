@@ -113,7 +113,7 @@ export default function Bookings() {
 
   const getStatusBadge = (status: string | null | undefined) => {
     if (!status) return <Badge className="bg-neutral-100 text-neutral-800">Unknown</Badge>;
-    
+
     switch (status.toLowerCase()) {
       case "confirmed":
         return <Badge className="bg-green-100 text-green-800">Confirmed</Badge>;
@@ -190,13 +190,13 @@ export default function Bookings() {
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Confirmed:</span>
                     <span className="font-medium">
-                      {filteredBookings.filter(b => b.status.toLowerCase() === "confirmed").length}
+                      {filteredBookings.filter(b => b.status?.toLowerCase() === "confirmed").length}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-neutral-600">Pending:</span>
                     <span className="font-medium">
-                      {filteredBookings.filter(b => b.status.toLowerCase() === "pending").length}
+                      {filteredBookings.filter(b => b.status?.toLowerCase() === "pending").length}
                     </span>
                   </div>
                 </div>
