@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Call } from "@shared/schema";
-import { useLocation } from 'react-router-dom';
+import { useLocation } from "wouter";
 
 // TypeScript interface to handle both camelCase and snake_case formats
 interface CallData extends Partial<Call> {
