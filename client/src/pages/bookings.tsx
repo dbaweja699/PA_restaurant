@@ -313,32 +313,35 @@ export default function Bookings() {
                               <DropdownMenuItem onSelect={() => setSelectedBooking(booking)}>
                                 View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={async () => {
-                                try {
-                                  await fetch(`/api/bookings/${booking.id}/status`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: 'confirmed' })
-                                  });
-                                  await refetch();
-                                } catch (error) {
-                                  console.error('Failed to update status:', error);
-                                }
-                              }}>
-                                Mark as Confirmed
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={async () => {
-                                try {
-                                  await fetch(`/api/bookings/${booking.id}/status`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ status: 'cancelled' })
-                                  });
-                                  await refetch();
-                                } catch (error) {
-                                  console.error('Failed to update status:', error);
-                                }
-                              }}>
+                              <DropdownMenuItem 
+                                className="text-red-600"
+                                onSelect={async () => {
+                                  try {
+                                    const response = await fetch(`/api/bookings/${booking.id}`, {
+                                      method: 'DELETE',
+                                      headers: { 'Content-Type': 'application/json' }
+                                    });
+                                    
+                                    if (!response.ok) {
+                                      throw new Error('Failed to delete booking');
+                                    }
+                                    
+                                    await refetch();
+                                    toast({
+                                      title: "Booking Cancelled",
+                                      description: `Booking for ${booking.customerName} has been cancelled.`,
+                                      variant: "default",
+                                    });
+                                  } catch (error) {
+                                    console.error('Failed to cancel booking:', error);
+                                    toast({
+                                      title: "Error",
+                                      description: "Failed to cancel booking. Please try again.",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
+                              >
                                 Cancel Booking
                               </DropdownMenuItem>
                               {booking.source === "Phone Call" && booking.callId && (
