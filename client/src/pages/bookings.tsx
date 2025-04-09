@@ -1,6 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { type Booking } from "@shared/schema";
+import { useLocation } from "wouter";
+import { MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Card, 
   CardContent, 
@@ -65,6 +73,7 @@ export default function Bookings() {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [, setLocation] = useLocation();
 
   if (isLoading) {
     return (
@@ -298,13 +307,25 @@ export default function Bookings() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => setSelectedBooking(booking)}
-                          >
-                            <Info className="h-4 w-4" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onSelect={() => setSelectedBooking(booking)}>
+                                Update Status
+                              </DropdownMenuItem>
+                              {booking.source === "Phone Call" && booking.callId && (
+                                <DropdownMenuItem 
+                                  onSelect={() => setLocation(`/calls?id=${booking.callId}`)}
+                                >
+                                  View Call Details
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
