@@ -399,7 +399,10 @@ export default function Bookings() {
             </div>
 
             <div className="flex justify-between border-t pt-4">
-              <Select defaultValue={selectedBooking.status?.toLowerCase() || "pending"}>
+              <Select 
+                defaultValue={selectedBooking.status?.toLowerCase() || "pending"}
+                onValueChange={(value) => setSelectedBooking({...selectedBooking, status: value})}
+              >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Update Status" />
                 </SelectTrigger>
@@ -409,7 +412,26 @@ export default function Bookings() {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              <Button>Update</Button>
+              <Button 
+                onClick={async () => {
+                  try {
+                    await fetch(`/api/bookings/${selectedBooking.id}/status`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ status: selectedBooking.status }),
+                    });
+                    // Refetch bookings data
+                    await refetch();
+                    setSelectedBooking(null);
+                  } catch (error) {
+                    console.error('Failed to update booking status:', error);
+                  }
+                }}
+              >
+                Update
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
