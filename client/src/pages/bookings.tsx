@@ -413,9 +413,6 @@ export default function Bookings() {
               <div className="flex flex-col space-y-1.5">
                 <h3 className="text-sm font-semibold">Booking Information</h3>
                 <p className="flex items-center text-sm">
-                  Status: {getStatusBadge(selectedBooking.status)}
-                </p>
-                <p className="flex items-center text-sm">
                   Source: <Badge variant="outline" className="ml-2 capitalize">{selectedBooking.source}</Badge>
                 </p>
                 <p className="flex items-center text-sm">
@@ -424,46 +421,6 @@ export default function Bookings() {
                   </Badge>
                 </p>
               </div>
-            </div>
-
-            <div className="flex justify-between border-t pt-4">
-              <Select 
-                defaultValue={selectedBooking.status?.toLowerCase() || "pending"}
-                onValueChange={(value) => setSelectedBooking({...selectedBooking, status: value})}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Update Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="confirmed">Confirmed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button 
-                onClick={async () => {
-                  try {
-                    const response = await fetch(`/api/bookings/${selectedBooking.id}/status`, {
-                      method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ status: selectedBooking.status }),
-                    });
-                    
-                    if (!response.ok) {
-                      throw new Error('Failed to update status');
-                    }
-                    
-                    await refetch();
-                    setSelectedBooking(null);
-                  } catch (error) {
-                    console.error('Failed to update booking status:', error);
-                  }
-                }}
-              >
-                Update
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
