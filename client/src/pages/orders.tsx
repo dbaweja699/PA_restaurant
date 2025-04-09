@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type Order } from "@shared/schema";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Table, 
   TableHeader, 
@@ -20,39 +22,121 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { format } from "date-fns";
-import { ShoppingCart, Truck, Users, ChevronDown, ChevronUp, Plus, Mic, Phone } from "lucide-react";
+import { ShoppingCart, Truck, Users, ChevronDown, ChevronUp, Plus, Mic, Phone, Check, X, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { OrderForm } from "@/components/order/OrderForm";
+
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: string;
+}
 
 function OrderDetailsRow({ order }: { order: Order }) {
   const [expanded, setExpanded] = useState(false);
   const [, setLocation] = useLocation();
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  // Status update mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const response = await apiRequest("PATCH", `/api/orders/${order.id}`, { 
+        status: newStatus 
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update order status");
+      }
+      
+      return await response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Status Updated",
+        description: "The order status has been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      setShowStatusDialog(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update status",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Parse items based on format (could be array or object)
-  let items = [];
-  if (order.items) {
-    if (Array.isArray(order.items)) {
-      items = order.items;
-    } else if (typeof order.items === 'object') {
-      // Handle object format like {"Paneer Butter Masala": 1, "Garlic Naan": 1}
+  const [items, setItems] = useState<OrderItem[]>([]);
+  
+  useEffect(() => {
+    let parsedItems: OrderItem[] = [];
+    
+    if (order.items) {
       try {
-        // If it's a string representation of JSON object
-        const itemsObject = typeof order.items === 'string' 
-          ? JSON.parse(order.items) 
-          : order.items;
-        
-        items = Object.entries(itemsObject).map(([name, quantity]) => ({
-          name,
-          quantity,
-          price: '' // We don't have individual prices in this format
-        }));
+        // Case 1: If it's already an array (like [{"qty":1,"item":"Laptop"}])
+        if (Array.isArray(order.items)) {
+          parsedItems = order.items.map(item => ({
+            name: item.item || item.name,
+            quantity: item.qty || item.quantity || 1,
+            price: item.price || ''
+          }));
+        } 
+        // Case 2: If it's a string representation of JSON (like "{\"Veg Manchurian\": 1}")
+        else if (typeof order.items === 'string') {
+          const itemsObj = JSON.parse(order.items);
+          
+          if (Array.isArray(itemsObj)) {
+            // Handle string of array case
+            parsedItems = itemsObj.map(item => ({
+              name: item.item || item.name,
+              quantity: item.qty || item.quantity || 1,
+              price: item.price || ''
+            }));
+          } else {
+            // Handle string of object case
+            parsedItems = Object.entries(itemsObj).map(([name, quantity]) => ({
+              name,
+              quantity: quantity as number,
+              price: '' // We don't have individual prices in this format
+            }));
+          }
+        } 
+        // Case 3: If it's a plain object (like {"Veg Manchurian":1})
+        else if (typeof order.items === 'object') {
+          parsedItems = Object.entries(order.items).map(([name, quantity]) => ({
+            name,
+            quantity: quantity as number,
+            price: '' // We don't have individual prices in this format
+          }));
+        }
       } catch (e) {
         console.error("Error parsing order items:", e);
-        items = [];
+        parsedItems = [];
       }
     }
-  }
+    
+    setItems(parsedItems);
+  }, [order.items]);
 
   const getTypeIcon = () => {
     switch (order.type.toLowerCase()) {
@@ -175,8 +259,82 @@ function OrderDetailsRow({ order }: { order: Order }) {
 
                 <div className="mt-4 flex justify-end space-x-2">
                   <Button variant="outline" size="sm">Edit Order</Button>
-                  <Button size="sm">Update Status</Button>
+                  <Button size="sm" onClick={(e) => {
+                    e.stopPropagation();
+                    setShowStatusDialog(true);
+                  }}>Update Status</Button>
                 </div>
+                
+                {/* Status Update Dialog */}
+                <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Update Order Status</DialogTitle>
+                      <DialogDescription>
+                        Change the status of order #{order.id} for {order.customerName}
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="grid gap-4 py-4">
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium">Select a new status</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button 
+                            variant={order.status === "processing" ? "default" : "outline"} 
+                            size="sm"
+                            className="justify-start"
+                            onClick={() => updateStatusMutation.mutate("processing")}
+                          >
+                            <span className="h-2 w-2 mr-2 rounded-full bg-blue-500"></span>
+                            Processing
+                          </Button>
+                          <Button 
+                            variant={order.status === "confirmed" ? "default" : "outline"} 
+                            size="sm"
+                            className="justify-start"
+                            onClick={() => updateStatusMutation.mutate("confirmed")}
+                          >
+                            <span className="h-2 w-2 mr-2 rounded-full bg-green-500"></span>
+                            Confirmed
+                          </Button>
+                          <Button 
+                            variant={order.status === "ready" ? "default" : "outline"} 
+                            size="sm"
+                            className="justify-start"
+                            onClick={() => updateStatusMutation.mutate("ready")}
+                          >
+                            <span className="h-2 w-2 mr-2 rounded-full bg-yellow-500"></span>
+                            Ready
+                          </Button>
+                          <Button 
+                            variant={order.status === "completed" ? "default" : "outline"} 
+                            size="sm"
+                            className="justify-start"
+                            onClick={() => updateStatusMutation.mutate("completed")}
+                          >
+                            <span className="h-2 w-2 mr-2 rounded-full bg-neutral-500"></span>
+                            Completed
+                          </Button>
+                          <Button 
+                            variant={order.status === "cancelled" ? "default" : "outline"} 
+                            size="sm"
+                            className="justify-start col-span-2"
+                            onClick={() => updateStatusMutation.mutate("cancelled")}
+                          >
+                            <span className="h-2 w-2 mr-2 rounded-full bg-red-500"></span>
+                            Cancelled
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </TableCell>

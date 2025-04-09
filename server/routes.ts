@@ -398,17 +398,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch(`${apiPrefix}/orders/:id`, async (req, res) => {
     try {
+      console.log(`PATCH request for order ID: ${req.params.id}`, req.body);
       const id = parseInt(req.params.id);
+      
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid order ID, must be a number" });
+      }
+      
       const order = await storage.getOrderById(id);
       if (!order) {
+        console.log(`Order with ID ${id} not found`);
         return res.status(404).json({ error: "Order not found" });
       }
-
-      const validatedData = insertOrderSchema.partial().parse(req.body);
-      const updatedOrder = await storage.updateOrder(id, validatedData);
-      res.json(updatedOrder);
+      
+      console.log(`Found order:`, order);
+      
+      // Handle status update specifically
+      if (req.body.status && typeof req.body.status === 'string') {
+        const validStatuses = ["processing", "confirmed", "ready", "completed", "cancelled"];
+        const status = req.body.status.toLowerCase();
+        
+        if (!validStatuses.includes(status)) {
+          return res.status(400).json({ 
+            error: "Invalid status value", 
+            validValues: validStatuses 
+          });
+        }
+        
+        try {
+          const updatedOrder = await storage.updateOrder(id, { status });
+          console.log(`Updated order status:`, updatedOrder);
+          return res.json(updatedOrder);
+        } catch (updateError) {
+          console.error('Error updating order status:', updateError);
+          return res.status(500).json({
+            error: "Failed to update order status",
+            message: updateError instanceof Error ? updateError.message : "Unknown error"
+          });
+        }
+      }
+      
+      // Handle full updates (all other fields)
+      try {
+        const validatedData = insertOrderSchema.partial().parse(req.body);
+        const updatedOrder = await storage.updateOrder(id, validatedData);
+        console.log(`Updated order:`, updatedOrder);
+        res.json(updatedOrder);
+      } catch (validationError) {
+        console.error('Validation error:', validationError);
+        return res.status(400).json({ 
+          error: "Invalid order data",
+          details: validationError instanceof Error ? validationError.message : "Unknown validation error"
+        });
+      }
     } catch (error) {
-      res.status(400).json({ error: "Invalid order data" });
+      console.error('Error updating order:', error);
+      res.status(500).json({ 
+        error: "Error updating order",
+        message: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
