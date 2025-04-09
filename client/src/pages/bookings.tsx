@@ -244,7 +244,8 @@ export default function Bookings() {
                         {bookingsByTime[timeSlot].map(booking => (
                           <div 
                             key={booking.id}
-                            className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50"
+                            className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer"
+                            onClick={() => setSelectedBooking(booking)}
                           >
                             <div className="flex justify-between items-start">
                               <div>
@@ -335,7 +336,11 @@ export default function Bookings() {
                   </TableHeader>
                   <TableBody>
                     {filteredBookings.map((booking) => (
-                      <TableRow key={booking.id}>
+                      <TableRow 
+                        key={booking.id} 
+                        className="cursor-pointer hover:bg-neutral-50"
+                        onClick={() => setSelectedBooking(booking)}
+                      >
                         <TableCell>
                           <div className="font-medium">
                             {format(new Date(booking.bookingTime), "h:mm a")}
