@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { supabase } from './supabaseClient';
 import { z } from "zod";
 import { insertCallSchema, insertChatSchema, insertReviewSchema, insertOrderSchema, insertBookingSchema, insertSocialMediaSchema, insertNotificationSchema } from "../shared/schema";
 import { setupOpenAIRoutes } from "./openai";
