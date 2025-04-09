@@ -244,8 +244,7 @@ export default function Bookings() {
                         {bookingsByTime[timeSlot].map(booking => (
                           <div 
                             key={booking.id}
-                            className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50 cursor-pointer"
-                            onClick={() => setSelectedBooking(booking)}
+                            className="border border-neutral-200 rounded-lg p-3 hover:bg-neutral-50"
                           >
                             <div className="flex justify-between items-start">
                               <div>
@@ -261,7 +260,55 @@ export default function Bookings() {
                                   )}
                                 </div>
                               </div>
-                              {getStatusBadge(booking.status)}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onSelect={() => setSelectedBooking(booking)}>
+                                    View Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    className="text-red-600"
+                                    onSelect={async () => {
+                                      try {
+                                        const response = await fetch(`/api/bookings/${booking.id}`, {
+                                          method: 'DELETE'
+                                        });
+
+                                        if (!response.ok) {
+                                          throw new Error('Failed to delete booking');
+                                        }
+
+                                        await refetch();
+                                        toast({
+                                          title: "Success",
+                                          description: `Booking for ${booking.customer_name || booking.customerName} has been cancelled.`,
+                                          variant: "default",
+                                        });
+                                      } catch (error) {
+                                        console.error('Failed to cancel booking:', error);
+                                        toast({
+                                          title: "Error",
+                                          description: "Failed to cancel booking. Please try again.",
+                                          variant: "destructive",
+                                        });
+                                      }
+                                    }}
+                                  >
+                                    Cancel Booking
+                                  </DropdownMenuItem>
+                                  {booking.source === "Phone Call" && booking.callId && (
+                                    <DropdownMenuItem 
+                                      onSelect={() => setLocation(`/calls?id=${booking.callId}`)}
+                                    >
+                                      View Call Details
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                             {booking.notes && (
                               <p className="text-xs text-neutral-500 mt-2">
@@ -322,11 +369,11 @@ export default function Bookings() {
                                     const response = await fetch(`/api/bookings/${booking.id}`, {
                                       method: 'DELETE'
                                     });
-                                    
+
                                     if (!response.ok) {
                                       throw new Error('Failed to delete booking');
                                     }
-                                    
+
                                     await refetch();
                                     toast({
                                       title: "Success",
