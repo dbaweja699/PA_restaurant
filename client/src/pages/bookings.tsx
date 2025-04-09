@@ -61,7 +61,7 @@ import {
 import { BookingForm } from "@/components/booking/BookingForm";
 
 export default function Bookings() {
-  const { data: bookings, isLoading } = useQuery<Booking[]>({ 
+  const { data: bookings, isLoading, refetch } = useQuery<Booking[]>({ 
     queryKey: ['/api/bookings'],
   });
 
@@ -415,14 +415,18 @@ export default function Bookings() {
               <Button 
                 onClick={async () => {
                   try {
-                    await fetch(`/api/bookings/${selectedBooking.id}/status`, {
+                    const response = await fetch(`/api/bookings/${selectedBooking.id}/status`, {
                       method: 'PUT',
                       headers: {
                         'Content-Type': 'application/json',
                       },
                       body: JSON.stringify({ status: selectedBooking.status }),
                     });
-                    // Refetch bookings data
+                    
+                    if (!response.ok) {
+                      throw new Error('Failed to update status');
+                    }
+                    
                     await refetch();
                     setSelectedBooking(null);
                   } catch (error) {
