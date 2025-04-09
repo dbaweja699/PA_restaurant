@@ -59,8 +59,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { BookingForm } from "@/components/booking/BookingForm";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Bookings() {
+  const { toast } = useToast();
   const { data: bookings, isLoading, refetch } = useQuery<Booking[]>({ 
     queryKey: ['/api/bookings'],
   });
