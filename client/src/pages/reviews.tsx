@@ -56,17 +56,18 @@ function ReviewCard({ review }: { review: Review | any }) {
   } = getReviewData(review);
 
   // Function to approve AI response
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const approveAIResponse = async () => {
     try {
       console.log(`Approving AI response for review ID: ${id}`);
 
       const updateData = {
         status: 'responded',
-        posted_response: aiResponse, // Updated to snake_case
-        response_type: 'ai_approved' // Updated to snake_case
+        posted_response: aiResponse,
+        response_type: 'ai_approved'
       };
-
-      console.log("Update payload:", updateData);
 
       const response = await fetch(`/api/reviews/${id}`, {
         method: 'PATCH',
@@ -77,19 +78,25 @@ function ReviewCard({ review }: { review: Review | any }) {
       });
 
       const responseData = await response.json();
-      console.log("Server response:", responseData);
 
       if (!response.ok) {
-        throw new Error(`Error updating review: ${response.statusText}`);
+        throw new Error(responseData.error || `Error updating review: ${response.statusText}`);
       }
 
-      // In a real app, we'd use queryClient to invalidate and refetch
-      alert('AI response approved and posted successfully!');
-      window.location.reload();
+      await queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
+      toast({
+        title: "Success",
+        description: "AI response approved and posted successfully!",
+        variant: "default",
+      });
     } catch (err) {
       console.error('Error approving AI response:', err);
       const message = err instanceof Error ? err.message : 'Unknown error';
-      alert('Failed to approve AI response: ' + message);
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -100,11 +107,9 @@ function ReviewCard({ review }: { review: Review | any }) {
 
       const updateData = {
         status: 'responded',
-        posted_response: manualResponse, // Updated to snake_case
-        response_type: 'manual' // Updated to snake_case
+        posted_response: manualResponse,
+        response_type: 'manual'
       };
-
-      console.log("Manual update payload:", updateData);
 
       const response = await fetch(`/api/reviews/${id}`, {
         method: 'PATCH',
@@ -115,15 +120,13 @@ function ReviewCard({ review }: { review: Review | any }) {
       });
 
       const responseData = await response.json();
-      console.log("Manual response server response:", responseData);
 
       if (!response.ok) {
-        throw new Error(`Error updating review: ${response.statusText}`);
+        throw new Error(responseData.error || `Error updating review: ${response.statusText}`);
       }
 
-      // In a real app, we'd use queryClient to invalidate and refetch
+      await queryClient.invalidateQueries({ queryKey: ['/api/reviews'] });
       alert('Manual response posted successfully!');
-      window.location.reload();
     } catch (err) {
       console.error('Error posting manual response:', err);
       const message = err instanceof Error ? err.message : 'Unknown error';
