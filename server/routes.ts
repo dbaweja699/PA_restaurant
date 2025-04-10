@@ -497,28 +497,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertBookingSchema.parse(req.body);
       console.log('Validation passed, creating booking:', validatedData);
       
-      // Insert directly using Supabase
+      // Prepare the booking object using exact field names from CSV
+      const bookingData = {
+        customer_name: validatedData.customerName,
+        booking_time: validatedData.bookingTime,
+        party_size: validatedData.partySize,
+        notes: validatedData.notes || null,
+        status: validatedData.status || 'confirmed',
+        special_occasion: validatedData.specialOccasion || null,
+        ai_processed: validatedData.aiProcessed || false,
+        source: validatedData.source || 'website',
+        user_id: null,
+        call_id: validatedData.callId || null
+      };
+      
+      console.log('Prepared booking data for Supabase:', bookingData);
+      
+      // Insert directly using Supabase with detailed error handling
       const { data: booking, error } = await supabase
         .from('bookings')
-        .insert([{
-          customer_name: validatedData.customerName,
-          booking_time: validatedData.bookingTime,
-          party_size: validatedData.partySize,
-          notes: validatedData.notes || null,
-          status: validatedData.status || 'confirmed',
-          special_occasion: validatedData.specialOccasion || null,
-          ai_processed: validatedData.aiProcessed || false,
-          source: validatedData.source || 'website'
-        }])
-        .select()
-        .single();
+        .insert([bookingData]);
 
       if (error) {
         console.error('Supabase error creating booking:', error);
-        throw error;
+        return res.status(500).json({ 
+          error: "Failed to create booking", 
+          message: error.message,
+          details: error.details || 'No additional details',
+          code: error.code
+        });
+      }
+      
+      // Fetch the newly created booking
+      const { data: newBooking, error: fetchError } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('id', { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (fetchError) {
+        console.error('Error fetching created booking:', fetchError);
+        // Still return success even if we can't fetch the booking
+        return res.status(201).json({ 
+          message: "Booking created successfully but couldn't fetch the details",
+          success: true
+        });
       }
 
-      res.status(201).json(booking);
+      console.log('Booking created successfully:', newBooking);
+      res.status(201).json(newBooking);
     } catch (error) {
       console.error('Error creating booking:', error);
       if (error instanceof z.ZodError) {
@@ -551,16 +579,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete(`${apiPrefix}/bookings/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const booking = await storage.getBookingById(id);
-      if (!booking) {
+      console.log(`Attempting to delete booking with ID: ${id}`);
+      
+      // First verify the booking exists by direct Supabase query
+      const { data: existingBooking, error: findError } = await supabase
+        .from('bookings')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (findError) {
+        console.error('Error finding booking for deletion:', findError);
+        
+        // Check if the error is a not found error
+        if (findError.code === 'PGRST116') {
+          return res.status(404).json({ error: "Booking not found" });
+        }
+        
+        return res.status(500).json({ 
+          error: "Failed to verify booking", 
+          message: findError.message 
+        });
+      }
+      
+      if (!existingBooking) {
         return res.status(404).json({ error: "Booking not found" });
       }
-
-      await supabase.from('bookings').delete().eq('id', id);
-      res.status(200).json({ message: "Booking deleted successfully" });
+      
+      console.log('Found booking to delete:', existingBooking);
+      
+      // Perform the delete operation directly with Supabase
+      const { error: deleteError } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', id);
+      
+      if (deleteError) {
+        console.error('Error deleting booking from Supabase:', deleteError);
+        return res.status(500).json({ 
+          error: "Failed to delete booking", 
+          message: deleteError.message,
+          code: deleteError.code,
+          details: deleteError.details
+        });
+      }
+      
+      console.log(`Successfully deleted booking with ID: ${id}`);
+      res.status(200).json({ 
+        message: "Booking deleted successfully",
+        id: id 
+      });
     } catch (error) {
       console.error('Error deleting booking:', error);
-      res.status(500).json({ error: "Failed to delete booking" });
+      res.status(500).json({ 
+        error: "Failed to delete booking", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 

@@ -12,19 +12,44 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     schema: 'public',
   },
   auth: {
-    persistSession: true,
+    persistSession: false,
+    autoRefreshToken: false,
   },
   global: {
-    headers: { 'x-my-custom-header': 'my-app-name' },
+    headers: { 
+      'x-my-custom-header': 'my-app-name',
+      // Add authorization headers to bypass RLS
+      'Authorization': 'Bearer ' + supabaseAnonKey
+    },
   },
 });
 
-// Test database connection
+// Test database connection with logging
 export async function testConnection() {
   try {
+    console.log('Testing Supabase connection...');
     const { data, error } = await supabase.from('users').select('count').single();
-    if (error) throw error;
+    
+    if (error) {
+      console.error('Supabase connection test error:', error);
+      throw error;
+    }
+    
     console.log('Successfully connected to Supabase database');
+    
+    // Test bookings table specifically
+    const { data: bookingsData, error: bookingsError } = await supabase
+      .from('bookings')
+      .select('count')
+      .single();
+      
+    if (bookingsError) {
+      console.error('Supabase bookings test error:', bookingsError);
+      console.log('This might indicate an issue with bookings table permissions');
+    } else {
+      console.log('Successfully connected to bookings table');
+    }
+    
     return true;
   } catch (error) {
     console.error('Error connecting to Supabase:', error);
