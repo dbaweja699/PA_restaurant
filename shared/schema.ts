@@ -151,23 +151,27 @@ export const bookings = pgTable("bookings", {
   bookingTime: timestamp("booking_time").notNull(),
   partySize: integer("party_size").notNull(),
   notes: text("notes"),
-  status: text("status").notNull().default("confirmed"),
   specialOccasion: text("special_occasion"),
   aiProcessed: boolean("ai_processed").notNull().default(true),
   source: text("source").notNull().default("website"),
+  userId: integer("user_id"),
+  callId: integer("call_id"),
 });
 
 export const insertBookingSchema = createInsertSchema(bookings).pick({
   customerName: true,
   partySize: true,
   notes: true,
-  status: true,
   specialOccasion: true,
   aiProcessed: true,
   source: true,
+  userId: true,
+  callId: true,
 }).extend({
   // Override the bookingTime field to accept ISO string and convert to Date
   bookingTime: z.string().transform((str) => new Date(str)),
+  // Include status for UI even though it's not in the database
+  status: z.string().optional(),
 });
 
 export type InsertBooking = z.infer<typeof insertBookingSchema>;

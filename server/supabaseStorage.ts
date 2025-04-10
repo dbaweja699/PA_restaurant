@@ -470,18 +470,22 @@ export class SupabaseStorage implements IStorage {
     try {
       console.log('Attempting to create booking in Supabase:', insertBooking);
       
+      // Create the booking data object based on what exists in the actual database
+      const bookingData = {
+        customer_name: insertBooking.customerName,
+        booking_time: insertBooking.bookingTime,
+        party_size: insertBooking.partySize,
+        notes: insertBooking.notes || null,
+        special_occasion: insertBooking.specialOccasion || null,
+        ai_processed: insertBooking.aiProcessed !== undefined ? insertBooking.aiProcessed : true,
+        source: insertBooking.source || 'website'
+      };
+      
+      console.log('Sending booking data to Supabase:', bookingData);
+      
       const { data, error } = await supabase
         .from('bookings')
-        .insert({
-          customer_name: insertBooking.customerName,
-          booking_time: insertBooking.bookingTime,
-          party_size: insertBooking.partySize,
-          notes: insertBooking.notes,
-          status: insertBooking.status,
-          special_occasion: insertBooking.specialOccasion,
-          ai_processed: insertBooking.aiProcessed,
-          source: insertBooking.source
-        })
+        .insert(bookingData)
         .select()
         .single();
       
