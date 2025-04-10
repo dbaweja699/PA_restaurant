@@ -464,7 +464,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Bookings
   app.get(`${apiPrefix}/bookings`, async (req, res) => {
     try {
-      const bookings = await storage.getBookings();
+      // Use direct Supabase query with service role
+      const { data: bookings, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('bookingTime', { ascending: false });
+
+      if (error) {
+        console.error('Supabase error fetching bookings:', error);
+        throw error;
+      }
+
       res.json(bookings || []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
