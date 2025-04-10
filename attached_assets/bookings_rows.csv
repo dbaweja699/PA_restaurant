@@ -1,0 +1,14 @@
+id,customer_name,booking_time,party_size,notes,special_occasion,ai_processed,source,user_id,call_id
+1,John Doe,2025-03-27 22:54:40.441682+00,2,Window seat preferred,Anniversary,true,Website,,
+2,Jane Smith,2025-03-28 22:54:40.441682+00,4,Vegan options required,Birthday,false,Phone Call,,
+3,Alice Johnson,2025-03-29 22:54:40.441682+00,6,Celebrating promotion,None,true,Walk-in,,
+4,Bob Brown,2025-03-30 22:54:40.441682+00,8,Near the bar,None,false,Website,,
+5,Charlie Davis,2025-03-31 22:54:40.441682+00,3,Quiet corner preferred,Date Night,true,App,,
+6,David Wilson,2025-04-01 22:54:40.441682+00,5,Gluten-free menu needed,Family Dinner,false,Phone Call,,
+7,Emily White,2025-04-02 22:54:40.441682+00,2,Allergic to nuts,None,true,Website,,
+8,Frank Harris,2025-04-03 22:54:40.441682+00,10,Corporate dinner event,Business Meeting,true,Email,,
+9,Grace Lewis,2025-04-04 22:54:40.441682+00,7,Needs a high chair,Baby Shower,false,Walk-in,,
+11,API Test Customer,2025-04-01 19:00:00+00,6,This is a test booking from API,Anniversary,true,API,,
+12,Kate Narrow,2024-04-05 19:00:00+00,6,try to reserve the window seat,Yes,false,,,
+62,Shetij,2025-04-11 21:00:00+00,5,No notes,casual dining,true,Phone Call,,30
+65,Shetich,2025-04-12 21:00:00+00,5,None,friends meet up,true,Phone Call,,32
