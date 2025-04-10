@@ -495,12 +495,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid booking data", details: error.errors });
       }
       // If we get here, it's likely a permission error from Supabase
-      if (error instanceof Error && error.message && 
-          (error.message.includes('permission denied') || 
-           error.message.includes('Unable to create'))) {
-        return res.status(403).json({ 
-          error: "Permission denied", 
-          message: "This application is in read-only mode. The administrator needs to create bookings in the database directly."
+      if (error instanceof Error) {
+        console.error('Detailed booking creation error:', error);
+        
+        if (error.message && (error.message.includes('permission denied') || error.message.includes('Unable to create'))) {
+          return res.status(403).json({ 
+            error: "Permission denied", 
+            message: "This application is in read-only mode. The administrator needs to create bookings in the database directly."
+          });
+        }
+        
+        return res.status(500).json({
+          error: "Database error",
+          message: error.message
         });
       }
       res.status(400).json({ error: "Invalid booking data" });

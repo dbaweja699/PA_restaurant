@@ -99,12 +99,22 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
       form.reset(defaultValues);
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || "Failed to create booking";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      console.error('Booking creation error:', error?.response?.data || error);
+      const errorMessage = error?.response?.data?.message || error?.message || "Failed to create booking";
+      
+      if (errorMessage.includes('read-only mode')) {
+        toast({
+          title: "Database Access Error",
+          description: "Unable to create booking - database is in read-only mode. Please contact administrator.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 
