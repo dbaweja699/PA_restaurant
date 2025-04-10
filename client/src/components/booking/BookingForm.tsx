@@ -98,10 +98,11 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
       onOpenChange(false);
       form.reset(defaultValues);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || "Failed to create booking";
       toast({
         title: "Error",
-        description: "Failed to create booking",
+        description: errorMessage,
         variant: "destructive",
       });
     },
