@@ -468,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data: bookings, error } = await supabase
         .from('bookings')
         .select('*')
-        .order('bookingTime', { ascending: false });
+        .order('booking_time', { ascending: false });
 
       if (error) {
         console.error('Supabase error fetching bookings:', error);
