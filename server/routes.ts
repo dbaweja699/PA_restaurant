@@ -495,23 +495,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Attempting to create booking with data:', req.body);
       
-      // Validate incoming data
-      const validatedData = insertBookingSchema.parse(req.body);
-      console.log('Validation passed, creating booking:', validatedData);
-      
-      // Prepare the booking object using exact field names matching the database
-      const bookingData = {
-        customer_name: validatedData.customerName,
-        booking_time: validatedData.bookingTime,
-        party_size: validatedData.partySize,
-        notes: validatedData.notes || null,
-        status: validatedData.status || 'confirmed',
-        special_occasion: validatedData.specialOccasion || null,
-        ai_processed: validatedData.aiProcessed || false,
-        source: validatedData.source || 'website',
-        user_id: null,
-        call_id: validatedData.callId || null
-      };
+      // Create a booking through the storage interface for consistent usage
+      try {
+        const booking = await storage.createBooking({
+          customerName: req.body.customerName,
+          bookingTime: new Date(req.body.bookingTime),
+          partySize: req.body.partySize,
+          notes: req.body.notes || '',
+          status: req.body.status || 'confirmed',
+          specialOccasion: req.body.specialOccasion || null,
+          aiProcessed: req.body.aiProcessed || false,
+          source: req.body.source || 'website'
+        });
+        
+        console.log('Booking created successfully:', booking);
+        return res.status(201).json(booking);
+      } catch (storageError) {
+        console.error('Storage error creating booking:', storageError);
+        return res.status(500).json({ 
+          error: "Failed to create booking", 
+          message: storageError instanceof Error ? storageError.message : "Unknown error" 
+        });
+      }
       
       console.log('Prepared booking data for Supabase:', bookingData);
 

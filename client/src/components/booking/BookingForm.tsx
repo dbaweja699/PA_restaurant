@@ -87,15 +87,15 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
       const [hours, minutes] = timeValue.split(':');
       formattedDate.setHours(parseInt(hours), parseInt(minutes));
       
-      // Create properly formatted booking object with snake_case keys for backend
+      // Create properly formatted booking object with keys matching schema
       const bookingData = {
-        customer_name: data.customerName,
-        booking_time: formattedDate.toISOString(),
-        party_size: data.partySize,
+        customerName: data.customerName,
+        bookingTime: formattedDate.toISOString(),
+        partySize: data.partySize,
         notes: data.notes || '',
         status: data.status || 'confirmed',
-        special_occasion: data.specialOccasion || null,
-        ai_processed: data.aiProcessed || false,
+        specialOccasion: data.specialOccasion || null,
+        aiProcessed: data.aiProcessed || false,
         source: data.source || 'website'
       };
       
