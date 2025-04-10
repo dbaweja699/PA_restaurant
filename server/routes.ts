@@ -495,117 +495,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Attempting to create booking with data:', req.body);
       
-      // Create a booking through the storage interface for consistent usage
+      // Validate the incoming data
       try {
-        const booking = await storage.createBooking({
-          customerName: req.body.customerName,
-          bookingTime: new Date(req.body.bookingTime),
-          partySize: req.body.partySize,
-          notes: req.body.notes || '',
-          status: req.body.status || 'confirmed',
-          specialOccasion: req.body.specialOccasion || null,
-          aiProcessed: req.body.aiProcessed || false,
-          source: req.body.source || 'website'
-        });
+        const validatedData = insertBookingSchema.parse(req.body);
+        console.log('Validation passed with data:', validatedData);
         
+        // Create a booking through the storage interface
+        const booking = await storage.createBooking(validatedData);
         console.log('Booking created successfully:', booking);
         return res.status(201).json(booking);
-      } catch (storageError) {
-        console.error('Storage error creating booking:', storageError);
-        return res.status(500).json({ 
-          error: "Failed to create booking", 
-          message: storageError instanceof Error ? storageError.message : "Unknown error" 
-        });
-      }
-      
-      console.log('Prepared booking data for Supabase:', bookingData);
-
-      // Test Supabase connection before insert
-      try {
-        const { data: testData, error: testError } = await supabase
-          .from('bookings')
-          .select('count')
-          .limit(1);
-          
-        if (testError) {
-          console.error('Supabase connection test error:', testError);
-          return res.status(500).json({ 
-            error: "Database connection issue", 
-            message: "Failed to connect to the bookings table",
-            details: testError.message
+      } catch (validationError) {
+        console.error('Validation error:', validationError);
+        if (validationError instanceof z.ZodError) {
+          return res.status(400).json({ 
+            error: "Invalid booking data", 
+            details: validationError.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
           });
         }
-        
-        console.log('Supabase connection test successful:', testData);
-      } catch (connError) {
-        console.error('Supabase connection test exception:', connError);
-      }
-      
-      // Insert directly using Supabase with detailed error handling
-      const { data: booking, error } = await supabase
-        .from('bookings')
-        .insert([bookingData])
-        .select();
-
-      if (error) {
-        console.error('Supabase error creating booking:', error);
-        
-        // Check for specific error types
-        if (error.code === '42501') {
-          return res.status(403).json({ 
-            error: "Permission denied", 
-            message: "Your account doesn't have permission to insert bookings",
-            code: error.code
-          });
-        } else if (error.code === '23505') {
-          return res.status(409).json({ 
-            error: "Duplicate booking", 
-            message: "A booking with these details already exists",
-            code: error.code
-          });
-        }
-        
-        return res.status(500).json({ 
-          error: "Failed to create booking", 
-          message: error.message,
-          details: error.details || 'No additional details',
-          code: error.code
+        return res.status(400).json({ 
+          error: "Invalid booking data",
+          message: validationError instanceof Error ? validationError.message : "Unknown validation error"
         });
       }
-      
-      if (booking && booking.length > 0) {
-        console.log('Booking created successfully with direct return:', booking[0]);
-        return res.status(201).json(booking[0]);
-      }
-      
-      // Fallback: Fetch the newly created booking if not returned directly
-      const { data: newBooking, error: fetchError } = await supabase
-        .from('bookings')
-        .select('*')
-        .order('id', { ascending: false })
-        .limit(1)
-        .single();
-        
-      if (fetchError) {
-        console.error('Error fetching created booking:', fetchError);
-        // Still return success even if we can't fetch the booking
-        return res.status(201).json({ 
-          message: "Booking created successfully but couldn't fetch the details",
-          success: true
-        });
-      }
-
-      console.log('Booking created successfully (fetched after creation):', newBooking);
-      res.status(201).json(newBooking);
     } catch (error) {
       console.error('Error creating booking:', error);
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          error: "Invalid booking data", 
-          details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
-        });
-      }
-      
       res.status(500).json({ 
         error: "Failed to create booking", 
         message: error instanceof Error ? error.message : "Unknown error" 
