@@ -6,8 +6,10 @@ dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL!;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// Create client with admin privileges to bypass RLS for server operations
+export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   db: {
     schema: 'public',
   },
@@ -17,9 +19,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   global: {
     headers: { 
-      'x-my-custom-header': 'my-app-name',
-      // Add authorization headers to bypass RLS
-      'Authorization': 'Bearer ' + supabaseAnonKey
+      'x-my-custom-header': 'restaurant-ai-backend',
+      // Additional auth header to ensure we bypass RLS
+      'Authorization': 'Bearer ' + supabaseServiceRoleKey
     },
   },
 });

@@ -494,10 +494,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/bookings`, async (req, res) => {
     try {
       console.log('Attempting to create booking with data:', req.body);
+      
+      // Validate incoming data
       const validatedData = insertBookingSchema.parse(req.body);
       console.log('Validation passed, creating booking:', validatedData);
       
-      // Prepare the booking object using exact field names from CSV
+      // Prepare the booking object using exact field names matching the database
       const bookingData = {
         customer_name: validatedData.customerName,
         booking_time: validatedData.bookingTime,
@@ -512,14 +514,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       console.log('Prepared booking data for Supabase:', bookingData);
+
+      // Test Supabase connection before insert
+      try {
+        const { data: testData, error: testError } = await supabase
+          .from('bookings')
+          .select('count')
+          .limit(1);
+          
+        if (testError) {
+          console.error('Supabase connection test error:', testError);
+          return res.status(500).json({ 
+            error: "Database connection issue", 
+            message: "Failed to connect to the bookings table",
+            details: testError.message
+          });
+        }
+        
+        console.log('Supabase connection test successful:', testData);
+      } catch (connError) {
+        console.error('Supabase connection test exception:', connError);
+      }
       
       // Insert directly using Supabase with detailed error handling
       const { data: booking, error } = await supabase
         .from('bookings')
-        .insert([bookingData]);
+        .insert([bookingData])
+        .select();
 
       if (error) {
         console.error('Supabase error creating booking:', error);
+        
+        // Check for specific error types
+        if (error.code === '42501') {
+          return res.status(403).json({ 
+            error: "Permission denied", 
+            message: "Your account doesn't have permission to insert bookings",
+            code: error.code
+          });
+        } else if (error.code === '23505') {
+          return res.status(409).json({ 
+            error: "Duplicate booking", 
+            message: "A booking with these details already exists",
+            code: error.code
+          });
+        }
+        
         return res.status(500).json({ 
           error: "Failed to create booking", 
           message: error.message,
@@ -528,7 +568,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Fetch the newly created booking
+      if (booking && booking.length > 0) {
+        console.log('Booking created successfully with direct return:', booking[0]);
+        return res.status(201).json(booking[0]);
+      }
+      
+      // Fallback: Fetch the newly created booking if not returned directly
       const { data: newBooking, error: fetchError } = await supabase
         .from('bookings')
         .select('*')
@@ -545,12 +590,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      console.log('Booking created successfully:', newBooking);
+      console.log('Booking created successfully (fetched after creation):', newBooking);
       res.status(201).json(newBooking);
     } catch (error) {
       console.error('Error creating booking:', error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid booking data", details: error.errors });
+        return res.status(400).json({ 
+          error: "Invalid booking data", 
+          details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+        });
       }
       
       res.status(500).json({ 
@@ -915,6 +963,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         error: "Failed to create AI agent notification",
         message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Diagnostic endpoint for checking Supabase authentication status
+  app.get(`${apiPrefix}/system/db-auth-status`, async (req, res) => {
+    try {
+      console.log('Testing Supabase authentication status...');
+      
+      // Test if we can read from bookings
+      const { data: readData, error: readError } = await supabase
+        .from('bookings')
+        .select('count');
+        
+      // Test if we can write to bookings
+      const testBooking = {
+        customer_name: 'Auth Test',
+        booking_time: new Date().toISOString(),
+        party_size: 2,
+        source: 'system-test',
+        ai_processed: false
+      };
+      
+      const { data: writeData, error: writeError } = await supabase
+        .from('bookings')
+        .insert([testBooking])
+        .select();
+        
+      // If insert succeeded, delete the test booking
+      let deleteResult = null;
+      let deleteError = null;
+      
+      if (writeData && writeData.length > 0) {
+        const { data, error } = await supabase
+          .from('bookings')
+          .delete()
+          .eq('id', writeData[0].id)
+          .select();
+          
+        deleteResult = data;
+        deleteError = error;
+      }
+      
+      res.json({
+        authStatus: {
+          read: {
+            success: !readError,
+            error: readError ? readError.message : null
+          },
+          write: {
+            success: !writeError,
+            error: writeError ? writeError.message : null,
+            data: writeData ? 'Test booking created' : null
+          },
+          delete: {
+            success: !deleteError,
+            error: deleteError ? deleteError.message : null,
+            data: deleteResult ? 'Test booking deleted' : null
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error testing Supabase auth status:', error);
+      res.status(500).json({
+        error: 'Error testing Supabase auth status',
+        message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });

@@ -80,17 +80,32 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
 
   const mutation = useMutation({
     mutationFn: (data: BookingFormValues) => {
+      console.log('Submitting booking data:', data);
+      
+      // Format date with time
       const formattedDate = new Date(data.bookingTime);
       const [hours, minutes] = timeValue.split(':');
       formattedDate.setHours(parseInt(hours), parseInt(minutes));
       
-      return apiRequest.post('/api/bookings', {
-        ...data,
-        bookingTime: formattedDate.toISOString()
-      });
+      // Create properly formatted booking object with snake_case keys for backend
+      const bookingData = {
+        customerName: data.customerName,
+        bookingTime: formattedDate.toISOString(),
+        partySize: data.partySize,
+        notes: data.notes || '',
+        status: data.status || 'confirmed',
+        specialOccasion: data.specialOccasion || null,
+        aiProcessed: data.aiProcessed || false,
+        source: data.source || 'website'
+      };
+      
+      console.log('Formatted booking data being sent:', bookingData);
+      
+      return apiRequest.post('/api/bookings', bookingData);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    onSuccess: (response) => {
+      console.log('Booking created successfully:', response.data);
+      queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
       toast({
         title: "Success",
         description: "Booking created successfully",
@@ -100,7 +115,14 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
     },
     onError: (error: any) => {
       console.error('Booking creation error:', error?.response?.data || error);
-      const errorMessage = error?.response?.data?.message || error?.message || "Failed to create booking";
+      const errorData = error?.response?.data;
+      
+      // More detailed error logging
+      if (errorData) {
+        console.error('Error details:', errorData);
+      }
+      
+      const errorMessage = errorData?.message || errorData?.error || error?.message || "Failed to create booking";
       
       if (errorMessage.includes('read-only mode')) {
         toast({
