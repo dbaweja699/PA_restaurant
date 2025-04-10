@@ -89,22 +89,22 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
       
       // Create properly formatted booking object with snake_case keys for backend
       const bookingData = {
-        customerName: data.customerName,
-        bookingTime: formattedDate.toISOString(),
-        partySize: data.partySize,
+        customer_name: data.customerName,
+        booking_time: formattedDate.toISOString(),
+        party_size: data.partySize,
         notes: data.notes || '',
         status: data.status || 'confirmed',
-        specialOccasion: data.specialOccasion || null,
-        aiProcessed: data.aiProcessed || false,
+        special_occasion: data.specialOccasion || null,
+        ai_processed: data.aiProcessed || false,
         source: data.source || 'website'
       };
       
       console.log('Formatted booking data being sent:', bookingData);
       
-      return apiRequest.post('/api/bookings', bookingData);
+      return apiRequest("POST", '/api/bookings', bookingData);
     },
     onSuccess: (response) => {
-      console.log('Booking created successfully:', response.data);
+      console.log('Booking created successfully:', response);
       queryClient.invalidateQueries({ queryKey: ['/api/bookings'] });
       toast({
         title: "Success",
@@ -114,29 +114,18 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
       form.reset(defaultValues);
     },
     onError: (error: any) => {
-      console.error('Booking creation error:', error?.response?.data || error);
-      const errorData = error?.response?.data;
+      console.error('Booking creation error:', error);
+      let errorMessage = "Failed to create booking";
       
-      // More detailed error logging
-      if (errorData) {
-        console.error('Error details:', errorData);
+      if (error?.message) {
+        errorMessage = error.message;
       }
       
-      const errorMessage = errorData?.message || errorData?.error || error?.message || "Failed to create booking";
-      
-      if (errorMessage.includes('read-only mode')) {
-        toast({
-          title: "Database Access Error",
-          description: "Unable to create booking - database is in read-only mode. Please contact administrator.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
     },
   });
 
@@ -209,7 +198,20 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
                   </FormItem>
                 )}
               />
-
+              
+              <FormItem>
+                <FormLabel>Time</FormLabel>
+                <FormControl>
+                  <Input
+                    type="time"
+                    value={timeValue}
+                    onChange={(e) => setTimeValue(e.target.value)}
+                  />
+                </FormControl>
+              </FormItem>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="partySize"
@@ -221,9 +223,32 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
                         type="number"
                         min={1}
                         {...field}
-                        onChange={e => field.onChange(parseInt(e.target.value))}
+                        onChange={e => field.onChange(parseInt(e.target.value) || 2)}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="confirmed">Confirmed</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -257,20 +282,21 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
 
               <FormField
                 control={form.control}
-                name="status"
+                name="specialOccasion"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <FormLabel>Special Occasion</FormLabel>
+                    <Select value={field.value || ""} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
+                          <SelectValue placeholder="Select occasion (optional)" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="confirmed">Confirmed</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="birthday">Birthday</SelectItem>
+                        <SelectItem value="anniversary">Anniversary</SelectItem>
+                        <SelectItem value="business">Business Meeting</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -278,30 +304,6 @@ export function BookingForm({ open, onOpenChange }: BookingFormProps) {
                 )}
               />
             </div>
-
-            <FormField
-              control={form.control}
-              name="specialOccasion"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Special Occasion</FormLabel>
-                  <Select value={field.value || ""} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select occasion (optional)" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="birthday">Birthday</SelectItem>
-                      <SelectItem value="anniversary">Anniversary</SelectItem>
-                      <SelectItem value="business">Business Meeting</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
 
             <FormField
               control={form.control}
