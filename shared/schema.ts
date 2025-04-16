@@ -129,16 +129,20 @@ export const orders = pgTable("orders", {
   callId: integer("call_id"), // Reference to call ID for orders made via phone
 });
 
-export const insertOrderSchema = createInsertSchema(orders).pick({
-  customerName: true,
-  orderTime: true,
-  status: true,
-  type: true,
-  tableNumber: true,
-  items: true,
-  total: true,
-  aiProcessed: true,
-  callId: true,
+export const insertOrderSchema = z.object({
+  customerName: z.string().min(1, "Customer name is required"),
+  orderTime: z.string().optional(),
+  status: z.string().optional().default("processing"),
+  type: z.string(),
+  tableNumber: z.string().nullable().optional(),
+  items: z.array(z.object({
+    name: z.string(),
+    price: z.string(),
+    quantity: z.number()
+  })),
+  total: z.string(),
+  aiProcessed: z.boolean().optional().default(false),
+  callId: z.number().nullable().optional(),
 });
 
 export type InsertOrder = z.infer<typeof insertOrderSchema>;

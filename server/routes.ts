@@ -393,23 +393,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate the incoming data
       try {
-        const validatedData = insertOrderSchema.parse(req.body);
-        console.log('Validation passed with data:', validatedData);
+        // Handle validation with more helpful debugging
+        let validatedData;
+        try {
+          validatedData = insertOrderSchema.parse(req.body);
+          console.log('Validation passed with data:', validatedData);
+        } catch (zodError) {
+          console.error('Zod validation error:', zodError);
+          throw zodError;
+        }
+        
+        // Log the exact data being sent to Supabase
+        const orderRecord = {
+          customer_name: validatedData.customerName,
+          order_time: validatedData.orderTime || new Date().toISOString(),
+          status: validatedData.status || 'processing',
+          type: validatedData.type,
+          table_number: validatedData.tableNumber,
+          items: validatedData.items,
+          total: validatedData.total,
+          ai_processed: validatedData.aiProcessed !== undefined ? validatedData.aiProcessed : false,
+          call_id: validatedData.callId
+        };
+        
+        console.log('Inserting order record:', orderRecord);
         
         // Create order directly with Supabase for more control
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
-          .insert([{
-            customer_name: validatedData.customerName,
-            order_time: validatedData.orderTime || new Date().toISOString(),
-            status: validatedData.status || 'processing',
-            type: validatedData.type,
-            table_number: validatedData.tableNumber,
-            items: validatedData.items,
-            total: validatedData.total,
-            ai_processed: validatedData.aiProcessed || false,
-            call_id: validatedData.callId
-          }])
+          .insert([orderRecord])
           .select('*')
           .single();
         

@@ -175,11 +175,11 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
         throw new Error("At least one item is required");
       }
       
-      // Format the data to send to the server
+      // Format the data to send to the server - ensure it matches the schema exactly
       const orderData = {
         customerName: data.customerName,
         type: data.type,
-        tableNumber: data.tableNumber,
+        tableNumber: data.tableNumber || null,
         items: validItems,
         total: data.total,
         status: "processing",
@@ -190,7 +190,17 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
       console.log("Submitting order data:", orderData);
       
       try {
-        const response = await apiRequest("POST", "/api/orders", orderData);
+        // Add a delay to help with potential race conditions
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Make the request with a longer timeout
+        const response = await fetch('/api/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(orderData),
+        });
         
         if (!response.ok) {
           const errorData = await response.json();
@@ -198,7 +208,9 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
           throw new Error(errorData.message || errorData.error || "Failed to create order");
         }
         
-        return await response.json();
+        const responseData = await response.json();
+        console.log("Server response:", responseData);
+        return responseData;
       } catch (error) {
         console.error("Request error:", error);
         throw error;
@@ -234,6 +246,16 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
   });
 
   function onSubmit(data: OrderFormValues) {
+    // Validate customer name
+    if (!data.customerName || data.customerName.trim() === "") {
+      toast({
+        title: "Validation Error",
+        description: "Customer name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Validate that at least one item is valid
     const validItems = orderItems.filter(item => item.name.trim() !== "");
     if (validItems.length === 0) {
@@ -249,10 +271,19 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
     data.items = orderItems;
     
     // Ensure total is properly calculated
-    calculateTotal(orderItems);
+    const updatedTotal = calculateTotal(orderItems);
+    data.total = updatedTotal;
+    
+    console.log("Submitting order with data:", {
+      ...data,
+      items: validItems,
+    });
     
     // Submit the order
-    mutation.mutate(data);
+    mutation.mutate({
+      ...data,
+      items: validItems
+    });
   }
 
   return (
