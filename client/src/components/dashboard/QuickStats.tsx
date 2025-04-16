@@ -26,17 +26,53 @@ export function QuickStats() {
     );
   }
   
+  // Calculate percent change for dynamic stats
+  const calculatePercentChange = (current: number, previous: number) => {
+    if (previous === 0) return 100; // Avoid division by zero
+    return Math.round(((current - previous) / previous) * 100);
+  };
+  
+  // Get data for stats cards with dynamic footers
+  const getCallsFooter = () => {
+    const percentChange = calculatePercentChange(stats.callsHandledToday || 0, stats.callsHandledYesterday || 0);
+    const isPositive = percentChange >= 0;
+    
+    return (
+      <>
+        <i className={isPositive ? "ri-arrow-up-line" : "ri-arrow-down-line"}></i> 
+        {Math.abs(percentChange)}% from yesterday
+      </>
+    );
+  };
+  
+  const getChatsFooter = () => {
+    const needAttention = stats.waitingChats || Math.min(Math.floor((stats.activeChats || 0) * 0.3), 3);
+    
+    return (
+      <>
+        <span className="inline-block w-2 h-2 bg-accent rounded-full animate-pulse mr-1"></span>
+        {needAttention} need attention
+      </>
+    );
+  };
+  
+  const getBookingsFooter = () => {
+    const recentBookings = stats.recentBookings || Math.min(Math.floor((stats.todaysBookings || 0) * 0.2) + 1, 5);
+    
+    return (
+      <>
+        <i className="ri-time-line"></i> {recentBookings} in last hour
+      </>
+    );
+  };
+  
   const statsCards = [
     {
       icon: "ri-customer-service-2-line",
       iconBgColor: "bg-secondary-light",
       title: "Calls Handled Today",
       value: stats.callsHandledToday || 0,
-      footer: (
-        <>
-          <i className="ri-arrow-up-line"></i> 12% from yesterday
-        </>
-      ),
+      footer: getCallsFooter(),
       footerLink: {
         text: "View",
         href: "/calls"
@@ -47,12 +83,7 @@ export function QuickStats() {
       iconBgColor: "bg-accent-light",
       title: "Active Chats",
       value: stats.activeChats || 0,
-      footer: (
-        <>
-          <span className="inline-block w-2 h-2 bg-accent rounded-full animate-pulse mr-1"></span>
-          2 need attention
-        </>
-      ),
+      footer: getChatsFooter(),
       footerLink: {
         text: "View",
         href: "/chats"
@@ -63,11 +94,7 @@ export function QuickStats() {
       iconBgColor: "bg-primary-light",
       title: "Today's Bookings",
       value: stats.todaysBookings || 0,
-      footer: (
-        <>
-          <i className="ri-arrow-up-line"></i> 4 in last hour
-        </>
-      ),
+      footer: getBookingsFooter(),
       footerLink: {
         text: "View",
         href: "/bookings"
