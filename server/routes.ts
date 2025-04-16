@@ -110,55 +110,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orders = await storage.getOrders();
       const bookings = await storage.getBookings();
 
-      // Calculate today's bookings
+      // Get current date for today's calculations
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const todayBookings = bookings.filter(booking => {
-        const bookingDate = new Date(booking.bookingTime);
-        bookingDate.setHours(0, 0, 0, 0);
-        return bookingDate.getTime() === today.getTime();
-      }).length;
-
-      // Calculate active chats (chats with status "active" or "pending")
-      const activeChats = chats.filter(chat => 
-        chat && chat.status && (
-          chat.status.toLowerCase() === "active" || 
-          chat.status.toLowerCase() === "pending"
-        )
-      ).length;
-
-      // Calculate orders processed today
-      const todayOrders = orders.filter(order => {
-        const orderDate = new Date(order.orderTime);
-        orderDate.setHours(0, 0, 0, 0);
-        return orderDate.getTime() === today.getTime();
-      });
-
-      const ordersProcessed = todayOrders.length;
-
-      // Calculate total value of today's orders
-      const ordersTotalValue = todayOrders.reduce((total, order) => {
-        // Remove currency symbol and convert to number
-        const value = parseFloat(order.total.replace(/[^0-9.-]+/g, ""));
-        return total + (isNaN(value) ? 0 : value);
-      }, 0).toFixed(2);
-
+      
       // Calculate calls handled today
       const callsHandledToday = calls.filter(call => {
         if (!call.startTime && !call.start_time) return false;
         const callDate = new Date(call.startTime || call.start_time);
-        const today = new Date();
         return callDate.toDateString() === today.toDateString();
       }).length;
 
-      // Calculate active chats more accurately
+      // Calculate active chats
       const activeChats = chats.filter(chat => 
-        (chat.status === "active" || chat.status === "waiting") &&
+        (chat.status === "active" || chat.status === "waiting" || 
+         (chat.status && chat.status.toLowerCase() === "pending")) &&
         (chat.endTime === null && chat.end_time === null)
       ).length;
 
-      // Calculate today's bookings more accurately
-      const today = new Date();
+      // Calculate today's bookings
       const todayBookings = bookings.filter(booking => {
         if (!booking.bookingTime && !booking.booking_time) return false;
         const bookingDate = new Date(booking.bookingTime || booking.booking_time);
