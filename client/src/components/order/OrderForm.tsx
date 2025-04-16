@@ -177,22 +177,32 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
       
       // Format the data to send to the server
       const orderData = {
-        ...data,
+        customerName: data.customerName,
+        type: data.type,
+        tableNumber: data.tableNumber,
         items: validItems,
+        total: data.total,
+        status: "processing",
+        aiProcessed: false,
         orderTime: new Date().toISOString(),
       };
       
       console.log("Submitting order data:", orderData);
       
-      const response = await apiRequest("POST", "/api/orders", orderData);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Order creation failed:", errorData);
-        throw new Error(errorData.message || errorData.error || "Failed to create order");
+      try {
+        const response = await apiRequest("POST", "/api/orders", orderData);
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Order creation failed:", errorData);
+          throw new Error(errorData.message || errorData.error || "Failed to create order");
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error("Request error:", error);
+        throw error;
       }
-      
-      return await response.json();
     },
     onSuccess: (data) => {
       console.log("Order created successfully:", data);

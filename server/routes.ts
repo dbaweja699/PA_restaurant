@@ -396,10 +396,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const validatedData = insertOrderSchema.parse(req.body);
         console.log('Validation passed with data:', validatedData);
         
-        // Create an order through the storage interface
-        const order = await storage.createOrder(validatedData);
-        console.log('Order created successfully:', order);
-        return res.status(201).json(order);
+        // Create order directly with Supabase for more control
+        const { data: orderData, error: orderError } = await supabase
+          .from('orders')
+          .insert([{
+            customer_name: validatedData.customerName,
+            order_time: validatedData.orderTime || new Date().toISOString(),
+            status: validatedData.status || 'processing',
+            type: validatedData.type,
+            table_number: validatedData.tableNumber,
+            items: validatedData.items,
+            total: validatedData.total,
+            ai_processed: validatedData.aiProcessed || false,
+            call_id: validatedData.callId
+          }])
+          .select('*')
+          .single();
+        
+        if (orderError) {
+          console.error('Supabase error creating order:', orderError);
+          return res.status(500).json({
+            error: "Failed to create order in database", 
+            message: orderError.message,
+            details: orderError.details
+          });
+        }
+        
+        if (!orderData) {
+          return res.status(500).json({
+            error: "Failed to retrieve created order",
+            message: "Order was created but could not be retrieved"
+          });
+        }
+        
+        console.log('Order created successfully:', orderData);
+        return res.status(201).json(orderData);
       } catch (validationError) {
         console.error('Validation error:', validationError);
         if (validationError instanceof z.ZodError) {
