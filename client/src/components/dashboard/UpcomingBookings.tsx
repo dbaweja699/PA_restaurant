@@ -11,7 +11,7 @@ export function UpcomingBookings() {
   const { data: bookings, isLoading } = useQuery<Booking[]>({ 
     queryKey: ['/api/bookings'],
   });
-  
+
   if (isLoading) {
     return (
       <Card>
@@ -30,7 +30,7 @@ export function UpcomingBookings() {
       </Card>
     );
   }
-  
+
   if (!bookings || bookings.length === 0) {
     return (
       <Card>
@@ -47,13 +47,13 @@ export function UpcomingBookings() {
       </Card>
     );
   }
-  
+
   // Filter bookings for today and sort by time
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  
+
   const todaysBookings = bookings
     .filter(booking => {
       const bookingDate = new Date(booking.bookingTime);
@@ -62,21 +62,21 @@ export function UpcomingBookings() {
     .sort((a, b) => 
       new Date(a.bookingTime).getTime() - new Date(b.bookingTime).getTime()
     );
-    
+
   const getTimeClass = (bookingTime: Date) => {
     const now = new Date();
     const bookingHour = new Date(bookingTime).getHours();
     const isPrimaryTime = bookingHour >= 17; // After 5pm is dinner time
-    
+
     if (isPrimaryTime) {
       return "bg-primary-light text-white";
     }
     return "bg-neutral-100 text-neutral-800";
   };
-  
+
   const getStatusClass = (status: string | null | undefined) => {
     if (!status) return "bg-neutral-100 text-neutral-600";
-    
+
     switch (status.toLowerCase()) {
       case "confirmed":
         return "bg-green-100 text-green-800";
@@ -88,7 +88,7 @@ export function UpcomingBookings() {
         return "bg-neutral-100 text-neutral-600";
     }
   };
-  
+
   return (
     <Card>
       <CardHeader>
@@ -120,7 +120,7 @@ export function UpcomingBookings() {
               )}>
                 {booking.status ? 
                   booking.status.charAt(0).toUpperCase() + booking.status.slice(1) : 
-                  "Unknown"
+                  "Confirmed"
                 }
               </div>
             </div>
