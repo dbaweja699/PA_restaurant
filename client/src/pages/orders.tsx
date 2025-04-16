@@ -93,44 +93,68 @@ function OrderDetailsRow({ order }: { order: Order }) {
     
     if (order.items) {
       try {
-        // Case 1: If it's already an array (like [{"qty":1,"item":"Laptop"}])
-        if (Array.isArray(order.items)) {
-          parsedItems = order.items.map(item => ({
-            name: item.item || item.name,
-            quantity: item.qty || item.quantity || 1,
-            price: item.price || ''
-          }));
-        } 
-        // Case 2: If it's a string representation of JSON (like "{\"Veg Manchurian\": 1}")
+        // Handle the new format where items can be a complex object with "original" and "formatted" properties
+        if (typeof order.items === 'object' && order.items !== null) {
+          // Case 1: New format with original and formatted properties
+          if (order.items.original && Array.isArray(order.items.original)) {
+            parsedItems = order.items.original.map(item => ({
+              name: item.name || item.item || '',
+              quantity: item.quantity || item.qty || 1,
+              price: item.price || ''
+            }));
+          }
+          // Case 2: If it's already an array (like [{"qty":1,"item":"Laptop"}])
+          else if (Array.isArray(order.items)) {
+            parsedItems = order.items.map(item => ({
+              name: item.name || item.item || '',
+              quantity: item.quantity || item.qty || 1,
+              price: item.price || ''
+            }));
+          }
+          // Case 3: If it's a formatted object (like {"Veg Manchurian":1})
+          else if (order.items.formatted) {
+            parsedItems = Object.entries(order.items.formatted).map(([name, quantity]) => ({
+              name,
+              quantity: quantity as number,
+              price: ''
+            }));
+          }
+          // Case 4: If it's a simple object mapping names to quantities
+          else if (!Array.isArray(order.items) && typeof order.items === 'object') {
+            // Filter out non-object properties like "__proto__"
+            const entries = Object.entries(order.items).filter(
+              ([key]) => !key.startsWith('_') && key !== 'original' && key !== 'formatted'
+            );
+            
+            if (entries.length > 0) {
+              parsedItems = entries.map(([name, quantity]) => ({
+                name,
+                quantity: typeof quantity === 'number' ? quantity : 1,
+                price: ''
+              }));
+            }
+          }
+        }
+        // Case 5: If it's a string representation of JSON
         else if (typeof order.items === 'string') {
           const itemsObj = JSON.parse(order.items);
           
           if (Array.isArray(itemsObj)) {
-            // Handle string of array case
             parsedItems = itemsObj.map(item => ({
-              name: item.item || item.name,
-              quantity: item.qty || item.quantity || 1,
+              name: item.name || item.item || '',
+              quantity: item.quantity || item.qty || 1,
               price: item.price || ''
             }));
           } else {
-            // Handle string of object case
             parsedItems = Object.entries(itemsObj).map(([name, quantity]) => ({
               name,
               quantity: quantity as number,
-              price: '' // We don't have individual prices in this format
+              price: ''
             }));
           }
-        } 
-        // Case 3: If it's a plain object (like {"Veg Manchurian":1})
-        else if (typeof order.items === 'object') {
-          parsedItems = Object.entries(order.items).map(([name, quantity]) => ({
-            name,
-            quantity: quantity as number,
-            price: '' // We don't have individual prices in this format
-          }));
         }
       } catch (e) {
-        console.error("Error parsing order items:", e);
+        console.error("Error parsing order items:", e, order.items);
         parsedItems = [];
       }
     }
@@ -209,12 +233,12 @@ function OrderDetailsRow({ order }: { order: Order }) {
             <div className="text-sm">
               <h4 className="font-medium mb-2">Order Items</h4>
               <ul className="space-y-1">
-                {items.map((item: any, index: number) => (
+                {items.map((item: OrderItem, index: number) => (
                   <li key={index} className="flex justify-between">
                     <span>
-                      {item.quantity}x {item.name}
+                      {item.quantity}x {String(item.name)}
                     </span>
-                    <span>{item.price}</span>
+                    <span>{typeof item.price === 'string' ? item.price : ''}</span>
                   </li>
                 ))}
               </ul>
