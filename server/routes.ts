@@ -390,7 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/orders`, async (req, res) => {
     try {
       console.log('Attempting to create order with data:', req.body);
-      
+
       // Validate the incoming data
       try {
         // Handle validation with more helpful debugging
@@ -402,29 +402,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error('Zod validation error:', zodError);
           throw zodError;
         }
-        
-        // Log the exact data being sent to Supabase
-        const orderRecord = {
-          customer_name: validatedData.customerName,
-          order_time: validatedData.orderTime || new Date().toISOString(),
-          status: validatedData.status || 'processing',
-          type: validatedData.type,
-          table_number: validatedData.tableNumber,
-          items: validatedData.items,
-          total: validatedData.total,
-          ai_processed: validatedData.aiProcessed !== undefined ? validatedData.aiProcessed : false,
-          call_id: validatedData.callId
-        };
-        
-        console.log('Inserting order record:', orderRecord);
-        
+
+        // Format the order type to always prefix with 'manual-' for orders from the form
+        const orderType = validatedData.type.startsWith('manual-') 
+          ? validatedData.type 
+          : `manual-${validatedData.type}`;
+
+        // Format items for JSON storage if needed
+        let formattedItems = validatedData.items;
+        if (Array.isArray(validatedData.items)) {
+          // If items is an array of objects, transform it to the required format
+          const itemsObject = {};
+          validatedData.items.forEach(item => {
+            if (item.name && item.quantity) {
+              itemsObject[item.name] = item.quantity;
+            }
+          });
+          // Keep both formats for backward compatibility
+          formattedItems = {
+            formatted: itemsObject,
+            original: validatedData.items
+          };
+        }
+
         // Create order directly with Supabase for more control
         const { data: orderData, error: orderError } = await supabase
           .from('orders')
-          .insert([orderRecord])
+          .insert([{
+            customer_name: validatedData.customerName,
+            order_time: validatedData.orderTime || new Date().toISOString(),
+            status: validatedData.status || 'processing',
+            type: orderType,
+            table_number: validatedData.tableNumber,
+            items: formattedItems,
+            total: validatedData.total,
+            ai_processed: validatedData.aiProcessed || false,
+            call_id: validatedData.callId
+          }])
           .select('*')
           .single();
-        
+
         if (orderError) {
           console.error('Supabase error creating order:', orderError);
           return res.status(500).json({
@@ -433,14 +450,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             details: orderError.details
           });
         }
-        
+
         if (!orderData) {
           return res.status(500).json({
             error: "Failed to retrieve created order",
             message: "Order was created but could not be retrieved"
           });
         }
-        
+
         console.log('Order created successfully:', orderData);
         return res.status(201).json(orderData);
       } catch (validationError) {
@@ -469,31 +486,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`PATCH request for order ID: ${req.params.id}`, req.body);
       const id = parseInt(req.params.id);
-      
+
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid order ID, must be a number" });
       }
-      
+
       const order = await storage.getOrderById(id);
       if (!order) {
         console.log(`Order with ID ${id} not found`);
         return res.status(404).json({ error: "Order not found" });
       }
-      
+
       console.log(`Found order:`, order);
-      
+
       // Handle status update specifically
       if (req.body.status && typeof req.body.status === 'string') {
         const validStatuses = ["processing", "confirmed", "ready", "completed", "cancelled"];
         const status = req.body.status.toLowerCase();
-        
+
         if (!validStatuses.includes(status)) {
           return res.status(400).json({ 
             error: "Invalid status value", 
             validValues: validStatuses 
           });
         }
-        
+
         try {
           const updatedOrder = await storage.updateOrder(id, { status });
           console.log(`Updated order status:`, updatedOrder);
@@ -506,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }
-      
+
       // Handle full updates (all other fields)
       try {
         const validatedData = insertOrderSchema.partial().parse(req.body);
@@ -562,12 +579,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/bookings`, async (req, res) => {
     try {
       console.log('Attempting to create booking with data:', req.body);
-      
+
       // Validate the incoming data
       try {
         const validatedData = insertBookingSchema.parse(req.body);
         console.log('Validation passed with data:', validatedData);
-        
+
         // Create a booking through the storage interface
         const booking = await storage.createBooking(validatedData);
         console.log('Booking created successfully:', booking);
@@ -614,40 +631,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       console.log(`Attempting to delete booking with ID: ${id}`);
-      
+
       // First verify the booking exists by direct Supabase query
       const { data: existingBooking, error: findError } = await supabase
         .from('bookings')
         .select('*')
         .eq('id', id)
         .single();
-      
+
       if (findError) {
         console.error('Error finding booking for deletion:', findError);
-        
+
         // Check if the error is a not found error
         if (findError.code === 'PGRST116') {
           return res.status(404).json({ error: "Booking not found" });
         }
-        
+
         return res.status(500).json({ 
           error: "Failed to verify booking", 
           message: findError.message 
         });
       }
-      
+
       if (!existingBooking) {
         return res.status(404).json({ error: "Booking not found" });
       }
-      
+
       console.log('Found booking to delete:', existingBooking);
-      
+
       // Perform the delete operation directly with Supabase
       const { error: deleteError } = await supabase
         .from('bookings')
         .delete()
         .eq('id', id);
-      
+
       if (deleteError) {
         console.error('Error deleting booking from Supabase:', deleteError);
         return res.status(500).json({ 
@@ -657,7 +674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           details: deleteError.details
         });
       }
-      
+
       console.log(`Successfully deleted booking with ID: ${id}`);
       res.status(200).json({ 
         message: "Booking deleted successfully",
@@ -957,12 +974,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(`${apiPrefix}/system/db-auth-status`, async (req, res) => {
     try {
       console.log('Testing Supabase authentication status...');
-      
+
       // Test if we can read from bookings
       const { data: readData, error: readError } = await supabase
         .from('bookings')
         .select('count');
-        
+
       // Test if we can write to bookings
       const testBooking = {
         customer_name: 'Auth Test',
@@ -971,27 +988,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         source: 'system-test',
         ai_processed: false
       };
-      
+
       const { data: writeData, error: writeError } = await supabase
         .from('bookings')
         .insert([testBooking])
         .select();
-        
+
       // If insert succeeded, delete the test booking
       let deleteResult = null;
       let deleteError = null;
-      
+
       if (writeData && writeData.length > 0) {
         const { data, error } = await supabase
           .from('bookings')
           .delete()
           .eq('id', writeData[0].id)
           .select();
-          
+
         deleteResult = data;
         deleteError = error;
       }
-      
+
       res.json({
         authStatus: {
           read: {

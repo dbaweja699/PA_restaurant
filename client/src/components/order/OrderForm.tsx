@@ -178,8 +178,8 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
       // Format the data to send to the server - ensure it matches the schema exactly
       const orderData = {
         customerName: data.customerName,
-        type: data.type,
-        tableNumber: data.tableNumber || null,
+        type: `manual-${data.type}`, // Prefix with 'manual-' to indicate source
+        tableNumber: data.type === 'dine-in' ? data.tableNumber || null : null,
         items: validItems,
         total: data.total,
         status: "processing",

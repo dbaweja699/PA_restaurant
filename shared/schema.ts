@@ -133,7 +133,10 @@ export const insertOrderSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
   orderTime: z.string().optional(),
   status: z.string().optional().default("processing"),
-  type: z.string(),
+  type: z.string().refine(
+    (type) => type === "manual-dine-in" || type === "manual-Takeout",
+    "Order type must be 'manual-dine-in' or 'manual-Takeout'"
+  ),
   tableNumber: z.string().nullable().optional(),
   items: z.array(z.object({
     name: z.string(),
