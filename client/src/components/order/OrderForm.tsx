@@ -117,12 +117,20 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
   // Calculate order total
   const calculateTotal = (items: OrderItem[]) => {
     const total = items.reduce((sum, item) => {
+      // Skip items with empty names
+      if (!item.name.trim()) return sum;
+      
       const price = parseFloat(item.price) || 0;
       const quantity = item.quantity || 0;
       return sum + (price * quantity);
     }, 0);
     
-    form.setValue("total", total.toFixed(2));
+    // Format the total as currency with 2 decimal places
+    const formattedTotal = total.toFixed(2);
+    console.log(`Calculated total: $${formattedTotal} for ${items.length} items`);
+    
+    form.setValue("total", formattedTotal);
+    return formattedTotal;
   };
 
   // Handle voice agent button click
@@ -163,6 +171,10 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
       // Filter out any empty items
       const validItems = data.items.filter(item => item.name.trim() !== "");
       
+      if (validItems.length === 0) {
+        throw new Error("At least one item is required");
+      }
+      
       // Format the data to send to the server
       const orderData = {
         ...data,
@@ -170,23 +182,28 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
         orderTime: new Date().toISOString(),
       };
       
+      console.log("Submitting order data:", orderData);
+      
       const response = await apiRequest("POST", "/api/orders", orderData);
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create order");
+        console.error("Order creation failed:", errorData);
+        throw new Error(errorData.message || errorData.error || "Failed to create order");
       }
       
       return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Order created successfully:", data);
+      
       // Invalidate queries to refetch data
       queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
       
       // Show success message and close the form
       toast({
         title: "Order Created",
-        description: "The order has been successfully created.",
+        description: `Order #${data.id} has been successfully created.`,
         variant: "default",
       });
       
@@ -197,8 +214,9 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
       onOpenChange(false);
     },
     onError: (error) => {
+      console.error("Order creation error:", error);
       toast({
-        title: "Error",
+        title: "Error Creating Order",
         description: error instanceof Error ? error.message : "Failed to create order",
         variant: "destructive",
       });
@@ -206,8 +224,24 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
   });
 
   function onSubmit(data: OrderFormValues) {
+    // Validate that at least one item is valid
+    const validItems = orderItems.filter(item => item.name.trim() !== "");
+    if (validItems.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please add at least one item to the order",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Make sure we have the latest items data
     data.items = orderItems;
+    
+    // Ensure total is properly calculated
+    calculateTotal(orderItems);
+    
+    // Submit the order
     mutation.mutate(data);
   }
 
@@ -330,6 +364,7 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
                           setOrderItems(newItems);
                           form.setValue(`items.${index}.name`, e.target.value);
                         }}
+                        aria-label="Item name"
                       />
                     </div>
                     <div className="w-20">
@@ -337,12 +372,16 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
                         placeholder="Price"
                         value={item.price}
                         onChange={(e) => {
+                          // Accept only numbers and decimal point
+                          const value = e.target.value.replace(/[^0-9.]/g, '');
+                          
                           const newItems = [...orderItems];
-                          newItems[index].price = e.target.value;
+                          newItems[index].price = value;
                           setOrderItems(newItems);
-                          form.setValue(`items.${index}.price`, e.target.value);
+                          form.setValue(`items.${index}.price`, value);
                           calculateTotal(newItems);
                         }}
+                        aria-label="Item price"
                       />
                     </div>
                     <div className="w-16">
@@ -351,12 +390,24 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
                         min="1"
                         value={item.quantity}
                         onChange={(e) => {
+                          const quantity = parseInt(e.target.value) || 1;
                           const newItems = [...orderItems];
-                          newItems[index].quantity = parseInt(e.target.value) || 1;
+                          newItems[index].quantity = quantity;
                           setOrderItems(newItems);
-                          form.setValue(`items.${index}.quantity`, parseInt(e.target.value) || 1);
+                          form.setValue(`items.${index}.quantity`, quantity);
                           calculateTotal(newItems);
                         }}
+                        onBlur={() => {
+                          // Ensure minimum value of 1 when field loses focus
+                          if (!orderItems[index].quantity || orderItems[index].quantity < 1) {
+                            const newItems = [...orderItems];
+                            newItems[index].quantity = 1;
+                            setOrderItems(newItems);
+                            form.setValue(`items.${index}.quantity`, 1);
+                            calculateTotal(newItems);
+                          }
+                        }}
+                        aria-label="Item quantity"
                       />
                     </div>
                     <Button
@@ -366,6 +417,7 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
                       onClick={() => removeOrderItem(index)}
                       className="h-9 w-9"
                       disabled={orderItems.length <= 1}
+                      aria-label="Remove item"
                     >
                       <X className="h-4 w-4" />
                     </Button>

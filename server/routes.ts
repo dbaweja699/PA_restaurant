@@ -389,11 +389,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(`${apiPrefix}/orders`, async (req, res) => {
     try {
-      const validatedData = insertOrderSchema.parse(req.body);
-      const order = await storage.createOrder(validatedData);
-      res.status(201).json(order);
+      console.log('Attempting to create order with data:', req.body);
+      
+      // Validate the incoming data
+      try {
+        const validatedData = insertOrderSchema.parse(req.body);
+        console.log('Validation passed with data:', validatedData);
+        
+        // Create an order through the storage interface
+        const order = await storage.createOrder(validatedData);
+        console.log('Order created successfully:', order);
+        return res.status(201).json(order);
+      } catch (validationError) {
+        console.error('Validation error:', validationError);
+        if (validationError instanceof z.ZodError) {
+          return res.status(400).json({ 
+            error: "Invalid order data", 
+            details: validationError.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+          });
+        }
+        return res.status(400).json({ 
+          error: "Invalid order data",
+          message: validationError instanceof Error ? validationError.message : "Unknown validation error"
+        });
+      }
     } catch (error) {
-      res.status(400).json({ error: "Invalid order data" });
+      console.error('Error creating order:', error);
+      res.status(500).json({ 
+        error: "Failed to create order", 
+        message: error instanceof Error ? error.message : "Unknown error" 
+      });
     }
   });
 
