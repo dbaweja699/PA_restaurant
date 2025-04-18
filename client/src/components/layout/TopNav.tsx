@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { useQuery } from '@tanstack/react-query';
+import { getQueryFn } from '@/lib/queryClient';
 
 type TopNavProps = {
   openSidebar: () => void;
@@ -24,16 +26,16 @@ export default function TopNav({ openSidebar }: TopNavProps) {
   const handleSignOut = () => {
     // Clear token
     localStorage.removeItem('auth_token');
-    
+
     // Use queryClient to clear all cached data
     queryClient.clear();
-    
+
     // Notify user
     toast({
       title: "Logged out successfully",
       description: "You have been logged out of your account",
     });
-    
+
     // Use setLocation instead of window.location for smoother transition
     setLocation('/auth');
   };
@@ -66,7 +68,10 @@ export default function TopNav({ openSidebar }: TopNavProps) {
         </div>
 
         <div className="ml-4 flex items-center md:ml-6 space-x-4">
-          <NotificationCenter />
+          {/* Notification Center with animation when new notifications arrive */}
+          <div className="relative">
+            <NotificationCenter />
+          </div>
 
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
             <HelpCircleIcon className="h-5 w-5" />

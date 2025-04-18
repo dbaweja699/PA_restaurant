@@ -243,6 +243,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertCallSchema.parse(req.body);
       const call = await storage.createCall(validatedData);
+      
+      // Create notification for new call
+      try {
+        await storage.createNotification({
+          type: 'call',
+          message: `New call from ${validatedData.phoneNumber || "Unknown"}`,
+          details: {
+            callId: call.id,
+            phoneNumber: call.phoneNumber || call.phone_number,
+            startTime: call.startTime || call.start_time,
+            callType: call.type
+          },
+          isRead: false,
+          userId: null // Notify all users
+        });
+      } catch (notificationError) {
+        console.error('Failed to create notification for new call:', notificationError);
+      }
+      
       res.status(201).json(call);
     } catch (error) {
       res.status(400).json({ error: "Invalid call data" });
@@ -335,6 +354,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertReviewSchema.parse(req.body);
       const review = await storage.createReview(validatedData);
+      
+      // Create notification for new review
+      try {
+        const rating = review.rating || 0;
+        const ratingText = "★".repeat(rating) + "☆".repeat(5 - rating);
+        
+        await storage.createNotification({
+          type: 'review',
+          message: `New ${rating}-star review from ${review.customerName || review.customer_name}`,
+          details: {
+            reviewId: review.id,
+            customerName: review.customerName || review.customer_name,
+            rating: review.rating,
+            comment: review.comment,
+            source: review.source
+          },
+          isRead: false,
+          userId: null // Notify all users
+        });
+      } catch (notificationError) {
+        console.error('Failed to create notification for new review:', notificationError);
+      }
+      
       res.status(201).json(review);
     } catch (error) {
       res.status(400).json({ error: "Invalid review data" });
@@ -478,6 +520,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         console.log('Order created successfully:', orderData);
+        
+        // Create notification for new order
+        try {
+          await storage.createNotification({
+            type: 'order',
+            message: `New order: ${orderData.customer_name} - $${orderData.total}`,
+            details: {
+              orderId: orderData.id,
+              orderTime: orderData.order_time,
+              customerName: orderData.customer_name,
+              total: orderData.total,
+              status: orderData.status
+            },
+            isRead: false,
+            userId: null // Notify all users
+          });
+        } catch (notificationError) {
+          console.error('Failed to create notification for new order:', notificationError);
+        }
+        
         return res.status(201).json(orderData);
       } catch (validationError) {
         console.error('Validation error:', validationError);
@@ -607,6 +669,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create a booking through the storage interface
         const booking = await storage.createBooking(validatedData);
         console.log('Booking created successfully:', booking);
+        
+        // Create notification for new booking
+        try {
+          await storage.createNotification({
+            type: 'booking',
+            message: `New booking: ${validatedData.customerName} for ${validatedData.partySize} people`,
+            details: {
+              bookingId: booking.id,
+              bookingTime: booking.bookingTime || booking.booking_time,
+              customerName: booking.customerName || booking.customer_name,
+              partySize: booking.partySize || booking.party_size
+            },
+            isRead: false,
+            userId: null // Notify all users
+          });
+        } catch (notificationError) {
+          console.error('Failed to create notification for new booking:', notificationError);
+        }
+        
         return res.status(201).json(booking);
       } catch (validationError) {
         console.error('Validation error:', validationError);

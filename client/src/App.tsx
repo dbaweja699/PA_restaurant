@@ -21,6 +21,8 @@ import NotFound from "@/pages/not-found";
 // Auth pages
 import SignIn from "@/pages/auth/SignIn";
 import SignUp from "@/pages/auth/SignUp";
+import { Suspense, lazy, useEffect, useState } from "react";
+import { getQueryFn } from "./lib/queryClient";
 
 // Protected app router (dashboard, etc.)
 function AppRouter() {
@@ -52,7 +54,7 @@ function App() {
             </Switch>
           </AuthLayout>
         </Route>
-        
+
         {/* Protected Application Routes */}
         <Route>
           <Protected>

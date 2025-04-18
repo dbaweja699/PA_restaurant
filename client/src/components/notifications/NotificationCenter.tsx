@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Bell, BellDot, X, Check } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Bell, BellDot, X, Check, Volume2, VolumeX } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getQueryFn, apiRequest, queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
@@ -55,7 +55,15 @@ function NotificationCard({ notification, onMarkAsRead }: {
       bgColor: 'bg-yellow-100', 
       icon: <div className="bg-yellow-500 p-2 rounded-full text-white">⭐</div>
     },
+    order: { 
+      bgColor: 'bg-orange-100', 
+      icon: <div className="bg-orange-500 p-2 rounded-full text-white">🛒</div>
+    },
     conversation: { 
+      bgColor: 'bg-purple-100', 
+      icon: <div className="bg-purple-500 p-2 rounded-full text-white">💬</div>
+    },
+    chat: { 
       bgColor: 'bg-purple-100', 
       icon: <div className="bg-purple-500 p-2 rounded-full text-white">💬</div>
     },
@@ -101,21 +109,70 @@ function NotificationCard({ notification, onMarkAsRead }: {
 
 export function NotificationCenter() {
   const [open, setOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [lastNotificationCount, setLastNotificationCount] = useState(0);
+  const notificationSound = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+  
+  useEffect(() => {
+    // Create audio element for notification sound
+    notificationSound.current = new Audio('/notification-sound.mp3');
+    
+    // Fallback to a base64 encoded sound if the file doesn't exist
+    notificationSound.current.onerror = () => {
+      const fallbackSound = new Audio(
+        'data:audio/mp3;base64,SUQzAwAAAAABOlRJVDIAAAAZAAAAbm90aWZpY2F0aW9uLXNvdW5kLm1wMwBUWVhYAAAADwAAAHVzZXIAAHgAYQBtAHAAVEVOQwAAAA8AAABpAFQAdQBuAGUAcwAgADEAMgAuADkALgAwAC4AMQAwADMAVENPTgAAAA8AAABTA09VTkQgRUZGRUNUAAA='
+      );
+      notificationSound.current = fallbackSound;
+    };
+    
+    return () => {
+      if (notificationSound.current) {
+        notificationSound.current = null;
+      }
+    };
+  }, []);
   
   // Fetch all notifications
   const { data: notifications = [], refetch } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
     queryFn: getQueryFn({ on401: 'returnNull' }),
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 15000, // Refetch every 15 seconds
   });
   
   // Fetch unread notifications count
   const { data: unreadNotifications = [] } = useQuery<Notification[]>({
     queryKey: ['/api/notifications/unread'],
     queryFn: getQueryFn({ on401: 'returnNull' }),
-    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchInterval: 8000, // Refetch more frequently - every 8 seconds
   });
+  
+  // Check for new notifications and play sound
+  useEffect(() => {
+    const currentCount = unreadNotifications.length;
+    
+    // Check if we have new notifications since last check
+    if (currentCount > lastNotificationCount && lastNotificationCount > 0) {
+      // Show toast for new notification
+      toast({
+        title: "New Notification",
+        description: currentCount === lastNotificationCount + 1
+          ? unreadNotifications[0].message
+          : `You have ${currentCount - lastNotificationCount} new notifications`,
+        variant: "default",
+      });
+      
+      // Play sound if enabled
+      if (soundEnabled && notificationSound.current) {
+        notificationSound.current.play().catch(err => {
+          console.error("Failed to play notification sound:", err);
+        });
+      }
+    }
+    
+    // Update the last count
+    setLastNotificationCount(currentCount);
+  }, [unreadNotifications, lastNotificationCount]);
   
   // Mark a notification as read
   const markAsReadMutation = useMutation({
@@ -201,6 +258,15 @@ export function NotificationCenter() {
         <div className="flex justify-between items-center p-4 border-b">
           <div className="font-semibold">Notifications</div>
           <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? "Mute notification sounds" : "Enable notification sounds"}
+            >
+              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </Button>
             {unreadNotifications.length > 0 && (
               <Button 
                 variant="ghost" 
@@ -211,7 +277,12 @@ export function NotificationCenter() {
                 Mark all read
               </Button>
             )}
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setOpen(false)}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0" 
+              onClick={() => setOpen(false)}
+            >
               <X className="h-4 w-4" />
             </Button>
           </div>
