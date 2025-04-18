@@ -264,7 +264,50 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                   <CommandInput placeholder="Search across all data..." value={searchQuery} onValueChange={setSearchQuery} />
                   <CommandList>
                     <CommandEmpty>
-                      {isSearching ? 'Searching...' : 'No results found.'}
+                      {isSearching ? 'Searching...' : (
+                        <div className="py-2">
+                          <div className="text-sm text-neutral-500 mb-2">No results found.</div>
+                          <div className="text-xs font-medium text-neutral-600 mb-1">Try visiting these pages:</div>
+                          <div className="grid grid-cols-2 gap-2 mt-1">
+                            <CommandItem 
+                              onSelect={() => setLocation('/reviews')}
+                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
+                            >
+                              <span className="text-xs">Reviews</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/orders')}
+                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
+                            >
+                              <span className="text-xs">Orders</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/bookings')}
+                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
+                            >
+                              <span className="text-xs">Bookings</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/chats')}
+                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
+                            >
+                              <span className="text-xs">Chats</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/calls')}
+                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
+                            >
+                              <span className="text-xs">Calls</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/social')}
+                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
+                            >
+                              <span className="text-xs">Social Media</span>
+                            </CommandItem>
+                          </div>
+                        </div>
+                      )}
                     </CommandEmpty>
                     {searchResults.length > 0 && (
                       <>
