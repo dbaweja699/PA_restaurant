@@ -77,11 +77,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in reviews
       if (reviews) {
         reviews
-          .filter(review => {
-            const customerName = review.customerName || review.customer_name || '';
-            const comment = review.comment || '';
-            return customerName.toLowerCase().includes(query) || comment.toLowerCase().includes(query);
-          })
+          .filter(review => 
+            (review.customerName && review.customerName.toLowerCase().includes(query)) ||
+            (review.customer_name && review.customer_name.toLowerCase().includes(query)) ||
+            (review.comment && review.comment.toLowerCase().includes(query))
+          )
           .slice(0, 5)
           .forEach(review => {
             results.push({
@@ -98,11 +98,12 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in orders
       if (orders) {
         orders
-          .filter(order => {
-            const customerName = order.customerName || order.customer_name || '';
-            const tableNumber = order.tableNumber || order.table_number || '';
-            return customerName.toLowerCase().includes(query) || tableNumber.toLowerCase().includes(query);
-          })
+          .filter(order => 
+            (order.customerName && order.customerName.toLowerCase().includes(query)) ||
+            (order.customer_name && order.customer_name.toLowerCase().includes(query)) ||
+            (order.tableNumber && order.tableNumber.toLowerCase().includes(query)) ||
+            (order.table_number && order.table_number.toLowerCase().includes(query))
+          )
           .slice(0, 5)
           .forEach(order => {
             results.push({
@@ -119,14 +120,12 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in bookings
       if (bookings) {
         bookings
-          .filter(booking => {
-            const customerName = booking.customerName || booking.customer_name || '';
-            const notes = booking.notes || '';
-            const specialOccasion = booking.specialOccasion || '';
-            return customerName.toLowerCase().includes(query) || 
-                   notes.toLowerCase().includes(query) || 
-                   specialOccasion.toLowerCase().includes(query);
-          })
+          .filter(booking => 
+            (booking.customerName && booking.customerName.toLowerCase().includes(query)) ||
+            (booking.customer_name && booking.customer_name.toLowerCase().includes(query)) ||
+            (booking.notes && booking.notes.toLowerCase().includes(query)) ||
+            (booking.specialOccasion && booking.specialOccasion.toLowerCase().includes(query))
+          )
           .slice(0, 5)
           .forEach(booking => {
             results.push({
@@ -143,11 +142,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in calls
       if (calls) {
         calls
-          .filter(call => {
-            const phoneNumber = call.phoneNumber || call.phone_number || '';
-            const notes = call.notes || '';
-            return phoneNumber.toLowerCase().includes(query) || notes.toLowerCase().includes(query);
-          })
+          .filter(call => 
+            (call.phoneNumber && call.phoneNumber.toLowerCase().includes(query)) ||
+            (call.phone_number && call.phone_number.toLowerCase().includes(query)) ||
+            (call.notes && call.notes.toLowerCase().includes(query))
+          )
           .slice(0, 5)
           .forEach(call => {
             results.push({
@@ -164,11 +163,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in chats
       if (chats) {
         chats
-          .filter(chat => {
-            const customerName = chat.customerName || chat.customer_name || '';
-            const transcript = chat.transcript || '';
-            return customerName.toLowerCase().includes(query) || transcript.toLowerCase().includes(query);
-          })
+          .filter(chat => 
+            (chat.customerName && chat.customerName.toLowerCase().includes(query)) ||
+            (chat.customer_name && chat.customer_name.toLowerCase().includes(query)) ||
+            (chat.transcript && chat.transcript.toLowerCase().includes(query))
+          )
           .slice(0, 5)
           .forEach(chat => {
             results.push({
@@ -236,18 +235,13 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                     placeholder="Search reviews, orders, bookings..."
                     value={searchQuery}
                     onChange={(e) => {
-                      const newValue = e.target.value;
-                      setSearchQuery(newValue);
-                      // Only open popover if query has content
-                      if (newValue.length > 1 && !isSearchOpen) {
+                      setSearchQuery(e.target.value);
+                      if (e.target.value.length > 1) {
                         setIsSearchOpen(true);
-                      } else if (newValue.length <= 1 && isSearchOpen) {
-                        setIsSearchOpen(false);
                       }
                     }}
                     onClick={() => {
-                      // Only open popover if query has content
-                      if (searchQuery.length > 1 && !isSearchOpen) {
+                      if (searchQuery.length > 1) {
                         setIsSearchOpen(true);
                       }
                     }}
@@ -255,8 +249,7 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                   {searchQuery && (
                     <button 
                       className="absolute inset-y-0 right-0 flex items-center pr-3" 
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering other click handlers
+                      onClick={() => {
                         setSearchQuery('');
                         setIsSearchOpen(false);
                       }}
@@ -268,48 +261,10 @@ export default function TopNav({ openSidebar }: TopNavProps) {
               </PopoverTrigger>
               <PopoverContent className="p-0 w-[400px]" align="start">
                 <Command>
-                  <CommandInput 
-                    placeholder="Search across all data..." 
-                    value={searchQuery} 
-                    onValueChange={setSearchQuery}
-                  />
+                  <CommandInput placeholder="Search across all data..." value={searchQuery} onValueChange={setSearchQuery} />
                   <CommandList>
                     <CommandEmpty>
-                      {isSearching ? 'Searching...' : (
-                        <div className="py-2">
-                          <p className="px-2 pb-2 text-sm text-neutral-500">No direct matches found. Try these sections:</p>
-                          <div className="space-y-1">
-                            <CommandItem 
-                              onSelect={() => setLocation('/reviews')}
-                              className="cursor-pointer flex items-center"
-                            >
-                              <span className="bg-blue-100 text-blue-800 text-xs rounded-full px-2 py-0.5 mr-2">Reviews</span>
-                              <span className="text-sm">View and manage customer reviews</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/orders')}
-                              className="cursor-pointer flex items-center"
-                            >
-                              <span className="bg-green-100 text-green-800 text-xs rounded-full px-2 py-0.5 mr-2">Orders</span>
-                              <span className="text-sm">Manage restaurant orders</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/bookings')}
-                              className="cursor-pointer flex items-center"
-                            >
-                              <span className="bg-purple-100 text-purple-800 text-xs rounded-full px-2 py-0.5 mr-2">Bookings</span>
-                              <span className="text-sm">View and manage restaurant bookings</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/calls')}
-                              className="cursor-pointer flex items-center"
-                            >
-                              <span className="bg-orange-100 text-orange-800 text-xs rounded-full px-2 py-0.5 mr-2">Calls</span>
-                              <span className="text-sm">View call history and recordings</span>
-                            </CommandItem>
-                          </div>
-                        </div>
-                      )}
+                      {isSearching ? 'Searching...' : 'No results found.'}
                     </CommandEmpty>
                     {searchResults.length > 0 && (
                       <>
