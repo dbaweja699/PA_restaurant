@@ -77,11 +77,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in reviews
       if (reviews) {
         reviews
-          .filter(review => 
-            (review.customerName && review.customerName.toLowerCase().includes(query)) ||
-            (review.customer_name && review.customer_name.toLowerCase().includes(query)) ||
-            (review.comment && review.comment.toLowerCase().includes(query))
-          )
+          .filter(review => {
+            const customerName = review.customerName || review.customer_name || '';
+            const comment = review.comment || '';
+            return customerName.toLowerCase().includes(query) || comment.toLowerCase().includes(query);
+          })
           .slice(0, 5)
           .forEach(review => {
             results.push({
@@ -98,12 +98,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in orders
       if (orders) {
         orders
-          .filter(order => 
-            (order.customerName && order.customerName.toLowerCase().includes(query)) ||
-            (order.customer_name && order.customer_name.toLowerCase().includes(query)) ||
-            (order.tableNumber && order.tableNumber.toLowerCase().includes(query)) ||
-            (order.table_number && order.table_number.toLowerCase().includes(query))
-          )
+          .filter(order => {
+            const customerName = order.customerName || order.customer_name || '';
+            const tableNumber = order.tableNumber || order.table_number || '';
+            return customerName.toLowerCase().includes(query) || tableNumber.toLowerCase().includes(query);
+          })
           .slice(0, 5)
           .forEach(order => {
             results.push({
@@ -120,12 +119,14 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in bookings
       if (bookings) {
         bookings
-          .filter(booking => 
-            (booking.customerName && booking.customerName.toLowerCase().includes(query)) ||
-            (booking.customer_name && booking.customer_name.toLowerCase().includes(query)) ||
-            (booking.notes && booking.notes.toLowerCase().includes(query)) ||
-            (booking.specialOccasion && booking.specialOccasion.toLowerCase().includes(query))
-          )
+          .filter(booking => {
+            const customerName = booking.customerName || booking.customer_name || '';
+            const notes = booking.notes || '';
+            const specialOccasion = booking.specialOccasion || '';
+            return customerName.toLowerCase().includes(query) || 
+                   notes.toLowerCase().includes(query) || 
+                   specialOccasion.toLowerCase().includes(query);
+          })
           .slice(0, 5)
           .forEach(booking => {
             results.push({
@@ -142,11 +143,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in calls
       if (calls) {
         calls
-          .filter(call => 
-            (call.phoneNumber && call.phoneNumber.toLowerCase().includes(query)) ||
-            (call.phone_number && call.phone_number.toLowerCase().includes(query)) ||
-            (call.notes && call.notes.toLowerCase().includes(query))
-          )
+          .filter(call => {
+            const phoneNumber = call.phoneNumber || call.phone_number || '';
+            const notes = call.notes || '';
+            return phoneNumber.toLowerCase().includes(query) || notes.toLowerCase().includes(query);
+          })
           .slice(0, 5)
           .forEach(call => {
             results.push({
@@ -163,11 +164,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
       // Search in chats
       if (chats) {
         chats
-          .filter(chat => 
-            (chat.customerName && chat.customerName.toLowerCase().includes(query)) ||
-            (chat.customer_name && chat.customer_name.toLowerCase().includes(query)) ||
-            (chat.transcript && chat.transcript.toLowerCase().includes(query))
-          )
+          .filter(chat => {
+            const customerName = chat.customerName || chat.customer_name || '';
+            const transcript = chat.transcript || '';
+            return customerName.toLowerCase().includes(query) || transcript.toLowerCase().includes(query);
+          })
           .slice(0, 5)
           .forEach(chat => {
             results.push({
@@ -236,13 +237,17 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
-                      if (e.target.value.length > 1) {
-                        setIsSearchOpen(true);
+                      // Only update open state if needed
+                      const shouldBeOpen = e.target.value.length > 1;
+                      if (shouldBeOpen !== isSearchOpen) {
+                        setIsSearchOpen(shouldBeOpen);
                       }
                     }}
                     onClick={() => {
-                      if (searchQuery.length > 1) {
-                        setIsSearchOpen(true);
+                      // Only update open state if needed
+                      const shouldBeOpen = searchQuery.length > 1;
+                      if (shouldBeOpen !== isSearchOpen) {
+                        setIsSearchOpen(shouldBeOpen);
                       }
                     }}
                   />
@@ -261,7 +266,15 @@ export default function TopNav({ openSidebar }: TopNavProps) {
               </PopoverTrigger>
               <PopoverContent className="p-0 w-[400px]" align="start">
                 <Command>
-                  <CommandInput placeholder="Search across all data..." value={searchQuery} onValueChange={setSearchQuery} />
+                  <CommandInput 
+                    placeholder="Search across all data..." 
+                    value={searchQuery} 
+                    onValueChange={(value) => {
+                      if (value !== searchQuery) {
+                        setSearchQuery(value);
+                      }
+                    }} 
+                  />
                   <CommandList>
                     <CommandEmpty>
                       {isSearching ? 'Searching...' : (
