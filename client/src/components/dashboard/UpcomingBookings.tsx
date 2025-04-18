@@ -14,16 +14,16 @@ export function UpcomingBookings() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium text-neutral-900">
-            Today's Bookings
+      <Card className="bg-card border-accent/20 shadow-md animate-pulse-glow">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-medium text-primary-foreground flex items-center">
+            <span className="bg-primary px-2 py-1 rounded-md mr-2">Today's</span> Bookings
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="w-full h-12" />
+              <Skeleton key={i} className="w-full h-12 bg-accent/10" />
             ))}
           </div>
         </CardContent>
@@ -33,14 +33,14 @@ export function UpcomingBookings() {
 
   if (!bookings || bookings.length === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-medium text-neutral-900">
-            Today's Bookings
+      <Card className="bg-card border-accent/20 shadow-md animate-pulse-glow">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-medium text-primary-foreground flex items-center">
+            <span className="bg-primary px-2 py-1 rounded-md mr-2">Today's</span> Bookings
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-neutral-500 py-8">
+          <p className="text-center text-muted-foreground py-8 border border-dashed border-accent/30 rounded-md bg-background/50">
             No bookings scheduled for today.
           </p>
         </CardContent>
@@ -69,37 +69,40 @@ export function UpcomingBookings() {
     const isPrimaryTime = bookingHour >= 17; // After 5pm is dinner time
 
     if (isPrimaryTime) {
-      return "bg-primary-light text-white";
+      return "bg-primary text-primary-foreground";
     }
-    return "bg-neutral-100 text-neutral-800";
+    return "bg-accent text-accent-foreground";
   };
 
   const getStatusClass = (status: string | null | undefined) => {
-    if (!status) return "bg-neutral-100 text-neutral-600";
+    if (!status) return "bg-secondary/80 text-secondary-foreground";
 
     switch (status.toLowerCase()) {
       case "confirmed":
-        return "bg-green-100 text-green-800";
+        return "bg-green-600 text-white";
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-500 text-white";
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return "bg-red-500 text-white";
       default:
-        return "bg-neutral-100 text-neutral-600";
+        return "bg-secondary/80 text-secondary-foreground";
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg font-medium text-neutral-900">
-          Today's Bookings
+    <Card className="bg-card border-accent/20 shadow-md animate-pulse-glow">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-medium text-primary-foreground flex items-center">
+          <span className="bg-primary px-2 py-1 rounded-md mr-2">Today's</span> Bookings
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3 max-h-80 overflow-y-auto scrollbar-hide">
+        <div className="space-y-1 max-h-80 overflow-y-auto scrollbar-hide">
           {todaysBookings.map((booking) => (
-            <div key={booking.id} className="flex items-center justify-between p-2 hover:bg-neutral-50 rounded-md">
+            <div 
+              key={booking.id} 
+              className="flex items-center justify-between p-2 hover:bg-accent/10 rounded-md border-l-2 border-accent/50 mb-2 bg-card shadow-sm"
+            >
               <div className="flex items-center">
                 <div className={cn(
                   "font-medium rounded-md px-2 py-1 text-xs w-16 text-center",
@@ -108,14 +111,14 @@ export function UpcomingBookings() {
                   {format(new Date(booking.bookingTime), "h:mm a")}
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-neutral-800">{booking.customerName}</p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-sm font-medium text-primary">{booking.customerName}</p>
+                  <p className="text-xs text-accent-foreground">
                     Table for {booking.partySize} • {booking.notes || booking.specialOccasion || "No notes"}
                   </p>
                 </div>
               </div>
               <div className={cn(
-                "text-xs px-2 py-1 rounded-md",
+                "text-xs px-2 py-1 rounded-md font-medium shadow-sm",
                 getStatusClass(booking.status)
               )}>
                 {booking.status ? 
@@ -127,9 +130,9 @@ export function UpcomingBookings() {
           ))}
         </div>
       </CardContent>
-      <CardFooter className="justify-center">
-        <Button variant="link" asChild>
-          <Link href="/bookings" className="text-accent hover:text-accent-dark text-sm font-medium">
+      <CardFooter className="justify-center pt-2 border-t border-accent/20">
+        <Button variant="outline" size="sm" asChild className="hover:bg-primary hover:text-primary-foreground button-glow">
+          <Link href="/bookings" className="text-sm font-medium">
             Manage Bookings
           </Link>
         </Button>
