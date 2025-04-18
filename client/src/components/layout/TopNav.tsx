@@ -264,7 +264,41 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                   <CommandInput placeholder="Search across all data..." value={searchQuery} onValueChange={setSearchQuery} />
                   <CommandList>
                     <CommandEmpty>
-                      {isSearching ? 'Searching...' : 'No results found.'}
+                      {isSearching ? 'Searching...' : (
+                        <div className="py-2">
+                          <p className="px-2 pb-2 text-sm text-neutral-500">No direct matches found. Try these sections:</p>
+                          <div className="space-y-1">
+                            <CommandItem 
+                              onSelect={() => setLocation('/reviews')}
+                              className="cursor-pointer flex items-center"
+                            >
+                              <span className="bg-blue-100 text-blue-800 text-xs rounded-full px-2 py-0.5 mr-2">Reviews</span>
+                              <span className="text-sm">View and manage customer reviews</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/orders')}
+                              className="cursor-pointer flex items-center"
+                            >
+                              <span className="bg-green-100 text-green-800 text-xs rounded-full px-2 py-0.5 mr-2">Orders</span>
+                              <span className="text-sm">Manage restaurant orders</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/bookings')}
+                              className="cursor-pointer flex items-center"
+                            >
+                              <span className="bg-purple-100 text-purple-800 text-xs rounded-full px-2 py-0.5 mr-2">Bookings</span>
+                              <span className="text-sm">View and manage restaurant bookings</span>
+                            </CommandItem>
+                            <CommandItem 
+                              onSelect={() => setLocation('/calls')}
+                              className="cursor-pointer flex items-center"
+                            >
+                              <span className="bg-orange-100 text-orange-800 text-xs rounded-full px-2 py-0.5 mr-2">Calls</span>
+                              <span className="text-sm">View call history and recordings</span>
+                            </CommandItem>
+                          </div>
+                        </div>
+                      )}
                     </CommandEmpty>
                     {searchResults.length > 0 && (
                       <>
