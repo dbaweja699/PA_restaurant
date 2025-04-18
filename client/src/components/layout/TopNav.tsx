@@ -236,25 +236,27 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                     placeholder="Search reviews, orders, bookings..."
                     value={searchQuery}
                     onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      // Only update open state if needed
-                      const shouldBeOpen = e.target.value.length > 1;
-                      if (shouldBeOpen !== isSearchOpen) {
-                        setIsSearchOpen(shouldBeOpen);
+                      const newValue = e.target.value;
+                      setSearchQuery(newValue);
+                      // Only open popover if query has content
+                      if (newValue.length > 1 && !isSearchOpen) {
+                        setIsSearchOpen(true);
+                      } else if (newValue.length <= 1 && isSearchOpen) {
+                        setIsSearchOpen(false);
                       }
                     }}
                     onClick={() => {
-                      // Only update open state if needed
-                      const shouldBeOpen = searchQuery.length > 1;
-                      if (shouldBeOpen !== isSearchOpen) {
-                        setIsSearchOpen(shouldBeOpen);
+                      // Only open popover if query has content
+                      if (searchQuery.length > 1 && !isSearchOpen) {
+                        setIsSearchOpen(true);
                       }
                     }}
                   />
                   {searchQuery && (
                     <button 
                       className="absolute inset-y-0 right-0 flex items-center pr-3" 
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent triggering other click handlers
                         setSearchQuery('');
                         setIsSearchOpen(false);
                       }}
@@ -269,11 +271,7 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                   <CommandInput 
                     placeholder="Search across all data..." 
                     value={searchQuery} 
-                    onValueChange={(value) => {
-                      if (value !== searchQuery) {
-                        setSearchQuery(value);
-                      }
-                    }} 
+                    onValueChange={setSearchQuery}
                   />
                   <CommandList>
                     <CommandEmpty>
