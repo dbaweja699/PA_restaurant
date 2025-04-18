@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { 
   HelpCircleIcon, 
@@ -13,185 +13,46 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
-import { useQuery } from '@tanstack/react-query';
-import { getQueryFn } from '@/lib/queryClient';
 import { 
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Command, 
   CommandEmpty, 
   CommandGroup, 
   CommandInput, 
   CommandItem, 
-  CommandList, 
-  CommandSeparator
+  CommandList
 } from "@/components/ui/command";
 
 type TopNavProps = {
   openSidebar: () => void;
 };
 
-type SearchResult = {
-  id: number;
-  type: 'review' | 'order' | 'booking' | 'call' | 'chat';
-  title: string;
-  subtitle?: string;
-  href: string;
-  date?: string;
-}
-
 export default function TopNav({ openSidebar }: TopNavProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [, setLocation] = useLocation();
 
-  // Load all data that needs to be searched
-  const { data: reviews } = useQuery({ queryKey: ['/api/reviews'] });
-  const { data: orders } = useQuery({ queryKey: ['/api/orders'] });
-  const { data: bookings } = useQuery({ queryKey: ['/api/bookings'] });
-  const { data: calls } = useQuery({ queryKey: ['/api/calls'] });
-  const { data: chats } = useQuery({ queryKey: ['/api/chats'] });
+  // Define navigation pages
+  const navigationPages = [
+    { name: "Dashboard", path: "/" },
+    { name: "Reviews", path: "/reviews" },
+    { name: "Orders", path: "/orders" },
+    { name: "Bookings", path: "/bookings" },
+    { name: "Calls", path: "/calls" },
+    { name: "Chats", path: "/chats" },
+    { name: "Social Media", path: "/social" },
+    { name: "Settings", path: "/settings" }
+  ];
 
-  // Function to handle search
-  useEffect(() => {
-    if (searchQuery.length < 2) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    setIsSearching(true);
-    
-    // Small delay to avoid too many searches while typing
-    const timer = setTimeout(() => {
-      const results: SearchResult[] = [];
-      const query = searchQuery.toLowerCase();
-
-      // Search in reviews
-      if (reviews) {
-        reviews
-          .filter(review => 
-            (review.customerName && review.customerName.toLowerCase().includes(query)) ||
-            (review.customer_name && review.customer_name.toLowerCase().includes(query)) ||
-            (review.comment && review.comment.toLowerCase().includes(query))
-          )
-          .slice(0, 5)
-          .forEach(review => {
-            results.push({
-              id: review.id,
-              type: 'review',
-              title: review.customerName || review.customer_name || 'Unknown customer',
-              subtitle: review.comment || 'No comment',
-              href: `/reviews?id=${review.id}`,
-              date: review.date
-            });
-          });
-      }
-
-      // Search in orders
-      if (orders) {
-        orders
-          .filter(order => 
-            (order.customerName && order.customerName.toLowerCase().includes(query)) ||
-            (order.customer_name && order.customer_name.toLowerCase().includes(query)) ||
-            (order.tableNumber && order.tableNumber.toLowerCase().includes(query)) ||
-            (order.table_number && order.table_number.toLowerCase().includes(query))
-          )
-          .slice(0, 5)
-          .forEach(order => {
-            results.push({
-              id: order.id,
-              type: 'order',
-              title: order.customerName || order.customer_name || 'Unknown customer',
-              subtitle: `$${order.total} - ${order.status}`,
-              href: `/orders?id=${order.id}`,
-              date: order.orderTime || order.order_time
-            });
-          });
-      }
-
-      // Search in bookings
-      if (bookings) {
-        bookings
-          .filter(booking => 
-            (booking.customerName && booking.customerName.toLowerCase().includes(query)) ||
-            (booking.customer_name && booking.customer_name.toLowerCase().includes(query)) ||
-            (booking.notes && booking.notes.toLowerCase().includes(query)) ||
-            (booking.specialOccasion && booking.specialOccasion.toLowerCase().includes(query))
-          )
-          .slice(0, 5)
-          .forEach(booking => {
-            results.push({
-              id: booking.id,
-              type: 'booking',
-              title: booking.customerName || booking.customer_name || 'Unknown customer',
-              subtitle: `${booking.partySize || booking.party_size} people`,
-              href: `/bookings?id=${booking.id}`,
-              date: booking.bookingTime || booking.booking_time
-            });
-          });
-      }
-
-      // Search in calls
-      if (calls) {
-        calls
-          .filter(call => 
-            (call.phoneNumber && call.phoneNumber.toLowerCase().includes(query)) ||
-            (call.phone_number && call.phone_number.toLowerCase().includes(query)) ||
-            (call.notes && call.notes.toLowerCase().includes(query))
-          )
-          .slice(0, 5)
-          .forEach(call => {
-            results.push({
-              id: call.id,
-              type: 'call',
-              title: call.phoneNumber || call.phone_number || 'Unknown number',
-              subtitle: call.type || 'Call',
-              href: `/calls?id=${call.id}`,
-              date: call.startTime || call.start_time
-            });
-          });
-      }
-
-      // Search in chats
-      if (chats) {
-        chats
-          .filter(chat => 
-            (chat.customerName && chat.customerName.toLowerCase().includes(query)) ||
-            (chat.customer_name && chat.customer_name.toLowerCase().includes(query)) ||
-            (chat.transcript && chat.transcript.toLowerCase().includes(query))
-          )
-          .slice(0, 5)
-          .forEach(chat => {
-            results.push({
-              id: chat.id,
-              type: 'chat',
-              title: chat.customerName || chat.customer_name || 'Unknown customer',
-              subtitle: chat.status || 'Chat',
-              href: `/chats?id=${chat.id}`,
-              date: chat.startTime || chat.start_time
-            });
-          });
-      }
-
-      setSearchResults(results);
-      setIsSearching(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery, reviews, orders, bookings, calls, chats]);
-
-  const handleSearchNavigate = (result: SearchResult) => {
+  const handleNavigate = (path: string) => {
     setIsSearchOpen(false);
     setSearchQuery('');
-    setLocation(result.href);
+    setLocation(path);
   };
 
   const handleSignOut = () => {
@@ -232,19 +93,10 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                   </div>
                   <Input
                     className="block w-full pl-10 pr-3 py-2 border border-neutral-200 rounded-md text-sm placeholder-neutral-500"
-                    placeholder="Search reviews, orders, bookings..."
+                    placeholder="Find pages quickly..."
                     value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      if (e.target.value.length > 1) {
-                        setIsSearchOpen(true);
-                      }
-                    }}
-                    onClick={() => {
-                      if (searchQuery.length > 1) {
-                        setIsSearchOpen(true);
-                      }
-                    }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onClick={() => setIsSearchOpen(true)}
                   />
                   {searchQuery && (
                     <button 
@@ -259,88 +111,46 @@ export default function TopNav({ openSidebar }: TopNavProps) {
                   )}
                 </div>
               </PopoverTrigger>
-              <PopoverContent className="p-0 w-[400px]" align="start">
+              <PopoverContent className="p-0 w-[320px]" align="start">
                 <Command>
-                  <CommandInput placeholder="Search across all data..." value={searchQuery} onValueChange={setSearchQuery} />
+                  <CommandInput 
+                    placeholder="Search pages..." 
+                    value={searchQuery} 
+                    onValueChange={setSearchQuery} 
+                  />
                   <CommandList>
                     <CommandEmpty>
-                      {isSearching ? 'Searching...' : (
-                        <div className="py-2">
-                          <div className="text-sm text-neutral-500 mb-2">No results found.</div>
-                          <div className="text-xs font-medium text-neutral-600 mb-1">Try visiting these pages:</div>
-                          <div className="grid grid-cols-2 gap-2 mt-1">
+                      <div className="py-2">
+                        <div className="text-sm text-neutral-500 mb-2">Navigation</div>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          {navigationPages.map(page => (
                             <CommandItem 
-                              onSelect={() => setLocation('/reviews')}
+                              key={page.path}
+                              onSelect={() => handleNavigate(page.path)}
                               className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
                             >
-                              <span className="text-xs">Reviews</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/orders')}
-                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
-                            >
-                              <span className="text-xs">Orders</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/bookings')}
-                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
-                            >
-                              <span className="text-xs">Bookings</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/chats')}
-                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
-                            >
-                              <span className="text-xs">Chats</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/calls')}
-                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
-                            >
-                              <span className="text-xs">Calls</span>
-                            </CommandItem>
-                            <CommandItem 
-                              onSelect={() => setLocation('/social')}
-                              className="cursor-pointer flex items-center px-2 py-1 rounded-md hover:bg-neutral-100"
-                            >
-                              <span className="text-xs">Social Media</span>
-                            </CommandItem>
-                          </div>
-                        </div>
-                      )}
-                    </CommandEmpty>
-                    {searchResults.length > 0 && (
-                      <>
-                        <CommandGroup heading="Search Results">
-                          {searchResults.map(result => (
-                            <CommandItem 
-                              key={`${result.type}-${result.id}`}
-                              onSelect={() => handleSearchNavigate(result)}
-                              className="cursor-pointer"
-                            >
-                              <div className="flex flex-col">
-                                <div className="flex items-center">
-                                  <span className="capitalize text-xs bg-neutral-100 rounded-full px-2 py-0.5 mr-2">
-                                    {result.type}
-                                  </span>
-                                  <span className="font-medium">{result.title}</span>
-                                </div>
-                                {result.subtitle && (
-                                  <span className="text-xs text-neutral-500 truncate max-w-[350px]">{result.subtitle}</span>
-                                )}
-                              </div>
+                              <span className="text-xs">{page.name}</span>
                             </CommandItem>
                           ))}
-                        </CommandGroup>
-                      </>
-                    )}
-                    {isSearching && (
-                      <div className="p-2">
-                        <Skeleton className="h-5 w-full mb-2" />
-                        <Skeleton className="h-5 w-full mb-2" />
-                        <Skeleton className="h-5 w-full" />
+                        </div>
                       </div>
-                    )}
+                    </CommandEmpty>
+                    <CommandGroup heading="Pages">
+                      {navigationPages
+                        .filter(page => 
+                          page.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        .map(page => (
+                          <CommandItem 
+                            key={page.path}
+                            onSelect={() => handleNavigate(page.path)}
+                            className="cursor-pointer"
+                          >
+                            <span>{page.name}</span>
+                          </CommandItem>
+                        ))
+                      }
+                    </CommandGroup>
                   </CommandList>
                 </Command>
               </PopoverContent>
