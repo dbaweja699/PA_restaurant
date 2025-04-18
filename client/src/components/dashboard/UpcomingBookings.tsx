@@ -69,7 +69,7 @@ export function UpcomingBookings() {
     const isPrimaryTime = bookingHour >= 17; // After 5pm is dinner time
 
     if (isPrimaryTime) {
-      return "bg-primary-light text-white";
+      return "bg-black text-white";
     }
     return "bg-neutral-100 text-neutral-800";
   };
