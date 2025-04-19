@@ -15,6 +15,7 @@ import { queryClient } from "@/lib/queryClient";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { useQuery } from '@tanstack/react-query';
 import { getQueryFn } from '@/lib/queryClient';
+import { VoiceAgent } from "@/components/voice/VoiceAgent";
 import { 
   Popover,
   PopoverContent,
@@ -309,6 +310,11 @@ export default function TopNav({ openSidebar }: TopNavProps) {
           {/* Notification Center with animation when new notifications arrive */}
           <div className="relative">
             <NotificationCenter />
+          </div>
+
+          {/* Voice Agent Button */}
+          <div className="relative">
+            <VoiceAgent />
           </div>
 
           <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
