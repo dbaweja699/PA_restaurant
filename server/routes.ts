@@ -854,6 +854,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: "Invalid social media data" });
     }
   });
+  
+  // Proxy endpoint for the social media webhook
+  app.post(`${apiPrefix}/proxy/socialmedia`, async (req, res) => {
+    try {
+      console.log('Proxying request to social media webhook:', req.body);
+      
+      const response = await fetch('http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/socialmedia', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body),
+      });
+      
+      if (!response.ok) {
+        console.error('Error from n8n webhook:', response.status, response.statusText);
+        return res.status(response.status).json({ 
+          error: `Webhook responded with status ${response.status}` 
+        });
+      }
+      
+      const data = await response.json();
+      console.log('Webhook response:', data);
+      res.json(data);
+    } catch (error) {
+      console.error('Error proxying to webhook:', error);
+      res.status(500).json({ error: 'Failed to connect to webhook service' });
+    }
+  });
 
   // User
   app.get(`${apiPrefix}/user`, async (req, res) => {

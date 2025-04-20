@@ -175,16 +175,10 @@ export default function Social() {
     }
   });
   
-  // Webhook interaction mutation
+  // Webhook interaction mutation using local proxy
   const sendWebhookMutation = useMutation({
     mutationFn: async (webhookData: any) => {
-      const response = await fetch("http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/socialmedia", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(webhookData),
-      });
+      const response = await apiRequest("POST", "/api/proxy/socialmedia", webhookData);
       
       if (!response.ok) {
         throw new Error("Failed to send webhook request");
