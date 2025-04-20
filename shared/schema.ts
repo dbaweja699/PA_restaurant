@@ -243,14 +243,14 @@ export const socialMedia = pgTable("social_media", {
   prompt: text("prompt"),
   image_file_name: text("image_file_name"),
   caption: text("caption"),
-  status: text("status").default("pending"),
 });
 
 export const insertSocialMediaSchema = z.object({
   platform: z.string().nullable().optional(),
   post_content: z.string().nullable().optional(),
   prompt: z.string().nullable().optional(),
-  status: z.string().default("pending"),
+  // Status is needed for frontend logic but not stored in database
+  status: z.string().optional(),
   // Convert ISO string to Date object
   postTime: z.string().transform((str) => new Date(str)).optional(),
   image_file_name: z.string().nullable().optional(),

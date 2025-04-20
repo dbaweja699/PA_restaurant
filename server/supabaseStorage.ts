@@ -667,8 +667,7 @@ export class SupabaseStorage implements IStorage {
       // Map JavaScript camelCase properties to database snake_case columns
       // Only include fields that actually exist in the table structure
       const insertData: any = {
-        platform: insertSocial.platform || null,
-        status: insertSocial.status || 'pending'
+        platform: insertSocial.platform || 'website'
       };
       
       // Add optional fields if they exist
@@ -717,7 +716,6 @@ export class SupabaseStorage implements IStorage {
       const updateData: any = {};
       
       if (social.platform !== undefined) updateData.platform = social.platform;
-      if (social.status !== undefined) updateData.status = social.status;
       if (social.prompt !== undefined) updateData.prompt = social.prompt;
       if (social.post_content !== undefined) updateData.post_content = social.post_content;
       if (social.image_file_name !== undefined) updateData.image_file_name = social.image_file_name;
