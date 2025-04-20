@@ -3,13 +3,18 @@
 import React, { useEffect, useState } from "react";
 import { useConversation } from "@11labs/react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 // Agent ID from environment variables
-const AGENT_ID = "3Udx7nfy3Wpgv9JXpPu7";
+const AGENT_ID = "UEqDscBteVc9MEixiHyx";
 
 export function VoiceAgent() {
   const [open, setOpen] = useState(false);
@@ -62,7 +67,9 @@ export function VoiceAgent() {
       setHasPermission(true);
       setErrorMessage("");
     } catch (error) {
-      setErrorMessage("Microphone access denied. Please enable microphone permissions.");
+      setErrorMessage(
+        "Microphone access denied. Please enable microphone permissions.",
+      );
       console.error("Error accessing microphone:", error);
     }
   };
@@ -108,9 +115,9 @@ export function VoiceAgent() {
 
   return (
     <>
-      <Button 
-        variant="outline" 
-        size="icon" 
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() => setOpen(true)}
         className="text-white hover:bg-white/10 bg-gradient-to-r from-indigo-500 to-purple-600"
         title="Call AI Voice Agent"
@@ -127,8 +134,8 @@ export function VoiceAgent() {
               </span>
               <div className="flex gap-2 items-center">
                 {status === "connected" && (
-                  <Badge 
-                    variant="outline" 
+                  <Badge
+                    variant="outline"
                     className={`${isSpeaking ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"} border-none`}
                   >
                     {isSpeaking ? "Speaking..." : "Listening..."}
@@ -151,12 +158,13 @@ export function VoiceAgent() {
               </div>
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="p-4 space-y-4">
             {status === "connected" ? (
               <div className="space-y-4">
                 <p className="text-sm text-center">
-                  You're connected to the restaurant AI assistant. Speak clearly and the agent will respond to your questions.
+                  You're connected to the restaurant AI assistant. Speak clearly
+                  and the agent will respond to your questions.
                 </p>
                 <Button
                   variant="destructive"
@@ -170,7 +178,8 @@ export function VoiceAgent() {
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-center">
-                  Start a voice conversation with our AI restaurant assistant for help with bookings, menu information, and more.
+                  Start a voice conversation with our AI restaurant assistant
+                  for help with bookings, menu information, and more.
                 </p>
                 <Button
                   onClick={handleStartConversation}

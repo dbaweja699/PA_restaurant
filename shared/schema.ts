@@ -242,6 +242,8 @@ export const socialMedia = pgTable("social_media", {
   status: text("status").notNull().default("pending"),
   ai_response: text("ai_response"),
   ai_responded_at: timestamp("ai_responded_at"),
+  prompt: text("prompt"),
+  post_content: text("post_content"),
 });
 
 export const insertSocialMediaSchema = z.object({
@@ -254,6 +256,8 @@ export const insertSocialMediaSchema = z.object({
   postTime: z.string().transform((str) => new Date(str)),
   // Optional field
   aiRespondedAt: z.string().transform((str) => new Date(str)).optional(),
+  prompt: z.string().optional(),
+  postContent: z.string().optional(),
 });
 
 export type InsertSocialMedia = z.infer<typeof insertSocialMediaSchema>;

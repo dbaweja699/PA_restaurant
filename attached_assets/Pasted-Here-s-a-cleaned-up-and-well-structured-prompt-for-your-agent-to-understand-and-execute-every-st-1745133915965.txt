@@ -1,0 +1,111 @@
+Here’s a **cleaned-up and well-structured prompt** for your agent to understand and execute every step correctly. It includes clear steps, UI requirements, HTTP interactions, and expected behavior:
+
+---
+
+### 🧠 Refined Agent Instruction Prompt
+
+> **Task: Modify the web page with the following features and behaviors.**
+
+---
+
+#### ✅ 1. Add "Generate Post" Button
+
+- Add a new button labeled **"Generate Post"** on the page.
+- On click, it should:
+  - Open a form containing:
+    - A **text input field** labeled **"Prompt"**
+    - A **"Generate"** button
+
+---
+
+#### ✅ 2. On Clicking "Generate"
+
+- On clicking the **Generate** button:
+  1. Create a new **row** in the `social_media` table with the following fields:
+     - `prompt`: the user's input
+     - `status`: set to `"generation"`
+
+  2. Make an HTTP `POST` request to:
+     ```
+     http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/socialmedia
+     ```
+     With a **JSON body** like:
+     ```json
+     {
+       "id": <ID of the created row>,
+       "status": "generation",
+       "prompt": "<user prompt>"
+     }
+     ```
+
+---
+
+#### ✅ 3. Show "Generating..." Spinner
+
+- Display a **spinner animation** (with text: "Generating...") for **15 seconds** after sending the request.
+
+---
+
+#### ✅ 4. Fetch & Display Generated Post
+
+- After 15 seconds:
+  - Fetch the row using the row `id`
+  - Extract the `post_content` field (a string in format: `"<image_url>%<caption>"`)
+  - Split the string using `%`:
+    - First part = `image_url`
+    - Second part = `caption`
+
+- Display the **image** and **caption** on the UI.
+
+---
+
+#### ✅ 5. Add Action Buttons Below the Generated Post
+
+- Add two buttons:
+  - ✅ **Approve**  
+    - Sends a `POST` request to the same webhook URL:
+      ```
+      http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/socialmedia
+      ```
+      With JSON body:
+      ```json
+      {
+        "id": <row id>,
+        "status": "post"
+      }
+      ```
+
+  - 🔁 **Retry**
+    - When clicked:
+      - Show a new **input box** labeled **"Suggestion"**
+      - Include a new **"Generate"** button next to the input
+
+    - On clicking this **Generate** button:
+      - Send another POST request to the same URL with body:
+        ```json
+        {
+          "id": <row id>,
+          "suggestion": "<input value>",
+          "status": "retry"
+        }
+        ```
+
+      - Then:
+        - Show spinner again for 15 seconds
+        - Re-fetch the updated row
+        - Parse the `post_content` field as before
+        - Display new image and caption
+        - Keep the **Approve** and **Retry** buttons
+
+---
+
+### 🛠️ Notes for Agent
+
+- Use proper UI/UX spacing and error handling.
+- All API requests must handle failures gracefully and show appropriate messages.
+- Use asynchronous behavior to avoid freezing the UI during spinner delays or network calls.
+- Retain context of the current `id` across retries and actions.
+
+---
+
+Let me know if you'd like this converted into code (e.g., React or Flask + HTML), or tailored for a specific framework.

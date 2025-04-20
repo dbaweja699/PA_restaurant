@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { type SocialMedia } from "@shared/schema";
 import { 
   Card, 
@@ -18,8 +18,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { MessageSquare, Share2, ThumbsUp, ThumbsDown } from "lucide-react";
+import { MessageSquare, Share2, ThumbsUp, ThumbsDown, Plus, Loader2, Undo2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 function SocialPlatformIcon({ platform }: { platform: string }) {
   switch (platform.toLowerCase()) {
@@ -161,7 +167,7 @@ export default function Social() {
   
   // Group posts by platform
   const platforms = socialPosts ? 
-    [...new Set(socialPosts.map(post => getSocialData(post).platform))] : 
+    Array.from(new Set(socialPosts.map(post => getSocialData(post).platform))) : 
     [];
   
   const filteredPosts = socialPosts?.filter(post => {
@@ -181,13 +187,400 @@ export default function Social() {
     getSocialData(post).status.toLowerCase() === "responded"
   ).length || 0;
   
+  // States for post generation
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedPostId, setGeneratedPostId] = useState<number | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<{ imageUrl: string, caption: string } | null>(null);
+  const [showSuggestionInput, setShowSuggestionInput] = useState(false);
+  const [suggestion, setSuggestion] = useState("");
+  const { toast } = useToast();
+  
+  // Generate post mutation
+  const createPostMutation = useMutation({
+    mutationFn: async (postData: any) => {
+      const response = await apiRequest("POST", "/api/social", postData);
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/social'] });
+      return data;
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating post",
+        description: "There was a problem creating your post.",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  // Webhook interaction mutation
+  const sendWebhookMutation = useMutation({
+    mutationFn: async (webhookData: any) => {
+      const response = await fetch("http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/socialmedia", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(webhookData),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to send webhook request");
+      }
+      
+      return await response.json();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error processing request",
+        description: "There was a problem connecting to the webhook service.",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+    }
+  });
+  
+  // Fetch a specific post
+  const fetchPost = async (id: number) => {
+    try {
+      const response = await apiRequest("GET", `/api/social/${id}`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      return null;
+    }
+  };
+  
+  // Handle generating a post
+  const handleGeneratePost = async () => {
+    if (!prompt.trim()) {
+      toast({
+        title: "Empty prompt",
+        description: "Please enter a prompt to generate a post.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsGenerating(true);
+    
+    try {
+      // Create the initial post
+      const newPost = await createPostMutation.mutateAsync({
+        platform: "AI Generated",
+        content: "AI generated post (in progress)",
+        author: "AI Assistant",
+        status: "generation",
+        prompt: prompt,
+        postTime: new Date().toISOString(),
+      });
+      
+      setGeneratedPostId(newPost.id);
+      
+      // Send webhook
+      await sendWebhookMutation.mutateAsync({
+        id: newPost.id,
+        status: "generation",
+        prompt: prompt,
+      });
+      
+      // Wait for 15 seconds
+      setTimeout(async () => {
+        // Fetch the updated post
+        const updatedPost = await fetchPost(newPost.id);
+        
+        if (updatedPost && updatedPost.post_content) {
+          // Parse the post_content
+          const parts = updatedPost.post_content.split('%');
+          if (parts.length >= 2) {
+            setGeneratedContent({
+              imageUrl: parts[0],
+              caption: parts[1],
+            });
+          } else {
+            toast({
+              title: "Invalid response format",
+              description: "The generated content is not in the expected format.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Generation incomplete",
+            description: "The post was not generated successfully. Please try again.",
+            variant: "destructive",
+          });
+        }
+        
+        setIsGenerating(false);
+      }, 15000);
+      
+    } catch (error) {
+      console.error("Error generating post:", error);
+      toast({
+        title: "Error generating post",
+        description: "There was a problem generating your post.",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+    }
+  };
+  
+  // Handle retry
+  const handleRetry = async () => {
+    if (!generatedPostId) return;
+    
+    if (showSuggestionInput && !suggestion.trim()) {
+      toast({
+        title: "Empty suggestion",
+        description: "Please enter a suggestion for improving the post.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsGenerating(true);
+    setGeneratedContent(null);
+    
+    try {
+      // Send webhook for retry
+      await sendWebhookMutation.mutateAsync({
+        id: generatedPostId,
+        status: "retry",
+        suggestion: suggestion,
+      });
+      
+      // Wait for 15 seconds
+      setTimeout(async () => {
+        // Fetch the updated post
+        const updatedPost = await fetchPost(generatedPostId);
+        
+        if (updatedPost && updatedPost.post_content) {
+          // Parse the post_content
+          const parts = updatedPost.post_content.split('%');
+          if (parts.length >= 2) {
+            setGeneratedContent({
+              imageUrl: parts[0],
+              caption: parts[1],
+            });
+          } else {
+            toast({
+              title: "Invalid response format",
+              description: "The generated content is not in the expected format.",
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Generation incomplete",
+            description: "The post was not regenerated successfully. Please try again.",
+            variant: "destructive",
+          });
+        }
+        
+        setIsGenerating(false);
+        setShowSuggestionInput(false);
+        setSuggestion("");
+      }, 15000);
+      
+    } catch (error) {
+      console.error("Error retrying post:", error);
+      toast({
+        title: "Error retrying post",
+        description: "There was a problem regenerating your post.",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+    }
+  };
+  
+  // Handle approve
+  const handleApprove = async () => {
+    if (!generatedPostId) return;
+    
+    try {
+      // Send webhook for approval
+      await sendWebhookMutation.mutateAsync({
+        id: generatedPostId,
+        status: "post",
+      });
+      
+      toast({
+        title: "Post approved",
+        description: "Your post has been approved and will be published soon.",
+      });
+      
+      // Close dialog and reset states
+      setIsGenerateOpen(false);
+      setPrompt("");
+      setGeneratedPostId(null);
+      setGeneratedContent(null);
+      setShowSuggestionInput(false);
+      setSuggestion("");
+      
+      // Refetch social posts
+      queryClient.invalidateQueries({ queryKey: ['/api/social'] });
+      
+    } catch (error) {
+      console.error("Error approving post:", error);
+      toast({
+        title: "Error approving post",
+        description: "There was a problem approving your post.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Reset the dialog when it's closed
+  const handleDialogClose = () => {
+    if (isGenerating) {
+      toast({
+        title: "Generation in progress",
+        description: "Please wait for the generation to complete before closing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsGenerateOpen(false);
+    setPrompt("");
+    setGeneratedPostId(null);
+    setGeneratedContent(null);
+    setShowSuggestionInput(false);
+    setSuggestion("");
+  };
+  
+  // Generated Post Card Component
+  function GeneratedPostCard({ content }: { content: { imageUrl: string; caption: string } }) {
+    return (
+      <Card className="mb-4 overflow-hidden">
+        <div className="aspect-video w-full overflow-hidden bg-gray-100">
+          <img 
+            src={content.imageUrl} 
+            alt="Generated post" 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.src = "https://placehold.co/600x400?text=Image+Not+Available";
+            }}
+          />
+        </div>
+        <CardContent className="p-4">
+          <p className="text-neutral-700">{content.caption}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+  
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-display font-bold text-neutral-900">Social Media</h1>
-        <p className="mt-1 text-sm text-neutral-600">
-          Monitor and respond to social media interactions with AI assistance
-        </p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-neutral-900">Social Media</h1>
+          <p className="mt-1 text-sm text-neutral-600">
+            Monitor and respond to social media interactions with AI assistance
+          </p>
+        </div>
+        
+        <Button 
+          onClick={() => setIsGenerateOpen(true)}
+          className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Generate Post
+        </Button>
+        
+        {/* Generate Post Dialog */}
+        <Dialog open={isGenerateOpen} onOpenChange={handleDialogClose}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Generate Social Media Post</DialogTitle>
+              <DialogDescription>
+                Use AI to create engaging social media content for your restaurant.
+              </DialogDescription>
+            </DialogHeader>
+            
+            {!generatedContent ? (
+              <>
+                {!isGenerating ? (
+                  <div className="space-y-4 py-4">
+                    {!showSuggestionInput ? (
+                      <div className="space-y-2">
+                        <Label htmlFor="prompt">What kind of post would you like to create?</Label>
+                        <Textarea 
+                          id="prompt" 
+                          placeholder="e.g., Create a post promoting our weekend brunch special with eggs benedict and mimosas" 
+                          value={prompt}
+                          onChange={(e) => setPrompt(e.target.value)}
+                          className="min-h-[100px]"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="suggestion">How would you like to improve the post?</Label>
+                        <Textarea 
+                          id="suggestion" 
+                          placeholder="e.g., Make it more casual and add emojis" 
+                          value={suggestion}
+                          onChange={(e) => setSuggestion(e.target.value)}
+                          className="min-h-[100px]"
+                        />
+                      </div>
+                    )}
+                    <DialogFooter>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleDialogClose}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={showSuggestionInput ? handleRetry : handleGeneratePost}
+                        className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                      >
+                        Generate
+                      </Button>
+                    </DialogFooter>
+                  </div>
+                ) : (
+                  <div className="py-8 flex flex-col items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                    <p className="text-center text-sm text-neutral-600">
+                      Generating your post... This may take up to 15 seconds.
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="py-4">
+                  <GeneratedPostCard content={generatedContent} />
+                  
+                  <div className="flex justify-between mt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowSuggestionInput(true)}
+                      disabled={isGenerating}
+                      className="flex items-center"
+                    >
+                      <Undo2 className="mr-2 h-4 w-4" /> Retry
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleApprove}
+                      disabled={isGenerating}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                    >
+                      <Check className="mr-2 h-4 w-4" /> Approve
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
