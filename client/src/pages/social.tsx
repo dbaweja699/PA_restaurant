@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { MessageSquare, Share2, ThumbsUp, ThumbsDown, Plus, Loader2, Undo2, Check } from "lucide-react";
+import { MessageSquare, Share2, ThumbsUp, ThumbsDown, Plus, Loader2, Undo2, Check, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -81,6 +81,7 @@ const getSocialData = (post: any) => {
 function SocialCard({ post }: { post: SocialMedia | any }) {
   const [expanded, setExpanded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const { toast } = useToast();
   
   // Handle both snake_case from direct DB and camelCase from schema
   const { 
@@ -183,11 +184,68 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
         )}
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-3">
-        {status === "posted" ? (
+        {status?.toLowerCase() === "posted" ? (
           <div className="flex items-center gap-2 w-full">
+            <Badge className="bg-blue-100 text-blue-800">Posted</Badge>
             <div className="text-xs text-neutral-500 ml-auto">
               Posted on {format(new Date(date || new Date()), "MMM d")}
             </div>
+          </div>
+        ) : isAIGenerated && imageUrl ? (
+          <div className="flex justify-between w-full">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex items-center"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {prompt ? (
+                <>
+                  <Eye className="mr-2 h-4 w-4" /> {expanded ? "Hide Prompt" : "Show Prompt"}
+                </>
+              ) : (
+                <>
+                  <Undo2 className="mr-2 h-4 w-4" /> Retry
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={async () => {
+                try {
+                  // Send the post request
+                  await apiRequest("POST", "/api/proxy/socialmedia", {
+                    id,
+                    status: "post"
+                  });
+                  
+                  // Update post status
+                  await apiRequest("PATCH", `/api/social/${id}`, {
+                    status: "posted"
+                  });
+                  
+                  // Show success toast
+                  toast({
+                    title: "Post approved",
+                    description: "Your post has been approved and will be published soon."
+                  });
+                  
+                  // Refresh the social media list
+                  queryClient.invalidateQueries({ queryKey: ['/api/social'] });
+                } catch (error) {
+                  console.error("Error posting:", error);
+                  toast({
+                    title: "Error approving post",
+                    description: "There was a problem approving your post.",
+                    variant: "destructive"
+                  });
+                }
+              }}
+              size="sm"
+              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+            >
+              <Check className="mr-2 h-4 w-4" /> Approve & Post
+            </Button>
           </div>
         ) : aiResponse ? (
           <>
@@ -536,6 +594,11 @@ export default function Social() {
       await sendWebhookMutation.mutateAsync({
         id: generatedPostId,
         status: "post",
+      });
+      
+      // Update the post status in the database
+      await apiRequest("PATCH", `/api/social/${generatedPostId}`, {
+        status: "posted"
       });
       
       toast({
