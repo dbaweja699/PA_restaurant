@@ -247,8 +247,10 @@ export default function Social() {
   // Fetch a specific post
   const fetchPost = async (id: number) => {
     try {
+      console.log(`Fetching post with ID: ${id}`);
       const response = await apiRequest("GET", `/api/social/${id}`);
       const data = await response.json();
+      console.log("Received post data:", data);
       return data;
     } catch (error) {
       console.error("Error fetching post:", error);
@@ -481,20 +483,50 @@ export default function Social() {
   
   // Generated Post Card Component
   function GeneratedPostCard({ content }: { content: { imageUrl: string; caption: string } }) {
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
+    const [showFullCaption, setShowFullCaption] = useState(false);
+    
+    const caption = content.caption.trim();
+    const isLongCaption = caption.length > 150;
+    const displayCaption = !showFullCaption && isLongCaption 
+      ? caption.substring(0, 147) + "..." 
+      : caption;
+    
     return (
       <Card className="mb-4 overflow-hidden">
-        <div className="aspect-video w-full overflow-hidden bg-gray-100">
+        <div className="aspect-square max-h-[400px] w-full overflow-hidden bg-gray-100 relative">
+          {!isImageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
           <img 
             src={content.imageUrl} 
             alt="Generated post" 
-            className="w-full h-full object-cover"
+            className={cn(
+              "w-full h-full object-contain",
+              !isImageLoaded && "opacity-0"
+            )}
+            onLoad={() => setIsImageLoaded(true)}
             onError={(e) => {
               e.currentTarget.src = "https://placehold.co/600x400?text=Image+Not+Available";
+              setIsImageLoaded(true);
             }}
           />
         </div>
         <CardContent className="p-4">
-          <p className="text-neutral-700">{content.caption}</p>
+          <p className="text-neutral-700">
+            {displayCaption}
+            {isLongCaption && (
+              <Button 
+                variant="link" 
+                className="p-0 h-auto ml-1 text-primary"
+                onClick={() => setShowFullCaption(!showFullCaption)}
+              >
+                {showFullCaption ? "Show less" : "Read more"}
+              </Button>
+            )}
+          </p>
         </CardContent>
       </Card>
     );
