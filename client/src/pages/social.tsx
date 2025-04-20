@@ -302,16 +302,24 @@ export default function Social() {
         // Fetch the updated post
         const updatedPost = await fetchPost(newPost.id);
         
-        if (updatedPost && updatedPost.post_content) {
-          // Parse the post_content
-          const parts = updatedPost.post_content.split('%');
-          if (parts.length >= 2) {
-            setGeneratedContent({
-              imageUrl: parts[0],
-              caption: parts[1],
-            });
-            setIsGenerating(false);
-            return; // Success, stop polling
+        if (updatedPost) {
+          // Check for both camelCase and snake_case versions of the field
+          const content = updatedPost.postContent || updatedPost.post_content;
+          console.log("Content found:", content);
+          
+          if (content) {
+            // Parse the content
+            const parts = content.split('%');
+            console.log("Split parts:", parts);
+            
+            if (parts.length >= 2) {
+              setGeneratedContent({
+                imageUrl: parts[0].trim(),
+                caption: parts[1].trim(),
+              });
+              setIsGenerating(false);
+              return; // Success, stop polling
+            }
           }
         }
         
@@ -379,18 +387,26 @@ export default function Social() {
         // Fetch the updated post
         const updatedPost = await fetchPost(generatedPostId);
         
-        if (updatedPost && updatedPost.post_content) {
-          // Parse the post_content
-          const parts = updatedPost.post_content.split('%');
-          if (parts.length >= 2) {
-            setGeneratedContent({
-              imageUrl: parts[0],
-              caption: parts[1],
-            });
-            setIsGenerating(false);
-            setShowSuggestionInput(false);
-            setSuggestion("");
-            return; // Success, stop polling
+        if (updatedPost) {
+          // Check for both camelCase and snake_case versions of the field
+          const content = updatedPost.postContent || updatedPost.post_content;
+          console.log("Retry content found:", content);
+          
+          if (content) {
+            // Parse the content
+            const parts = content.split('%');
+            console.log("Retry split parts:", parts);
+            
+            if (parts.length >= 2) {
+              setGeneratedContent({
+                imageUrl: parts[0].trim(),
+                caption: parts[1].trim(),
+              });
+              setIsGenerating(false);
+              setShowSuggestionInput(false);
+              setSuggestion("");
+              return; // Success, stop polling
+            }
           }
         }
         
