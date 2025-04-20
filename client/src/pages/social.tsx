@@ -478,9 +478,10 @@ export default function Social() {
     }
   };
   
-  // Reset the dialog when it's closed
-  const handleDialogClose = () => {
-    if (isGenerating) {
+  // Reset the dialog when it's closed or when canceling suggestion input
+  const handleDialogClose = (forceClear = false) => {
+    // If generation is in progress and we're not forcing a clear, prevent closing
+    if (isGenerating && !forceClear) {
       toast({
         title: "Generation in progress",
         description: "Please wait for the generation to complete before closing.",
@@ -489,6 +490,14 @@ export default function Social() {
       return;
     }
     
+    // If in suggestion mode and not forcing a clear, just exit suggestion mode but keep dialog open
+    if (showSuggestionInput && !forceClear) {
+      setShowSuggestionInput(false);
+      setSuggestion("");
+      return;
+    }
+    
+    // Otherwise, fully reset the dialog
     setIsGenerateOpen(false);
     setPrompt("");
     setGeneratedPostId(null);
@@ -566,7 +575,26 @@ export default function Social() {
         </Button>
         
         {/* Generate Post Dialog */}
-        <Dialog open={isGenerateOpen} onOpenChange={handleDialogClose}>
+        <Dialog 
+          open={isGenerateOpen} 
+          onOpenChange={(open) => {
+            // Only allow closing if not generating
+            if (!open && !isGenerating) {
+              setIsGenerateOpen(false);
+              setPrompt("");
+              setGeneratedPostId(null);
+              setGeneratedContent(null);
+              setShowSuggestionInput(false);
+              setSuggestion("");
+            } else if (!open && isGenerating) {
+              toast({
+                title: "Generation in progress",
+                description: "Please wait for the generation to complete before closing.",
+                variant: "destructive",
+              });
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>Generate Social Media Post</DialogTitle>
@@ -575,42 +603,69 @@ export default function Social() {
               </DialogDescription>
             </DialogHeader>
             
-            {!generatedContent ? (
+            {showSuggestionInput ? (
+              // Suggestion input mode (for retries)
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="suggestion">How would you like to improve the post?</Label>
+                  <Textarea 
+                    id="suggestion" 
+                    placeholder="e.g., Make it more casual and add emojis" 
+                    value={suggestion}
+                    onChange={(e) => setSuggestion(e.target.value)}
+                    className="min-h-[100px]"
+                  />
+                </div>
+                
+                {generatedContent && (
+                  <div className="mt-4">
+                    <p className="text-sm text-neutral-500 mb-2">Current post:</p>
+                    <GeneratedPostCard content={generatedContent} />
+                  </div>
+                )}
+                
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowSuggestionInput(false);
+                      setSuggestion("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleRetry}
+                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                  >
+                    Generate with Suggestion
+                  </Button>
+                </DialogFooter>
+              </div>
+            ) : !generatedContent ? (
+              // Initial prompt input or loading state
               <>
                 {!isGenerating ? (
                   <div className="space-y-4 py-4">
-                    {!showSuggestionInput ? (
-                      <div className="space-y-2">
-                        <Label htmlFor="prompt">What kind of post would you like to create?</Label>
-                        <Textarea 
-                          id="prompt" 
-                          placeholder="e.g., Create a post promoting our weekend brunch special with eggs benedict and mimosas" 
-                          value={prompt}
-                          onChange={(e) => setPrompt(e.target.value)}
-                          className="min-h-[100px]"
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Label htmlFor="suggestion">How would you like to improve the post?</Label>
-                        <Textarea 
-                          id="suggestion" 
-                          placeholder="e.g., Make it more casual and add emojis" 
-                          value={suggestion}
-                          onChange={(e) => setSuggestion(e.target.value)}
-                          className="min-h-[100px]"
-                        />
-                      </div>
-                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt">What kind of post would you like to create?</Label>
+                      <Textarea 
+                        id="prompt" 
+                        placeholder="e.g., Create a post promoting our weekend brunch special with eggs benedict and mimosas" 
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        className="min-h-[100px]"
+                      />
+                    </div>
                     <DialogFooter>
                       <Button 
                         variant="outline" 
-                        onClick={handleDialogClose}
+                        onClick={() => setIsGenerateOpen(false)}
                       >
                         Cancel
                       </Button>
                       <Button 
-                        onClick={showSuggestionInput ? handleRetry : handleGeneratePost}
+                        onClick={handleGeneratePost}
                         className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
                       >
                         Generate
@@ -630,6 +685,7 @@ export default function Social() {
                 )}
               </>
             ) : (
+              // Generated content display
               <>
                 <div className="py-4">
                   <GeneratedPostCard content={generatedContent} />
@@ -637,7 +693,10 @@ export default function Social() {
                   <div className="flex justify-between mt-4">
                     <Button 
                       variant="outline" 
-                      onClick={() => setShowSuggestionInput(true)}
+                      onClick={() => {
+                        setShowSuggestionInput(true);
+                        console.log("Retry clicked - setting showSuggestionInput to true");
+                      }}
                       disabled={isGenerating}
                       className="flex items-center"
                     >
