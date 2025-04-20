@@ -692,17 +692,27 @@ export class SupabaseStorage implements IStorage {
       console.log('Attempting to create social media post in Supabase:', insertSocial);
       
       // Map JavaScript camelCase properties to database snake_case columns
+      // Only include fields that actually exist in the table structure
+      const insertData: any = {
+        platform: insertSocial.platform,
+        post_time: insertSocial.postTime,
+        content: insertSocial.content,
+        author: insertSocial.author,
+        status: insertSocial.status
+      };
+      
+      // Add optional fields if they exist
+      if (insertSocial.prompt) {
+        insertData.prompt = insertSocial.prompt;
+      }
+      
+      if (insertSocial.postContent) {
+        insertData.post_content = insertSocial.postContent;
+      }
+      
       const { data, error } = await supabase
         .from('social_media')
-        .insert({
-          platform: insertSocial.platform,
-          post_time: insertSocial.postTime,
-          content: insertSocial.content,
-          author: insertSocial.author,
-          status: insertSocial.status,
-          ai_response: insertSocial.aiResponse || null,
-          ai_responded_at: insertSocial.aiRespondedAt || null
-        })
+        .insert(insertData)
         .select()
         .single();
       
@@ -721,8 +731,10 @@ export class SupabaseStorage implements IStorage {
         content: data.content,
         author: data.author,
         status: data.status,
-        ai_response: data.ai_response,
-        ai_responded_at: data.ai_responded_at
+        ai_response: data.ai_response || null,
+        ai_responded_at: data.ai_responded_at || null,
+        prompt: data.prompt || null,
+        post_content: data.post_content || null
       };
     } catch (error) {
       console.error('Exception in createSocialMedia:', error);
@@ -740,8 +752,8 @@ export class SupabaseStorage implements IStorage {
       if (social.author !== undefined) updateData.author = social.author;
       if (social.status !== undefined) updateData.status = social.status;
       if (social.postTime !== undefined) updateData.post_time = social.postTime;
-      if (social.aiResponse !== undefined) updateData.ai_response = social.aiResponse;
-      if (social.aiRespondedAt !== undefined) updateData.ai_responded_at = social.aiRespondedAt;
+      if (social.prompt !== undefined) updateData.prompt = social.prompt;
+      if (social.postContent !== undefined) updateData.post_content = social.postContent;
       
       console.log(`Updating social media #${id} with data:`, updateData);
       
@@ -765,8 +777,10 @@ export class SupabaseStorage implements IStorage {
         content: data.content,
         author: data.author,
         status: data.status,
-        ai_response: data.ai_response,
-        ai_responded_at: data.ai_responded_at
+        ai_response: data.ai_response || null,
+        ai_responded_at: data.ai_responded_at || null,
+        prompt: data.prompt || null,
+        post_content: data.post_content || null
       };
     } catch (error) {
       console.error(`Exception in updateSocialMedia for ID ${id}:`, error);

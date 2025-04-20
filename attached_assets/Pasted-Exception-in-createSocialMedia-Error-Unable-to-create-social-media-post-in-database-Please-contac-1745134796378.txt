@@ -1,0 +1,45 @@
+Exception in createSocialMedia: Error: Unable to create social media post in database. Please contact administrator. Error: Could not find the 'ai_responded_at' column of 'social_media' in the schema cache
+    at SupabaseStorage.createSocialMedia (/home/runner/workspace/server/supabaseStorage.ts:711:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:835:22)
+7:39:23 AM [express] POST /api/social 400 in 85ms :: {"error":"Invalid social media data"}
+Attempting to create social media post in Supabase: {
+  platform: 'AI Generated',
+  content: 'AI generated post (in progress)',
+  author: 'AI Assistant',
+  status: 'generation',
+  postTime: 2025-04-20T07:39:23.402Z,
+  prompt: 'make a poster of 20% of on pizza on this weekend\n'
+}
+Supabase error creating social media post: {
+  code: 'PGRST204',
+  details: null,
+  hint: null,
+  message: "Could not find the 'ai_responded_at' column of 'social_media' in the schema cache"
+}
+Exception in createSocialMedia: Error: Unable to create social media post in database. Please contact administrator. Error: Could not find the 'ai_responded_at' column of 'social_media' in the schema cache
+    at SupabaseStorage.createSocialMedia (/home/runner/workspace/server/supabaseStorage.ts:711:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:835:22)
+7:39:24 AM [express] POST /api/social 400 in 54ms :: {"error":"Invalid social media data"}
+7:39:25 AM [express] GET /api/notifications/unread 304 in 56ms :: []
+Attempting to create social media post in Supabase: {
+  platform: 'AI Generated',
+  content: 'AI generated post (in progress)',
+  author: 'AI Assistant',
+  status: 'generation',
+  postTime: 2025-04-20T07:39:24.440Z,
+  prompt: 'make a poster of 20% of on pizza on this weekend\n'
+}
+Supabase error creating social media post: {
+  code: 'PGRST204',
+  details: null,
+  hint: null,
+  message: "Could not find the 'ai_responded_at' column of 'social_media' in the schema cache"
+}
+Exception in createSocialMedia: Error: Unable to create social media post in database. Please contact administrator. Error: Could not find the 'ai_responded_at' column of 'social_media' in the schema cache
+    at SupabaseStorage.createSocialMedia (/home/runner/workspace/server/supabaseStorage.ts:711:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:835:22)
+7:39:25 AM [express] POST /api/social 400 in 60ms :: {"error":"Invalid social media data"}
+7:39:33 AM [express] GET /api/notifications/unread 304 in 86ms :: []
