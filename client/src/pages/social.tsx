@@ -49,31 +49,58 @@ function SocialPlatformIcon({ platform }: { platform: string }) {
 
 // Helper function to safely access social media data with database field name fallbacks
 const getSocialData = (post: any) => {
+  // Parse post content if available
+  let imageUrl = null;
+  let caption = null;
+  const postContent = post.postContent || post.post_content;
+  
+  if (postContent && typeof postContent === 'string') {
+    const parts = postContent.split('%');
+    if (parts.length >= 2) {
+      imageUrl = parts[0].trim();
+      caption = parts[1].trim();
+    }
+  }
+  
   return {
+    id: post.id || 0,
     platform: post.platform || '',
     author: post.author || '',
     content: post.content || '',
     status: post.status || 'pending',
     postTime: post.postTime || post.post_time || new Date(),
     aiResponse: post.aiResponse || post.ai_response,
-    aiRespondedAt: post.aiRespondedAt || post.ai_responded_at
+    aiRespondedAt: post.aiRespondedAt || post.ai_responded_at,
+    prompt: post.prompt || '',
+    imageUrl,
+    caption,
+    date: post.date || new Date()
   };
 };
 
 function SocialCard({ post }: { post: SocialMedia | any }) {
   const [expanded, setExpanded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Handle both snake_case from direct DB and camelCase from schema
-  const { platform, author, content, status, postTime, aiResponse, aiRespondedAt } = getSocialData(post);
+  const { 
+    id, platform, author, content, status, postTime, 
+    aiResponse, aiRespondedAt, prompt, imageUrl, caption, date 
+  } = getSocialData(post);
+  
+  const isAIGenerated = platform === "AI Generated";
+  const formattedDate = date ? format(new Date(date), "MMMM d, yyyy 'at' h:mm a") : '';
   
   const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "pending":
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
       case "responded":
         return <Badge className="bg-green-100 text-green-800">Responded</Badge>;
       case "flagged":
         return <Badge className="bg-red-100 text-red-800">Flagged</Badge>;
+      case "posted":
+        return <Badge className="bg-blue-100 text-blue-800">Posted</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -89,11 +116,11 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
             </div>
             <div>
               <CardTitle className="text-base flex items-center">
-                {author}
+                {author || "AI Generated"}
                 <Badge variant="outline" className="ml-2 capitalize">{platform}</Badge>
               </CardTitle>
               <div className="text-xs text-neutral-500 mt-1">
-                {postTime && format(new Date(postTime), "MMMM d, yyyy 'at' h:mm a")}
+                {formattedDate}
               </div>
             </div>
           </div>
@@ -101,9 +128,47 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-neutral-700 mb-4">
-          {content}
-        </div>
+        {/* For AI Generated post with image and caption */}
+        {isAIGenerated && imageUrl && (
+          <div className="mb-4">
+            <div className="aspect-video rounded-md overflow-hidden bg-gray-100 mb-3 relative">
+              {!imageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              )}
+              <img 
+                src={imageUrl} 
+                alt="Generated content" 
+                className={cn(
+                  "w-full h-full object-cover",
+                  !imageLoaded && "opacity-0"
+                )}
+                onLoad={() => setImageLoaded(true)}
+                onError={(e) => {
+                  e.currentTarget.src = "https://placehold.co/600x400?text=Image+Not+Available";
+                  setImageLoaded(true);
+                }}
+              />
+            </div>
+            {caption && (
+              <p className="text-sm text-neutral-800">{caption}</p>
+            )}
+          </div>
+        )}
+        
+        {/* For regular social media content or customer comments */}
+        {(content || prompt) && (
+          <div className="text-neutral-700 mb-4">
+            {isAIGenerated && prompt && (
+              <div className="mb-3">
+                <p className="text-sm font-medium text-neutral-500 mb-1">Prompt:</p>
+                <p className="text-sm text-neutral-600">{prompt}</p>
+              </div>
+            )}
+            {content && !isAIGenerated && <p>{content}</p>}
+          </div>
+        )}
         
         {expanded && aiResponse && (
           <div className="mt-4 bg-neutral-50 p-3 rounded-md text-sm">
@@ -118,22 +183,37 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
         )}
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-3">
-        {aiResponse ? (
-          <Button variant="outline" size="sm" onClick={() => setExpanded(!expanded)}>
-            {expanded ? "Hide Response" : "Show Response"}
-          </Button>
+        {status === "posted" ? (
+          <div className="flex items-center gap-2 w-full">
+            <div className="text-xs text-neutral-500 ml-auto">
+              Posted on {format(new Date(date || new Date()), "MMM d")}
+            </div>
+          </div>
+        ) : aiResponse ? (
+          <>
+            <Button variant="outline" size="sm" onClick={() => setExpanded(!expanded)}>
+              {expanded ? "Hide Response" : "Show Response"}
+            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="flex items-center">
+                <ThumbsUp className="h-4 w-4 mr-1" /> Approve
+              </Button>
+              <Button size="sm">Respond Manually</Button>
+            </div>
+          </>
         ) : (
-          <Button variant="outline" size="sm" disabled>
-            Awaiting AI Response
-          </Button>
+          <>
+            <Button variant="outline" size="sm" disabled>
+              Awaiting AI Response
+            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="flex items-center">
+                <ThumbsUp className="h-4 w-4 mr-1" /> Approve
+              </Button>
+              <Button size="sm">Respond Manually</Button>
+            </div>
+          </>
         )}
-        
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex items-center">
-            <ThumbsUp className="h-4 w-4 mr-1" /> Approve
-          </Button>
-          <Button size="sm">Respond Manually</Button>
-        </div>
       </CardFooter>
     </Card>
   );
@@ -366,14 +446,22 @@ export default function Social() {
     }
     
     setIsGenerating(true);
-    setGeneratedContent(null);
+    setShowSuggestionInput(false); // Hide suggestion input while generating
     
     try {
       // Send webhook for retry
-      await sendWebhookMutation.mutateAsync({
+      const response = await sendWebhookMutation.mutateAsync({
         id: generatedPostId,
         status: "retry",
         suggestion: suggestion,
+      });
+      
+      console.log("Webhook response:", response);
+      
+      // Show toast notification
+      toast({
+        title: "Regenerating post",
+        description: "The post is being regenerated with your suggestions. This may take up to 30 seconds.",
       });
       
       // Poll for the result every 3 seconds
@@ -403,7 +491,6 @@ export default function Social() {
                 caption: parts[1].trim(),
               });
               setIsGenerating(false);
-              setShowSuggestionInput(false);
               setSuggestion("");
               return; // Success, stop polling
             }
@@ -418,7 +505,6 @@ export default function Social() {
             variant: "default",
           });
           setIsGenerating(false);
-          setShowSuggestionInput(false);
           setSuggestion("");
           return;
         }
@@ -427,8 +513,8 @@ export default function Social() {
         setTimeout(checkForContent, 3000);
       };
       
-      // Start checking after initial 3 second delay
-      setTimeout(checkForContent, 3000);
+      // Start checking after initial 10 second delay
+      setTimeout(checkForContent, 10000);
       
     } catch (error) {
       console.error("Error retrying post:", error);
@@ -603,7 +689,7 @@ export default function Social() {
               </DialogDescription>
             </DialogHeader>
             
-            {showSuggestionInput ? (
+            {showSuggestionInput && !isGenerating ? (
               // Suggestion input mode (for retries)
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
@@ -641,6 +727,17 @@ export default function Social() {
                     Generate with Suggestion
                   </Button>
                 </DialogFooter>
+              </div>
+            ) : isGenerating ? (
+              // Loading state (for both initial generation and retries)
+              <div className="py-8 flex flex-col items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                <p className="text-center text-sm text-neutral-600">
+                  {generatedContent ? "Regenerating your post..." : "Generating your post..."} This may take up to 30 seconds.
+                </p>
+                <p className="text-center text-xs text-neutral-500 mt-2">
+                  The n8n workflow has been started. Your image and caption will appear shortly.
+                </p>
               </div>
             ) : !generatedContent ? (
               // Initial prompt input or loading state
