@@ -610,35 +610,13 @@ export class SupabaseStorage implements IStorage {
         
         if (!sqlData || sqlData.length === 0) return [];
         
-        return sqlData.map(item => ({
-          id: item.id,
-          platform: item.platform,
-          post_time: item.post_time, 
-          content: item.content,
-          author: item.author,
-          status: item.status,
-          ai_response: item.ai_response || null,
-          ai_responded_at: item.ai_responded_at || null,
-          prompt: item.prompt || null,
-          post_content: item.post_content || null
-        }));
+        return sqlData;
       }
       
       // Map data from RPC if successful
       if (!data || data.length === 0) return [];
       
-      return data.map((item: any) => ({
-        id: item.id,
-        platform: item.platform,
-        post_time: item.post_time,
-        content: item.content,
-        author: item.author,
-        status: item.status,
-        ai_response: item.ai_response || null,
-        ai_responded_at: item.ai_responded_at || null,
-        prompt: item.prompt || null,
-        post_content: item.post_content || null
-      }));
+      return data;
     } catch (error) {
       console.error('Exception in getSocialMedia:', error);
       
@@ -674,19 +652,8 @@ export class SupabaseStorage implements IStorage {
         throw error;
       }
       
-      // Transform the response to match our SocialMedia type
-      return {
-        id: data.id,
-        platform: data.platform,
-        post_time: data.post_time,
-        content: data.content,
-        author: data.author,
-        status: data.status,
-        ai_response: data.ai_response || null,
-        ai_responded_at: data.ai_responded_at || null,
-        prompt: data.prompt || null,
-        post_content: data.post_content || null
-      };
+      // Return data directly
+      return data;
     } catch (error) {
       console.error(`Error retrieving social media with ID ${id}:`, error);
       return undefined;
@@ -700,11 +667,8 @@ export class SupabaseStorage implements IStorage {
       // Map JavaScript camelCase properties to database snake_case columns
       // Only include fields that actually exist in the table structure
       const insertData: any = {
-        platform: insertSocial.platform,
-        post_time: insertSocial.postTime,
-        content: insertSocial.content,
-        author: insertSocial.author,
-        status: insertSocial.status
+        platform: insertSocial.platform || null,
+        status: insertSocial.status || 'pending'
       };
       
       // Add optional fields if they exist
@@ -712,9 +676,19 @@ export class SupabaseStorage implements IStorage {
         insertData.prompt = insertSocial.prompt;
       }
       
-      if (insertSocial.postContent) {
-        insertData.post_content = insertSocial.postContent;
+      if (insertSocial.post_content) {
+        insertData.post_content = insertSocial.post_content;
       }
+      
+      if (insertSocial.image_file_name) {
+        insertData.image_file_name = insertSocial.image_file_name;
+      }
+      
+      if (insertSocial.caption) {
+        insertData.caption = insertSocial.caption;
+      }
+      
+      console.log('Final insert data:', insertData);
       
       const { data, error } = await supabase
         .from('social_media')
@@ -729,19 +703,8 @@ export class SupabaseStorage implements IStorage {
       
       console.log('Social media post created successfully in Supabase:', data);
       
-      // Transform database response to match our SocialMedia type
-      return {
-        id: data.id,
-        platform: data.platform,
-        post_time: data.post_time,
-        content: data.content,
-        author: data.author,
-        status: data.status,
-        ai_response: data.ai_response || null,
-        ai_responded_at: data.ai_responded_at || null,
-        prompt: data.prompt || null,
-        post_content: data.post_content || null
-      };
+      // Return the data directly since it matches our schema
+      return data;
     } catch (error) {
       console.error('Exception in createSocialMedia:', error);
       throw error;
@@ -754,12 +717,11 @@ export class SupabaseStorage implements IStorage {
       const updateData: any = {};
       
       if (social.platform !== undefined) updateData.platform = social.platform;
-      if (social.content !== undefined) updateData.content = social.content;
-      if (social.author !== undefined) updateData.author = social.author;
       if (social.status !== undefined) updateData.status = social.status;
-      if (social.postTime !== undefined) updateData.post_time = social.postTime;
       if (social.prompt !== undefined) updateData.prompt = social.prompt;
-      if (social.postContent !== undefined) updateData.post_content = social.postContent;
+      if (social.post_content !== undefined) updateData.post_content = social.post_content;
+      if (social.image_file_name !== undefined) updateData.image_file_name = social.image_file_name;
+      if (social.caption !== undefined) updateData.caption = social.caption;
       
       console.log(`Updating social media #${id} with data:`, updateData);
       
@@ -775,19 +737,8 @@ export class SupabaseStorage implements IStorage {
         return undefined;
       }
       
-      // Transform the response to match our SocialMedia type
-      return {
-        id: data.id,
-        platform: data.platform,
-        post_time: data.post_time,
-        content: data.content,
-        author: data.author,
-        status: data.status,
-        ai_response: data.ai_response || null,
-        ai_responded_at: data.ai_responded_at || null,
-        prompt: data.prompt || null,
-        post_content: data.post_content || null
-      };
+      // Return data directly since it matches our schema
+      return data;
     } catch (error) {
       console.error(`Exception in updateSocialMedia for ID ${id}:`, error);
       return undefined;

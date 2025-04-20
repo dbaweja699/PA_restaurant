@@ -235,29 +235,26 @@ export type ActivityLog = typeof activityLogs.$inferSelect;
 // Social media schema
 export const socialMedia = pgTable("social_media", {
   id: serial("id").primaryKey(),
-  platform: text("platform").notNull(),
-  post_time: timestamp("post_time").notNull(),
-  content: text("content").notNull(),
-  author: text("author").notNull(),
-  status: text("status").notNull().default("pending"),
-  ai_response: text("ai_response"),
-  ai_responded_at: timestamp("ai_responded_at"),
-  prompt: text("prompt"),
+  platform: text("platform"),
   post_content: text("post_content"),
+  interaction_count: integer("interaction_count"),
+  engagement_rate: text("engagement_rate"),
+  user_id: integer("user_id"),
+  prompt: text("prompt"),
+  image_file_name: text("image_file_name"),
+  caption: text("caption"),
+  status: text("status").default("pending"),
 });
 
 export const insertSocialMediaSchema = z.object({
-  platform: z.string(),
-  content: z.string(),
-  author: z.string(),
+  platform: z.string().nullable().optional(),
+  post_content: z.string().nullable().optional(),
+  prompt: z.string().nullable().optional(),
   status: z.string().default("pending"),
-  aiResponse: z.string().nullable().optional(),
   // Convert ISO string to Date object
-  postTime: z.string().transform((str) => new Date(str)),
-  // Optional field
-  aiRespondedAt: z.string().transform((str) => new Date(str)).optional(),
-  prompt: z.string().optional(),
-  postContent: z.string().optional(),
+  postTime: z.string().transform((str) => new Date(str)).optional(),
+  image_file_name: z.string().nullable().optional(),
+  caption: z.string().nullable().optional(),
 });
 
 export type InsertSocialMedia = z.infer<typeof insertSocialMediaSchema>;
