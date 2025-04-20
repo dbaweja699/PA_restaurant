@@ -617,23 +617,27 @@ export class SupabaseStorage implements IStorage {
           content: item.content,
           author: item.author,
           status: item.status,
-          ai_response: item.ai_response,
-          ai_responded_at: item.ai_responded_at
+          ai_response: item.ai_response || null,
+          ai_responded_at: item.ai_responded_at || null,
+          prompt: item.prompt || null,
+          post_content: item.post_content || null
         }));
       }
       
       // Map data from RPC if successful
       if (!data || data.length === 0) return [];
       
-      return data.map(item => ({
+      return data.map((item: any) => ({
         id: item.id,
         platform: item.platform,
         post_time: item.post_time,
         content: item.content,
         author: item.author,
         status: item.status,
-        ai_response: item.ai_response,
-        ai_responded_at: item.ai_responded_at
+        ai_response: item.ai_response || null,
+        ai_responded_at: item.ai_responded_at || null,
+        prompt: item.prompt || null,
+        post_content: item.post_content || null
       }));
     } catch (error) {
       console.error('Exception in getSocialMedia:', error);
@@ -678,8 +682,10 @@ export class SupabaseStorage implements IStorage {
         content: data.content,
         author: data.author,
         status: data.status,
-        ai_response: data.ai_response,
-        ai_responded_at: data.ai_responded_at
+        ai_response: data.ai_response || null,
+        ai_responded_at: data.ai_responded_at || null,
+        prompt: data.prompt || null,
+        post_content: data.post_content || null
       };
     } catch (error) {
       console.error(`Error retrieving social media with ID ${id}:`, error);
