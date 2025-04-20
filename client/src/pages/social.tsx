@@ -178,6 +178,7 @@ export default function Social() {
   // Webhook interaction mutation using local proxy
   const sendWebhookMutation = useMutation({
     mutationFn: async (webhookData: any) => {
+      console.log("Sending webhook data:", webhookData);
       const response = await apiRequest("POST", "/api/proxy/socialmedia", webhookData);
       
       if (!response.ok) {
@@ -186,7 +187,13 @@ export default function Social() {
       
       return await response.json();
     },
+    onSuccess: (data) => {
+      console.log("Webhook response:", data);
+      // The workflow has started, now we continue with the timer
+      // Don't show any errors here as the process is working correctly
+    },
     onError: (error) => {
+      console.error("Webhook error:", error);
       toast({
         title: "Error processing request",
         description: "There was a problem connecting to the webhook service.",
@@ -282,8 +289,14 @@ export default function Social() {
         prompt: prompt,
       });
       
-      // Wait for 15 seconds
-      setTimeout(async () => {
+      // Poll for the result every 3 seconds
+      const maxAttempts = 10; // 30 seconds total
+      let attempts = 0;
+      
+      const checkForContent = async () => {
+        attempts++;
+        console.log(`Checking for content, attempt ${attempts}/${maxAttempts}`);
+        
         // Fetch the updated post
         const updatedPost = await fetchPost(newPost.id);
         
@@ -295,23 +308,28 @@ export default function Social() {
               imageUrl: parts[0],
               caption: parts[1],
             });
-          } else {
-            toast({
-              title: "Invalid response format",
-              description: "The generated content is not in the expected format.",
-              variant: "destructive",
-            });
+            setIsGenerating(false);
+            return; // Success, stop polling
           }
-        } else {
-          toast({
-            title: "Generation incomplete",
-            description: "The post was not generated successfully. Please try again.",
-            variant: "destructive",
-          });
         }
         
-        setIsGenerating(false);
-      }, 15000);
+        // If we reached the maximum attempts, show an error
+        if (attempts >= maxAttempts) {
+          toast({
+            title: "Generation taking longer than expected",
+            description: "The post is still being generated. You can check back later in the social media section.",
+            variant: "default",
+          });
+          setIsGenerating(false);
+          return;
+        }
+        
+        // Otherwise, try again after 3 seconds
+        setTimeout(checkForContent, 3000);
+      };
+      
+      // Start checking after initial 3 second delay
+      setTimeout(checkForContent, 3000);
       
     } catch (error) {
       console.error("Error generating post:", error);
@@ -348,8 +366,14 @@ export default function Social() {
         suggestion: suggestion,
       });
       
-      // Wait for 15 seconds
-      setTimeout(async () => {
+      // Poll for the result every 3 seconds
+      const maxAttempts = 10; // 30 seconds total
+      let attempts = 0;
+      
+      const checkForContent = async () => {
+        attempts++;
+        console.log(`Checking for retry content, attempt ${attempts}/${maxAttempts}`);
+        
         // Fetch the updated post
         const updatedPost = await fetchPost(generatedPostId);
         
@@ -361,25 +385,32 @@ export default function Social() {
               imageUrl: parts[0],
               caption: parts[1],
             });
-          } else {
-            toast({
-              title: "Invalid response format",
-              description: "The generated content is not in the expected format.",
-              variant: "destructive",
-            });
+            setIsGenerating(false);
+            setShowSuggestionInput(false);
+            setSuggestion("");
+            return; // Success, stop polling
           }
-        } else {
-          toast({
-            title: "Generation incomplete",
-            description: "The post was not regenerated successfully. Please try again.",
-            variant: "destructive",
-          });
         }
         
-        setIsGenerating(false);
-        setShowSuggestionInput(false);
-        setSuggestion("");
-      }, 15000);
+        // If we reached the maximum attempts, show an error
+        if (attempts >= maxAttempts) {
+          toast({
+            title: "Generation taking longer than expected",
+            description: "The post is still being generated. You can check back later in the social media section.",
+            variant: "default",
+          });
+          setIsGenerating(false);
+          setShowSuggestionInput(false);
+          setSuggestion("");
+          return;
+        }
+        
+        // Otherwise, try again after 3 seconds
+        setTimeout(checkForContent, 3000);
+      };
+      
+      // Start checking after initial 3 second delay
+      setTimeout(checkForContent, 3000);
       
     } catch (error) {
       console.error("Error retrying post:", error);
@@ -542,7 +573,10 @@ export default function Social() {
                   <div className="py-8 flex flex-col items-center justify-center">
                     <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                     <p className="text-center text-sm text-neutral-600">
-                      Generating your post... This may take up to 15 seconds.
+                      Generating your post... This may take up to 30 seconds.
+                    </p>
+                    <p className="text-center text-xs text-neutral-500 mt-2">
+                      The n8n workflow has been started. Your image and caption will appear shortly.
                     </p>
                   </div>
                 )}
