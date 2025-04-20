@@ -140,54 +140,8 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
 }
 
 export default function Social() {
-  const { data: socialPosts, isLoading } = useQuery<SocialMedia[]>({ 
-    queryKey: ['/api/social'],
-  });
-  
+  // All hooks must be at the top in the same order
   const [activeTab, setActiveTab] = useState("all");
-  
-  if (isLoading) {
-    return (
-      <div className="py-6 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <Skeleton className="h-8 w-64 mb-2" />
-          <Skeleton className="h-4 w-96" />
-        </div>
-        
-        <Skeleton className="h-12 w-full mb-4" />
-        
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-40 w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-  
-  // Group posts by platform
-  const platforms = socialPosts ? 
-    Array.from(new Set(socialPosts.map(post => getSocialData(post).platform))) : 
-    [];
-  
-  const filteredPosts = socialPosts?.filter(post => {
-    const { status, platform } = getSocialData(post);
-    
-    if (activeTab === "all") return true;
-    if (activeTab === "pending") return status.toLowerCase() === "pending";
-    if (activeTab === "responded") return status.toLowerCase() === "responded";
-    return platform.toLowerCase() === activeTab.toLowerCase();
-  }) || [];
-  
-  const pendingCount = socialPosts?.filter(post => 
-    getSocialData(post).status.toLowerCase() === "pending"
-  ).length || 0;
-  
-  const respondedCount = socialPosts?.filter(post => 
-    getSocialData(post).status.toLowerCase() === "responded"
-  ).length || 0;
-  
-  // States for post generation
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -195,9 +149,14 @@ export default function Social() {
   const [generatedContent, setGeneratedContent] = useState<{ imageUrl: string, caption: string } | null>(null);
   const [showSuggestionInput, setShowSuggestionInput] = useState(false);
   const [suggestion, setSuggestion] = useState("");
-  const { toast } = useToast();
   
-  // Generate post mutation
+  // Hooks
+  const { toast } = useToast();
+  const { data: socialPosts, isLoading } = useQuery<SocialMedia[]>({ 
+    queryKey: ['/api/social'],
+  });
+  
+  // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async (postData: any) => {
       const response = await apiRequest("POST", "/api/social", postData);
@@ -242,6 +201,47 @@ export default function Social() {
       setIsGenerating(false);
     }
   });
+  
+  if (isLoading) {
+    return (
+      <div className="py-6 px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        
+        <Skeleton className="h-12 w-full mb-4" />
+        
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  
+  // Group posts by platform
+  const platforms = socialPosts ? 
+    Array.from(new Set(socialPosts.map(post => getSocialData(post).platform))) : 
+    [];
+  
+  const filteredPosts = socialPosts?.filter(post => {
+    const { status, platform } = getSocialData(post);
+    
+    if (activeTab === "all") return true;
+    if (activeTab === "pending") return status.toLowerCase() === "pending";
+    if (activeTab === "responded") return status.toLowerCase() === "responded";
+    return platform.toLowerCase() === activeTab.toLowerCase();
+  }) || [];
+  
+  const pendingCount = socialPosts?.filter(post => 
+    getSocialData(post).status.toLowerCase() === "pending"
+  ).length || 0;
+  
+  const respondedCount = socialPosts?.filter(post => 
+    getSocialData(post).status.toLowerCase() === "responded"
+  ).length || 0;
   
   // Fetch a specific post
   const fetchPost = async (id: number) => {
@@ -473,7 +473,7 @@ export default function Social() {
         </CardContent>
       </Card>
     );
-  }
+  };
   
   return (
     <div className="py-6 px-4 sm:px-6 lg:px-8">
