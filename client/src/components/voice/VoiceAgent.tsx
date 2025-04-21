@@ -9,18 +9,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff } from "lucide-react";
+import { Mic, MicOff, Volume2, VolumeX, Phone, PhoneOff, MessageSquare, Send, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
-// Agent ID from environment variables
-const AGENT_ID = "UEqDscBteVc9MEixiHyx";
+// Agent ID for Fasta Pasta restaurant
+const AGENT_ID = "3Udx7nfy3Wpgv9JXpPu7";
 
 export function VoiceAgent() {
   const [open, setOpen] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isTextMode, setIsTextMode] = useState(false);
+  const [textInput, setTextInput] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const conversation = useConversation({
     onConnect: () => {
@@ -105,11 +109,64 @@ export function VoiceAgent() {
     }
   };
 
+  // Function to send text to AI voice agent using our new proxy
+  const handleSendText = async () => {
+    if (!textInput.trim()) return;
+    
+    try {
+      setIsProcessing(true);
+      setErrorMessage("");
+      
+      const response = await fetch('/api/proxy/ai_voice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          agentId: AGENT_ID,
+          text: textInput
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("AI voice proxy response:", data);
+      
+      toast({
+        title: "Message sent to AI Voice Agent",
+        description: "The message was sent successfully",
+      });
+      
+      // Clear the input field after successful submission
+      setTextInput("");
+    } catch (error) {
+      setErrorMessage(`Failed to send text to AI agent: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error sending text to AI agent:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send text to AI agent",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  // Toggle between voice and text modes
+  const toggleInputMode = () => {
+    setIsTextMode(!isTextMode);
+  };
+
   // Clean up when dialog is closed
   const handleClose = () => {
     if (status === "connected") {
       handleEndConversation();
     }
+    setTextInput("");
+    setIsTextMode(false);
     setOpen(false);
   };
 
