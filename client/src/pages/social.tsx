@@ -428,15 +428,18 @@ export default function Social() {
     try {
       // Create the initial post
       const newPost = await createPostMutation.mutateAsync({
-        platform: "AI Generated",
+        platform: "Facebook", // Use the actual social media platform
         content: "AI generated post (in progress)",
         author: "AI Assistant",
-        status: "generation",
+        status: "pending", // Default to pending status
         prompt: prompt,
         postTime: new Date().toISOString(),
       });
       
       setGeneratedPostId(newPost.id);
+      
+      // Update dialog state
+      setDialogPostStatus("pending");
       
       // Send webhook
       await sendWebhookMutation.mutateAsync({
@@ -523,6 +526,9 @@ export default function Social() {
     setShowSuggestionInput(false); // Hide suggestion input while generating
     
     try {
+      // Ensure the post status is set to pending for retries
+      setDialogPostStatus("pending");
+      
       // Send webhook for retry
       const response = await sendWebhookMutation.mutateAsync({
         id: generatedPostId,
