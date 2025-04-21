@@ -1,0 +1,64 @@
+i have created a proxy server in route.ts havinf code: import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { supabase } from "./supabaseClient";
+import axios from "axios";
+import { z } from "zod";
+import {
+insertCallSchema,
+insertChatSchema,
+insertReviewSchema,
+insertOrderSchema,
+insertBookingSchema,
+insertSocialMediaSchema,
+insertNotificationSchema,
+} from "../shared/schema";
+import { setupOpenAIRoutes } from "./openai";
+import { pool } from "./db";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+// API routes for RestaurantAI Assistant
+const apiPrefix = "/api";
+
+// Dashboard stats endpoint will be implemented below
+
+// Proxy endpoint to N8N webhook
+app.post(${apiPrefix}/proxy, async (req, res) => {
+const EC2_HTTP_URL =
+"http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/67eff4f0-a0e3-4881-b179-249a9394a340";
+try {
+const response = await axios.post(EC2_HTTP_URL, req.body);
+res.json(response.data);
+} catch (error) {
+console.error("Error proxying to webhook:", error);
+res.status(500).json({ error: "Failed to connect to webhook service" });
+}
+});
+
+but while making request it is not forwarding to the n8n url, the n8n url is working well :
+/workspace$ curl -X POST "http://localhost:5000/api/proxy"
+-H "Content-Type: application/json"
+-d '{"key1":"value1","key2":"value2"}'
+{"error":"Faicurl -X POST "https://79d3103f-d275-4f99-b1af-fee62e8c0e8c-00-64839rqfivbz.janeway.replit.dev/api/proxy" -00-64839rqfivbz.janeway.replit.dev/api/proxy"
+-H "Content-Type: application/json"
+-d '{"key1":"value1","key2":"value2"}'
+{"error":"Failed to connect to webhook service"}/workspace$ ^C
+~/workspace$ npm install axios
+
+added 3 packages, and audited 526 packages in 4s
+
+68 packages are looking for funding
+run npm fund for details
+
+5 moderate severity vulnerabilities
+
+To address issues that do not require attention, run:
+npm audit fix
+
+To address all issues (including breaking changes), run:
+npm audit fix --force
+
+Run npm audit for details.
+/workspace$ curl -X POST "https://79d3103f-d275-4f99-b1af-fee62e8c0e8c-00-64839rqfivbz.janeway.replit.dev/api/proxy" -H "Content-Type: application/json" -d '{"key1":"value1","key2":"value2"}'
+{"error":"Failed to connect to webhook service"}/workspace$ curl -X POST "https://79d3103f-d275-4f99-b1af-fee62e8c0e8c-0curl -X POST "http://localhost:5000/api/proxy" -H "Content-Type: application/json" -d '{"key1":"value1","key2":"value2"}'
+{"error":"Failed to connect to webhook service"}~/workspace$
