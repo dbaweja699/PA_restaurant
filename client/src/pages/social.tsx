@@ -109,15 +109,15 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
     
     switch (cleanStatus) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">{platform} - Pending</Badge>;
+        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">{platform}</Badge>;
       case "responded":
-        return <Badge className="bg-green-100 text-green-800">{platform} - Responded</Badge>;
+        return <Badge className="bg-green-100 text-green-800">{platform}</Badge>;
       case "flagged":
-        return <Badge className="bg-red-100 text-red-800">{platform} - Flagged</Badge>;
+        return <Badge className="bg-red-100 text-red-800">{platform}</Badge>;
       case "posted":
-        return <Badge className="bg-blue-100 text-blue-800">{platform} - Posted</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">{platform}</Badge>;
       default:
-        return <Badge variant="outline">{platform} - {status}</Badge>;
+        return <Badge variant="outline">{platform}</Badge>;
     }
   };
   
