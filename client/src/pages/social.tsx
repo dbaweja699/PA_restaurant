@@ -210,7 +210,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               Posted on {format(new Date(date || new Date()), "MMM d")}
             </div>
           </div>
-        ) : isPending && isAIGenerated && imageUrl ? (
+        ) : isAIGenerated && imageUrl ? (
           <div className="flex justify-between w-full">
             <Button 
               variant="outline" 
@@ -232,12 +232,13 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               )}
             </Button>
 
-            {isPending && (
+            {/* Only show Approve & Post button if post is pending */}
+            {isPending && !isPosted && (
               <Button 
                 onClick={async () => {
                   try {
                     // Send the post request
-                    await apiRequest("POST", "/api/proxy/socialmedia", {
+                    await apiRequest("POST", "/api/proxy", {
                       id,
                       status: "post"
                     });
