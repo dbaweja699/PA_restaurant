@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import logoImg from "@/assets/dblytics-logo.png";
+import logoImg from "@/assets/fasta-pasta-logo.png";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
@@ -53,7 +53,9 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     <div className={sidebarClasses}>
       <div className="flex items-center justify-center h-auto py-6 px-0">
         <div className="flex flex-col items-center w-full">
-          <img src={logoImg} alt="Restaurant AI Assistant Logo" className="w-[100%] max-w-full h-auto mb-4" />
+          <div className="bg-white rounded-lg p-2 mb-3 w-[80%]">
+            <img src={logoImg} alt="Fasta Pasta Logo" className="w-full max-w-full h-auto" />
+          </div>
           <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent tracking-tight">
             Restaurant AI Assistant
           </h1>
