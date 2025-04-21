@@ -118,7 +118,12 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
             <div>
               <CardTitle className="text-base flex items-center">
                 {author || "AI Generated"}
-                <Badge variant="outline" className="ml-2 capitalize">{platform}</Badge>
+                {isAIGenerated && (
+                  <Badge variant="outline" className="ml-2">AI Generated</Badge>
+                )}
+                {!isAIGenerated && (
+                  <Badge variant="outline" className="ml-2 capitalize">{platform}</Badge>
+                )}
               </CardTitle>
               <div className="text-xs text-neutral-500 mt-1">
                 {formattedDate}
@@ -210,42 +215,44 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               )}
             </Button>
             
-            <Button 
-              onClick={async () => {
-                try {
-                  // Send the post request
-                  await apiRequest("POST", "/api/proxy/socialmedia", {
-                    id,
-                    status: "post"
-                  });
-                  
-                  // Update post status
-                  await apiRequest("PATCH", `/api/social/${id}`, {
-                    status: "posted"
-                  });
-                  
-                  // Show success toast
-                  toast({
-                    title: "Post approved",
-                    description: "Your post has been approved and will be published soon."
-                  });
-                  
-                  // Refresh the social media list
-                  queryClient.invalidateQueries({ queryKey: ['/api/social'] });
-                } catch (error) {
-                  console.error("Error posting:", error);
-                  toast({
-                    title: "Error approving post",
-                    description: "There was a problem approving your post.",
-                    variant: "destructive"
-                  });
-                }
-              }}
-              size="sm"
-              className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-            >
-              <Check className="mr-2 h-4 w-4" /> Approve & Post
-            </Button>
+            {status?.toLowerCase() === "pending" && (
+              <Button 
+                onClick={async () => {
+                  try {
+                    // Send the post request
+                    await apiRequest("POST", "/api/proxy/socialmedia", {
+                      id,
+                      status: "post"
+                    });
+                    
+                    // Update post status
+                    await apiRequest("PATCH", `/api/social/${id}`, {
+                      status: "posted"
+                    });
+                    
+                    // Show success toast
+                    toast({
+                      title: "Post approved",
+                      description: "Your post has been approved and will be published soon."
+                    });
+                    
+                    // Refresh the social media list
+                    queryClient.invalidateQueries({ queryKey: ['/api/social'] });
+                  } catch (error) {
+                    console.error("Error posting:", error);
+                    toast({
+                      title: "Error approving post",
+                      description: "There was a problem approving your post.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                size="sm"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              >
+                <Check className="mr-2 h-4 w-4" /> Approve & Post
+              </Button>
+            )}
           </div>
         ) : aiResponse ? (
           <>
