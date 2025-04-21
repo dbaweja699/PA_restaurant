@@ -81,6 +81,7 @@ const getSocialData = (post: any) => {
 function SocialCard({ post }: { post: SocialMedia | any }) {
   const [expanded, setExpanded] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
   const { toast } = useToast();
 
   // Handle both snake_case from direct DB and camelCase from schema
@@ -151,7 +152,10 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
         {/* For AI Generated post with image and caption */}
         {isAIGenerated && imageUrl && (
           <div className="mb-4">
-            <div className="aspect-video rounded-md overflow-hidden bg-gray-100 mb-3 relative">
+            <div 
+              className="aspect-video rounded-md overflow-hidden bg-gray-100 mb-3 relative cursor-pointer"
+              onClick={() => setImageModalOpen(true)}
+            >
               {!imageLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -161,7 +165,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
                 src={imageUrl} 
                 alt="Generated content" 
                 className={cn(
-                  "w-full h-full object-cover",
+                  "w-full h-full object-contain hover:scale-105 transition-transform duration-200",
                   !imageLoaded && "opacity-0"
                 )}
                 onLoad={() => setImageLoaded(true)}
@@ -176,6 +180,30 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
             )}
           </div>
         )}
+        
+        {/* Image Modal for full-size view */}
+        <Dialog open={imageModalOpen} onOpenChange={setImageModalOpen}>
+          <DialogContent className="max-w-4xl w-full p-1 bg-transparent border-none">
+            <div className="relative w-full h-full max-h-[80vh] flex items-center justify-center">
+              <img 
+                src={imageUrl} 
+                alt="Full size content"
+                className="max-w-full max-h-[calc(80vh-2rem)] object-contain rounded-md"
+              />
+              <Button 
+                className="absolute top-2 right-2 h-8 w-8 rounded-full p-0 bg-black/40 hover:bg-black/60"
+                onClick={() => setImageModalOpen(false)}
+                variant="ghost"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span className="sr-only">Close</span>
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* For regular social media content or customer comments */}
         {(content || prompt) && (
