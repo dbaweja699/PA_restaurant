@@ -13,6 +13,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Dashboard stats endpoint will be implemented below
 
+  // Proxy endpoint to N8N webhook
+  app.post(`${apiPrefix}/proxy`, async (req, res) => {
+    const EC2_HTTP_URL = "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/67eff4f0-a0e3-4881-b179-249a9394a340";
+    try {
+      const response = await axios.post(EC2_HTTP_URL, req.body);
+      res.json(response.data);
+    } catch (error) {
+      console.error("Error proxying to webhook:", error);
+      res.status(500).json({ error: "Failed to connect to webhook service" });
+    }
+  });
+
   // Auth routes
   app.post(`${apiPrefix}/auth/signup`, async (req, res) => {
     try {
