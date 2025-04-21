@@ -346,8 +346,7 @@ export default function Social() {
   const sendWebhookMutation = useMutation({
     mutationFn: async (webhookData: any) => {
       console.log("Sending webhook data:", webhookData);
-      // Using the updated working proxy endpoint
-      const response = await apiRequest("POST", "/api/proxy", webhookData);
+      const response = await apiRequest("POST", "/api/proxy/socialmedia", webhookData);
 
       if (!response.ok) {
         throw new Error("Failed to send webhook request");

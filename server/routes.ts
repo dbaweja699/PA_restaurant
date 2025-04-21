@@ -2,7 +2,6 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { supabase } from "./supabaseClient";
-import axios from "axios";
 import { z } from "zod";
 import {
   insertCallSchema,
@@ -26,146 +25,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/proxy`, async (req, res) => {
     const EC2_HTTP_URL =
       "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/67eff4f0-a0e3-4881-b179-249a9394a340";
-    
-    console.log("Received proxy request with body:", JSON.stringify(req.body));
-    
     try {
-      console.log(`Attempting to forward request to: ${EC2_HTTP_URL}`);
-      
-      // Set a timeout to avoid hanging requests
-      const response = await axios.post(EC2_HTTP_URL, req.body, {
-        timeout: 15000, // 15 seconds timeout
-        headers: {
-          'Content-Type': 'application/json',
-          // Forward any headers that might be needed for authentication
-          'User-Agent': req.headers['user-agent'] || 'Restaurant-AI-Proxy'
-        }
-      });
-      
-      console.log("Webhook response received:", response.status);
+      const response = await axios.post(EC2_HTTP_URL, req.body);
       res.json(response.data);
     } catch (error) {
-      // Provide detailed error information for debugging
-      if (axios.isAxiosError(error)) {
-        console.error("Axios error proxying to webhook:", {
-          message: error.message,
-          code: error.code,
-          status: error.response?.status,
-          data: error.response?.data
-        });
-        
-        if (error.code === 'ECONNREFUSED') {
-          return res.status(503).json({ 
-            error: "Connection refused",
-            message: "The webhook service is unavailable. Please check if the server is running."
-          });
-        }
-        
-        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
-          return res.status(504).json({ 
-            error: "Connection timeout",
-            message: "The webhook service took too long to respond. Please try again later."
-          });
-        }
-        
-        if (error.response) {
-          // The webhook server responded with a status code outside of 2xx range
-          return res.status(error.response.status).json({
-            error: `Webhook responded with ${error.response.status}`,
-            details: error.response.data
-          });
-        }
-      }
-      
       console.error("Error proxying to webhook:", error);
-      res.status(500).json({ 
-        error: "Failed to connect to webhook service",
-        message: error instanceof Error ? error.message : "Unknown error occurred"
-      });
+      res.status(500).json({ error: "Failed to connect to webhook service" });
     }
-  });
-  
-  // Alternative proxy endpoint that uses http module directly
-  app.post(`${apiPrefix}/proxy-alt`, async (req, res) => {
-    const http = require('http');
-    const EC2_HOST = 'ec2-13-58-27-158.us-east-2.compute.amazonaws.com';
-    const EC2_PORT = 5678;
-    const WEBHOOK_PATH = '/webhook/67eff4f0-a0e3-4881-b179-249a9394a340';
-    
-    console.log("Received proxy-alt request with body:", JSON.stringify(req.body));
-    
-    const data = JSON.stringify(req.body);
-    
-    const options = {
-      hostname: EC2_HOST,
-      port: EC2_PORT,
-      path: WEBHOOK_PATH,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': data.length,
-        'User-Agent': req.headers['user-agent'] || 'Restaurant-AI-Proxy'
-      },
-      timeout: 15000 // 15 seconds
-    };
-    
-    const proxyReq = http.request(options, (proxyRes) => {
-      console.log(`STATUS: ${proxyRes.statusCode}`);
-      
-      let responseData = '';
-      
-      proxyRes.on('data', (chunk) => {
-        responseData += chunk;
-      });
-      
-      proxyRes.on('end', () => {
-        console.log('Webhook response complete');
-        try {
-          // Try to parse as JSON, but fallback to string if it fails
-          const jsonResponse = responseData ? JSON.parse(responseData) : {};
-          res.status(proxyRes.statusCode || 200).json(jsonResponse);
-        } catch (e) {
-          console.log('Response was not JSON:', responseData);
-          res.status(proxyRes.statusCode || 200).send(responseData);
-        }
-      });
-    });
-    
-    proxyReq.on('error', (error) => {
-      console.error('Error making proxy request:', error);
-      
-      if (error.code === 'ECONNREFUSED') {
-        return res.status(503).json({
-          error: 'Connection refused',
-          message: 'The webhook service is unavailable. Please check if the server is running.'
-        });
-      }
-      
-      if (error.code === 'ETIMEDOUT') {
-        return res.status(504).json({
-          error: 'Connection timeout',
-          message: 'The webhook service took too long to respond. Please try again later.'
-        });
-      }
-      
-      res.status(500).json({
-        error: 'Failed to connect to webhook service',
-        message: error.message || 'Unknown error occurred',
-        code: error.code
-      });
-    });
-    
-    proxyReq.on('timeout', () => {
-      proxyReq.destroy();
-      res.status(504).json({
-        error: 'Request timeout',
-        message: 'The request to the webhook service timed out. Please try again later.'
-      });
-    });
-    
-    // Write data to request body
-    proxyReq.write(data);
-    proxyReq.end();
   });
 
   // Auth routes
