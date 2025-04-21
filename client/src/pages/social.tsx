@@ -210,7 +210,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               Posted on {format(new Date(date || new Date()), "MMM d")}
             </div>
           </div>
-        ) : isAIGenerated && imageUrl ? (
+        ) : isPending && isAIGenerated && imageUrl ? (
           <div className="flex justify-between w-full">
             <Button 
               variant="outline" 
