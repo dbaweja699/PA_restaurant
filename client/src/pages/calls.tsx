@@ -14,6 +14,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -62,6 +69,8 @@ export default function Calls() {
     new Set(),
   );
   const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
+  const [transcriptDialogOpen, setTranscriptDialogOpen] = useState(false);
+  const [activeTranscript, setActiveTranscript] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: calls = [] } = useQuery<CallData[]>({
@@ -239,6 +248,23 @@ export default function Calls() {
 
   return (
     <div className="p-6">
+      <Dialog open={transcriptDialogOpen} onOpenChange={setTranscriptDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Call Transcript</DialogTitle>
+            <DialogDescription>
+              Complete conversation between agent and customer
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="border rounded-md p-4 bg-muted/20">
+              <pre className="whitespace-pre-wrap text-sm font-mono">
+                {activeTranscript}
+              </pre>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-4 mb-4">
@@ -334,8 +360,34 @@ export default function Calls() {
                             <div>
                               <h4 className="font-medium mb-1">Call Summary</h4>
                               <p className="text-sm text-muted-foreground">
-                                {call.summary}
+                                {call.summary.includes("%") 
+                                  ? call.summary.split("%")[0].trim() 
+                                  : call.summary}
                               </p>
+                              {call.summary.includes("%") && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-2"
+                                  onClick={() => {
+                                    // Extract transcript portion after the % symbol
+                                    const transcript = call.summary.split("%")[1]?.trim();
+                                    if (transcript) {
+                                      // Format transcript for dialog display
+                                      const formattedTranscript = transcript
+                                        .split(";")
+                                        .map(line => line.trim())
+                                        .join("\n");
+                                      
+                                      setActiveTranscript(formattedTranscript);
+                                      setTranscriptDialogOpen(true);
+                                    }
+                                  }}
+                                >
+                                  <Search className="h-3 w-3 mr-1" />
+                                  Show Transcript
+                                </Button>
+                              )}
                             </div>
                           )}
 
