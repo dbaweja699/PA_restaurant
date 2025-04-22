@@ -238,8 +238,8 @@ export default function Calls() {
   
   const handleSeek = (value: number) => {
     if (audioRef.current) {
-      // Only update the current time if within valid range
-      if (value >= 0 && value <= audioRef.current.duration) {
+      // Only update the current time if within valid range and audio is loaded
+      if (value >= 0 && value <= audioRef.current.duration && !isNaN(audioRef.current.duration)) {
         audioRef.current.currentTime = value;
         setAudioProgress(value);
       }
@@ -297,11 +297,19 @@ export default function Calls() {
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  if (audioRef.current) {
+                  if (audioRef.current && !isNaN(audioRef.current.duration)) {
                     // Go back 5 seconds
                     const newTime = Math.max(0, audioRef.current.currentTime - 5);
                     audioRef.current.currentTime = newTime;
+                    // Ensure UI updates immediately without waiting for timeupdate event
                     setAudioProgress(newTime);
+                    
+                    // Force sync with audio element's actual time (can be delayed)
+                    setTimeout(() => {
+                      if (audioRef.current) {
+                        setAudioProgress(audioRef.current.currentTime);
+                      }
+                    }, 50);
                   }
                 }}
                 title="Back 5 seconds"
@@ -328,11 +336,19 @@ export default function Calls() {
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  if (audioRef.current) {
+                  if (audioRef.current && !isNaN(audioRef.current.duration)) {
                     // Go forward 5 seconds
                     const newTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
                     audioRef.current.currentTime = newTime;
+                    // Ensure UI updates immediately without waiting for timeupdate event
                     setAudioProgress(newTime);
+                    
+                    // Force sync with audio element's actual time (can be delayed)
+                    setTimeout(() => {
+                      if (audioRef.current) {
+                        setAudioProgress(audioRef.current.currentTime);
+                      }
+                    }, 50);
                   }
                 }}
                 title="Forward 5 seconds"
@@ -351,19 +367,53 @@ export default function Calls() {
                 value={audioProgress}
                 onChange={(e) => handleSeek(parseFloat(e.target.value))}
                 className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-200"
+                step="0.1" // For smoother seeking
               />
               <span className="text-sm w-12">{formatTime(audioDuration)}</span>
             </div>
             <div className="text-center text-sm text-muted-foreground">
               {currentAudioUrl && (
-                <audio className="hidden" src={currentAudioUrl} controls ref={(el) => {
-                  // Update audioRef if it changes
-                  if (el && audioRef.current !== el) {
-                    audioRef.current = el;
-                    el.addEventListener('loadedmetadata', () => setAudioDuration(el.duration));
-                    el.addEventListener('timeupdate', () => setAudioProgress(el.currentTime));
-                  }
-                }} />
+                <audio 
+                  className="hidden" 
+                  src={currentAudioUrl} 
+                  controls 
+                  preload="metadata" 
+                  ref={(el) => {
+                    // Update audioRef if it changes
+                    if (el && audioRef.current !== el) {
+                      audioRef.current = el;
+                      
+                      // Clear previous event listeners if any
+                      const oldEl = audioRef.current;
+                      if (oldEl) {
+                        oldEl.removeEventListener('loadedmetadata', () => {});
+                        oldEl.removeEventListener('timeupdate', () => {});
+                        oldEl.removeEventListener('seeking', () => {});
+                        oldEl.removeEventListener('seeked', () => {});
+                      }
+                      
+                      // Add new event listeners
+                      el.addEventListener('loadedmetadata', () => {
+                        setAudioDuration(el.duration);
+                        setAudioProgress(el.currentTime);
+                      });
+                      
+                      el.addEventListener('timeupdate', () => {
+                        setAudioProgress(el.currentTime);
+                      });
+                      
+                      el.addEventListener('seeking', () => {
+                        // When seeking starts, update UI accordingly
+                        setAudioProgress(el.currentTime);
+                      });
+                      
+                      el.addEventListener('seeked', () => {
+                        // When seeking ends, update UI with final position
+                        setAudioProgress(el.currentTime);
+                      });
+                    }
+                  }} 
+                />
               )}
             </div>
           </div>
