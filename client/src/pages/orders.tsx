@@ -168,6 +168,32 @@ function OrderDetailsRow({ order }: { order: Order }) {
                   price: ''
                 };
               }
+              // If description is a string with numeric value (like "2")
+              else if (typeof description === 'string' && !isNaN(parseInt(description))) {
+                return {
+                  name: name,
+                  quantity: parseInt(description),
+                  price: ''
+                };
+              }
+              // For formats like "main size", "1 slice" - extract quantity if exists
+              else if (typeof description === 'string') {
+                // Check if it starts with a number followed by a space
+                const match = description.match(/^(\d+)\s+/);
+                if (match) {
+                  return {
+                    name: `${name} (${description})`,
+                    quantity: parseInt(match[1]),
+                    price: ''
+                  };
+                }
+                // Otherwise, show the size/description and use quantity 1
+                return {
+                  name: `${name} (${description})`,
+                  quantity: 1,
+                  price: ''
+                };
+              }
               // Fallback for other formats
               return {
                 name: name,
