@@ -238,8 +238,11 @@ export default function Calls() {
   
   const handleSeek = (value: number) => {
     if (audioRef.current) {
-      audioRef.current.currentTime = value;
-      setAudioProgress(value);
+      // Only update the current time if within valid range
+      if (value >= 0 && value <= audioRef.current.duration) {
+        audioRef.current.currentTime = value;
+        setAudioProgress(value);
+      }
     }
   };
   
@@ -295,12 +298,51 @@ export default function Calls() {
                 size="icon"
                 onClick={() => {
                   if (audioRef.current) {
+                    // Go back 5 seconds
+                    const newTime = Math.max(0, audioRef.current.currentTime - 5);
+                    audioRef.current.currentTime = newTime;
+                    setAudioProgress(newTime);
+                  }
+                }}
+                title="Back 5 seconds"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 17l-5-5 5-5"/>
+                  <path d="M18 17l-5-5 5-5"/>
+                </svg>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (audioRef.current) {
                     audioRef.current.paused ? audioRef.current.play() : audioRef.current.pause();
                   }
                 }}
               >
                 {playingAudioId ? <Pause size={16} /> : <Play size={16} />}
               </Button>
+              
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (audioRef.current) {
+                    // Go forward 5 seconds
+                    const newTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
+                    audioRef.current.currentTime = newTime;
+                    setAudioProgress(newTime);
+                  }
+                }}
+                title="Forward 5 seconds"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M13 17l5-5-5-5"/>
+                  <path d="M6 17l5-5-5-5"/>
+                </svg>
+              </Button>
+              
               <span className="text-sm w-12 text-right">{formatTime(audioProgress)}</span>
               <input
                 type="range"
