@@ -32,7 +32,6 @@ import {
   Sliders,
   MessageSquare,
   Bell,
-  Key,
   Users,
   Globe,
   Lock,
@@ -218,7 +217,7 @@ export default function Settings() {
       </div>
       
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-3 w-full">
           <TabsTrigger value="general" className="flex items-center">
             <SettingsIcon className="mr-2 h-4 w-4" />
             <span className="hidden md:inline">General</span>
@@ -230,10 +229,6 @@ export default function Settings() {
           <TabsTrigger value="integrations" className="flex items-center">
             <Globe className="mr-2 h-4 w-4" />
             <span className="hidden md:inline">Integrations</span>
-          </TabsTrigger>
-          <TabsTrigger value="api" className="flex items-center">
-            <Key className="mr-2 h-4 w-4" />
-            <span className="hidden md:inline">API Settings</span>
           </TabsTrigger>
         </TabsList>
         
@@ -488,86 +483,7 @@ export default function Settings() {
           </div>
         </TabsContent>
         
-        {/* API Settings */}
-        <TabsContent value="api">
-          <SettingsForm 
-            title="API Configuration" 
-            description="Manage API access and authentication"
-          >
-            <div className="space-y-6">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="api-key">Your API Key</Label>
-                  <div className="flex">
-                    <Input id="api-key" value="af8z7c9d3e5f1g2h6j4k8l9m" readOnly className="rounded-r-none" />
-                    <Button className="rounded-l-none">Regenerate</Button>
-                  </div>
-                  <p className="text-xs text-neutral-500">
-                    This key grants access to your restaurant's AI assistant API
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Webhook Configuration</h3>
-                <div className="grid gap-2">
-                  <Label htmlFor="webhook-url">Webhook URL</Label>
-                  <Input id="webhook-url" placeholder="https://your-domain.com/webhook" />
-                  <p className="text-xs text-neutral-500">
-                    Event notifications will be sent to this URL
-                  </p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Event Subscriptions</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="event-calls" />
-                    <Label htmlFor="event-calls">Calls</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="event-chats" />
-                    <Label htmlFor="event-chats">Chats</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="event-bookings" />
-                    <Label htmlFor="event-bookings">Bookings</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="event-orders" />
-                    <Label htmlFor="event-orders">Orders</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="event-reviews" />
-                    <Label htmlFor="event-reviews">Reviews</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox id="event-social" />
-                    <Label htmlFor="event-social">Social Media</Label>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="pt-2 border-t">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <Label 
-                      htmlFor="api-access" 
-                      className="mb-1"
-                    >
-                      API Access
-                    </Label>
-                    <span className="text-sm text-neutral-500">
-                      Enable or disable API access
-                    </span>
-                  </div>
-                  <Switch id="api-access" defaultChecked />
-                </div>
-              </div>
-            </div>
-          </SettingsForm>
-        </TabsContent>
+        
       </Tabs>
     </div>
   );
