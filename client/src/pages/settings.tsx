@@ -245,42 +245,7 @@ export default function Settings() {
         {/* General Settings */}
         <TabsContent value="general">
           <div className="grid gap-6">
-            <SettingsForm 
-              title="Restaurant Profile" 
-              description="Update your restaurant information"
-            >
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="restaurant-name">Restaurant Name</Label>
-                  <Input id="restaurant-name" defaultValue="Fine Dining Restaurant" />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" defaultValue="123 Main Street, City, State, ZIP" />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" defaultValue="+1 (555) 123-4567" />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="contact@finedinigrestaurant.com" />
-                  </div>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="hours">Business Hours</Label>
-                  <Textarea 
-                    id="hours" 
-                    defaultValue="Monday - Friday: 11:00 AM - 10:00 PM&#10;Saturday - Sunday: 10:00 AM - 11:00 PM" 
-                  />
-                </div>
-              </div>
-            </SettingsForm>
+            <RestaurantProfileForm />
             
             <SettingsForm 
               title="User Preferences" 
@@ -743,6 +708,137 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// Restaurant Profile Form with state management
+function RestaurantProfileForm() {
+  const [restaurantName, setRestaurantName] = useState("Fine Dining Restaurant");
+  const [address, setAddress] = useState("123 Main Street, City, State, ZIP");
+  const [phone, setPhone] = useState("+1 (555) 123-4567");
+  const [email, setEmail] = useState("contact@finedinigrestaurant.com");
+  const [hours, setHours] = useState("Monday - Friday: 11:00 AM - 10:00 PM\nSaturday - Sunday: 10:00 AM - 11:00 PM");
+  
+  // Form input refs
+  const nameRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const hoursRef = useRef<HTMLTextAreaElement>(null);
+  
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+  
+  const handleInputChange = () => {
+    setHasChanges(true);
+  };
+  
+  const handleSave = () => {
+    setIsSaving(true);
+    
+    // Get current values from refs
+    const newName = nameRef.current?.value || restaurantName;
+    const newAddress = addressRef.current?.value || address;
+    const newPhone = phoneRef.current?.value || phone;
+    const newEmail = emailRef.current?.value || email;
+    const newHours = hoursRef.current?.value || hours;
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      // Update state with new values
+      setRestaurantName(newName);
+      setAddress(newAddress);
+      setPhone(newPhone);
+      setEmail(newEmail);
+      setHours(newHours);
+      
+      setHasChanges(false);
+      setIsSaving(false);
+      
+      toast({
+        title: "Changes saved",
+        description: "Your restaurant profile has been updated successfully.",
+      });
+    }, 500);
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Restaurant Profile</CardTitle>
+        <CardDescription>Update your restaurant information</CardDescription>
+      </CardHeader>
+      <CardContent onChange={handleInputChange}>
+        <div className="grid gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="restaurant-name">Restaurant Name</Label>
+            <Input 
+              id="restaurant-name" 
+              ref={nameRef}
+              defaultValue={restaurantName} 
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="address">Address</Label>
+            <Input 
+              id="address" 
+              ref={addressRef}
+              defaultValue={address} 
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input 
+                id="phone" 
+                ref={phoneRef}
+                defaultValue={phone} 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                ref={emailRef}
+                defaultValue={email} 
+              />
+            </div>
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="hours">Business Hours</Label>
+            <Textarea 
+              id="hours" 
+              ref={hoursRef}
+              defaultValue={hours} 
+            />
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-end">
+        <Button 
+          disabled={!hasChanges || isSaving}
+          onClick={handleSave}
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </>
+          )}
+        </Button>
+      </CardFooter>
+    </Card>
   );
 }
 
