@@ -71,6 +71,10 @@ export default function Calls() {
   const [playingAudioId, setPlayingAudioId] = useState<number | null>(null);
   const [transcriptDialogOpen, setTranscriptDialogOpen] = useState(false);
   const [activeTranscript, setActiveTranscript] = useState("");
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioPlayerOpen, setAudioPlayerOpen] = useState(false);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { data: calls = [] } = useQuery<CallData[]>({
@@ -182,6 +186,9 @@ export default function Calls() {
   };
 
   const handlePlayAudio = (id: number, url: string) => {
+    setCurrentAudioUrl(url);
+    setAudioPlayerOpen(true);
+    
     if (playingAudioId === id) {
       // If already playing this audio, pause it
       if (audioRef.current) {
@@ -201,9 +208,21 @@ export default function Calls() {
       const audio = new Audio(url);
       audioRef.current = audio;
 
+      // Add event listeners to update UI
+      audio.onloadedmetadata = () => {
+        setAudioDuration(audio.duration);
+      };
+      
+      audio.ontimeupdate = () => {
+        setAudioProgress(audio.currentTime);
+      };
+      
       audio.onplay = () => setPlayingAudioId(id);
       audio.onpause = () => setPlayingAudioId(null);
-      audio.onended = () => setPlayingAudioId(null);
+      audio.onended = () => {
+        setPlayingAudioId(null);
+        setAudioProgress(0);
+      };
 
       audio.play().catch((error) => {
         console.error("Error playing audio:", error);
@@ -215,6 +234,19 @@ export default function Calls() {
         });
       });
     }
+  };
+  
+  const handleSeek = (value: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = value;
+      setAudioProgress(value);
+    }
+  };
+  
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   // Stop audio playback when component unmounts
@@ -248,6 +280,54 @@ export default function Calls() {
 
   return (
     <div className="p-6">
+      <Dialog open={audioPlayerOpen} onOpenChange={setAudioPlayerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Audio Player</DialogTitle>
+            <DialogDescription>
+              Listen to the call recording
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (audioRef.current) {
+                    audioRef.current.paused ? audioRef.current.play() : audioRef.current.pause();
+                  }
+                }}
+              >
+                {playingAudioId ? <Pause size={16} /> : <Play size={16} />}
+              </Button>
+              <span className="text-sm w-12 text-right">{formatTime(audioProgress)}</span>
+              <input
+                type="range"
+                min="0"
+                max={audioDuration || 100}
+                value={audioProgress}
+                onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-200"
+              />
+              <span className="text-sm w-12">{formatTime(audioDuration)}</span>
+            </div>
+            <div className="text-center text-sm text-muted-foreground">
+              {currentAudioUrl && (
+                <audio className="hidden" src={currentAudioUrl} controls ref={(el) => {
+                  // Update audioRef if it changes
+                  if (el && audioRef.current !== el) {
+                    audioRef.current = el;
+                    el.addEventListener('loadedmetadata', () => setAudioDuration(el.duration));
+                    el.addEventListener('timeupdate', () => setAudioProgress(el.currentTime));
+                  }
+                }} />
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
       <Dialog open={transcriptDialogOpen} onOpenChange={setTranscriptDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -422,7 +502,7 @@ export default function Calls() {
                                     </>
                                   )}
                                 </Button>
-
+                                
                                 {playingAudioId === call.id && (
                                   <span className="text-sm font-medium text-primary animate-pulse">
                                     <Volume2
