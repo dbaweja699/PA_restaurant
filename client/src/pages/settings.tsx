@@ -33,7 +33,6 @@ import {
   MessageSquare,
   Bell,
   Key,
-  Bot,
   Users,
   Globe,
   Lock,
@@ -219,14 +218,10 @@ export default function Settings() {
       </div>
       
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full">
           <TabsTrigger value="general" className="flex items-center">
             <SettingsIcon className="mr-2 h-4 w-4" />
             <span className="hidden md:inline">General</span>
-          </TabsTrigger>
-          <TabsTrigger value="ai-behavior" className="flex items-center">
-            <Bot className="mr-2 h-4 w-4" />
-            <span className="hidden md:inline">AI Behavior</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center">
             <Bell className="mr-2 h-4 w-4" />
@@ -317,106 +312,7 @@ export default function Settings() {
           </div>
         </TabsContent>
         
-        {/* AI Behavior Settings */}
-        <TabsContent value="ai-behavior">
-          <div className="grid gap-6">
-            <SettingsForm 
-              title="AI Personality" 
-              description="Configure how your AI assistant communicates"
-            >
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="ai-name">AI Assistant Name</Label>
-                  <Input id="ai-name" defaultValue="Dining Assistant" />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="ai-tone">Communication Tone</Label>
-                  <Select defaultValue="professional">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select tone" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="casual">Casual & Friendly</SelectItem>
-                      <SelectItem value="formal">Formal</SelectItem>
-                      <SelectItem value="luxury">Luxury & Upscale</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="greeting">Default Greeting</Label>
-                  <Textarea 
-                    id="greeting" 
-                    defaultValue="Thank you for contacting Fine Dining Restaurant. How may I assist you today?"
-                  />
-                </div>
-              </div>
-            </SettingsForm>
-            
-            <SettingsForm 
-              title="Response Settings" 
-              description="Configure AI response behaviors"
-            >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Human Handoff Threshold</h4>
-                    <p className="text-sm text-neutral-500">
-                      When should the AI transfer to a human agent
-                    </p>
-                  </div>
-                  <Select defaultValue="medium">
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="response-time">Maximum Response Time (seconds)</Label>
-                  <Input id="response-time" type="number" defaultValue="10" />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <Label 
-                      htmlFor="allow-booking-changes" 
-                      className="mb-1"
-                    >
-                      Allow AI to Modify Bookings
-                    </Label>
-                    <span className="text-sm text-neutral-500">
-                      Can the AI modify existing bookings
-                    </span>
-                  </div>
-                  <Switch id="allow-booking-changes" defaultChecked />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <Label 
-                      htmlFor="auto-respond-reviews" 
-                      className="mb-1"
-                    >
-                      Auto-Respond to Reviews
-                    </Label>
-                    <span className="text-sm text-neutral-500">
-                      Automatically respond to new reviews
-                    </span>
-                  </div>
-                  <Switch id="auto-respond-reviews" defaultChecked />
-                </div>
-              </div>
-            </SettingsForm>
-          </div>
-        </TabsContent>
+        
         
         {/* Notifications Settings */}
         <TabsContent value="notifications">
