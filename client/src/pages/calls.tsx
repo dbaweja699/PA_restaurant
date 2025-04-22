@@ -190,49 +190,63 @@ export default function Calls() {
     setAudioPlayerOpen(true);
     
     if (playingAudioId === id) {
-      // If already playing this audio, pause it
+      // If already playing this audio, toggle play/pause
       if (audioRef.current) {
         if (audioRef.current.paused) {
-          audioRef.current.play();
+          audioRef.current.play()
+            .then(() => {
+              setPlayingAudioId(id);
+            })
+            .catch((error) => {
+              console.error("Error playing audio:", error);
+              setPlayingAudioId(null);
+            });
         } else {
           audioRef.current.pause();
+          setPlayingAudioId(null);
         }
       }
     } else {
       // If playing a different audio, stop the current one and play the new one
       if (audioRef.current) {
         audioRef.current.pause();
+        setPlayingAudioId(null);
       }
 
-      // Create a new audio element
+      // Set up new audio element
       const audio = new Audio(url);
       audioRef.current = audio;
 
       // Add event listeners to update UI
-      audio.onloadedmetadata = () => {
+      audio.addEventListener('loadedmetadata', () => {
         setAudioDuration(audio.duration);
-      };
+      });
       
-      audio.ontimeupdate = () => {
+      audio.addEventListener('timeupdate', () => {
         setAudioProgress(audio.currentTime);
-      };
+      });
       
-      audio.onplay = () => setPlayingAudioId(id);
-      audio.onpause = () => setPlayingAudioId(null);
-      audio.onended = () => {
+      audio.addEventListener('play', () => setPlayingAudioId(id));
+      audio.addEventListener('pause', () => setPlayingAudioId(null));
+      audio.addEventListener('ended', () => {
         setPlayingAudioId(null);
         setAudioProgress(0);
-      };
-
-      audio.play().catch((error) => {
-        console.error("Error playing audio:", error);
-        toast({
-          title: "Error",
-          description:
-            "Could not play audio. The URL may be invalid or the audio file is not accessible.",
-          variant: "destructive",
-        });
       });
+
+      // Play the audio
+      audio.play()
+        .then(() => {
+          setPlayingAudioId(id);
+        })
+        .catch((error) => {
+          console.error("Error playing audio:", error);
+          toast({
+            title: "Error",
+            description:
+              "Could not play audio. The URL may be invalid or the audio file is not accessible.",
+            variant: "destructive",
+          });
+        });
     }
   };
   
@@ -252,15 +266,36 @@ export default function Calls() {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Stop audio playback when component unmounts
+  // Audio cleanup and event handling
   useEffect(() => {
+    // Cleanup function to remove event listeners and stop playback
     return () => {
       if (audioRef.current) {
-        audioRef.current.pause();
+        const audio = audioRef.current;
+        
+        // Remove all event listeners
+        audio.removeEventListener('loadedmetadata', () => {});
+        audio.removeEventListener('timeupdate', () => {});
+        audio.removeEventListener('play', () => {});
+        audio.removeEventListener('pause', () => {});
+        audio.removeEventListener('ended', () => {});
+        audio.removeEventListener('seeking', () => {});
+        audio.removeEventListener('seeked', () => {});
+        
+        // Stop playback
+        audio.pause();
         audioRef.current = null;
       }
     };
   }, []);
+  
+  // Dialog close handler to pause audio when dialog is closed
+  useEffect(() => {
+    if (!audioPlayerOpen && audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+      setPlayingAudioId(null);
+    }
+  }, [audioPlayerOpen]);
 
   // Since we get data from API in snake_case but our schema is in camelCase,
   // we need to handle both formats to avoid type errors
@@ -325,7 +360,24 @@ export default function Calls() {
                 size="icon"
                 onClick={() => {
                   if (audioRef.current) {
-                    audioRef.current.paused ? audioRef.current.play() : audioRef.current.pause();
+                    if (audioRef.current.paused) {
+                      audioRef.current.play()
+                        .then(() => {
+                          if (currentAudioUrl) {
+                            // Find the call ID with this URL
+                            const call = calls.find(c => 
+                              (c.call_recording_url || c.callRecordingUrl) === currentAudioUrl
+                            );
+                            if (call) {
+                              setPlayingAudioId(call.id!);
+                            }
+                          }
+                        })
+                        .catch(err => console.error("Play error:", err));
+                    } else {
+                      audioRef.current.pause();
+                      setPlayingAudioId(null);
+                    }
                   }
                 }}
               >
