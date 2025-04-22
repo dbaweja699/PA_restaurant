@@ -985,21 +985,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Proxy endpoint for AI voice agent functionality
   app.post(`${apiPrefix}/proxy/ai_voice`, async (req, res) => {
-    const ELEVENLABS_WEBHOOK_URL = 
-      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/a8da29a8-c2cd-42ad-8b74-126ce7252b1d";
-    
+    const ELEVENLABS_WEBHOOK_URL =
+      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/67eff4f0-a0e3-4881-b179-249a9394a340";
+
     try {
       console.log("Proxying request to AI voice webhook:", req.body);
-      
+
       const response = await axios.post(ELEVENLABS_WEBHOOK_URL, req.body);
-      
+
       console.log("AI voice webhook response:", response.data);
       res.json(response.data);
     } catch (error) {
       console.error("Error proxying to AI voice webhook:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to connect to AI voice webhook service",
-        details: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });
