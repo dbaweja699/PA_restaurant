@@ -53,19 +53,19 @@ function OrderDetailsRow({ order }: { order: Order }) {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
+  
   // Status update mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
       const response = await apiRequest("PATCH", `/api/orders/${order.id}`, { 
         status: newStatus 
       });
-
+      
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Failed to update order status");
       }
-
+      
       return await response.json();
     },
     onSuccess: () => {
@@ -87,15 +87,15 @@ function OrderDetailsRow({ order }: { order: Order }) {
 
   // Parse items based on format (could be array or object)
   const [items, setItems] = useState<OrderItem[]>([]);
-
+  
   useEffect(() => {
     let parsedItems: OrderItem[] = [];
-
+    
     if (order.items) {
       try {
-        // Handle different item formats
+        // Handle the new format where items can be a complex object with "original" and "formatted" properties
         if (typeof order.items === 'object' && order.items !== null) {
-          // Case 1: Complex object with original and formatted properties
+          // Case 1: New format with original and formatted properties
           if (order.items.original && Array.isArray(order.items.original)) {
             parsedItems = order.items.original.map(item => ({
               name: item.name || item.item || '',
@@ -103,7 +103,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
               price: item.price || ''
             }));
           }
-          // Case 2: Array of items
+          // Case 2: If it's already an array (like [{"qty":1,"item":"Laptop"}])
           else if (Array.isArray(order.items)) {
             parsedItems = order.items.map(item => ({
               name: item.name || item.item || '',
@@ -111,21 +111,21 @@ function OrderDetailsRow({ order }: { order: Order }) {
               price: item.price || ''
             }));
           }
-          // Case 3: Object with formatted property
+          // Case 3: If it's a formatted object (like {"Veg Manchurian":1})
           else if (order.items.formatted) {
             parsedItems = Object.entries(order.items.formatted).map(([name, quantity]) => ({
               name,
-              quantity: typeof quantity === 'number' ? quantity : 1,
+              quantity: quantity as number,
               price: ''
             }));
           }
-          // Case 4: Simple object mapping names to quantities
+          // Case 4: If it's a simple object mapping names to quantities
           else if (!Array.isArray(order.items) && typeof order.items === 'object') {
-            // Filter out non-object properties
+            // Filter out non-object properties like "__proto__"
             const entries = Object.entries(order.items).filter(
               ([key]) => !key.startsWith('_') && key !== 'original' && key !== 'formatted'
             );
-
+            
             if (entries.length > 0) {
               parsedItems = entries.map(([name, quantity]) => ({
                 name,
@@ -135,97 +135,22 @@ function OrderDetailsRow({ order }: { order: Order }) {
             }
           }
         }
-        // Case 5: String representation of JSON
+        // Case 5: If it's a string representation of JSON
         else if (typeof order.items === 'string') {
-          try {
-            // Handle plain string items that aren't in JSON format
-            if (typeof order.items === 'string' && !order.items.startsWith('{') && !order.items.startsWith('[')) {
-              parsedItems = [{
-                name: order.items,
-                quantity: 1,
-                price: ''
-              }];
-            }
-
-            // Parse the items - handle different formats
-            else {
-              const itemsObj = JSON.parse(order.items);
-
-              if (Array.isArray(itemsObj)) {
-                // Handle array format
-                parsedItems = itemsObj.map(item => ({
-                  name: item.name || item.item || '',
-                  quantity: item.quantity || item.qty || 1,
-                  price: item.price || ''
-                }));
-              } 
-              // Handle format: {"Cheesy Garlic Bread": "3 slices x 1", ...}
-              else if (typeof itemsObj === 'object') {
-                parsedItems = Object.entries(itemsObj).map(([name, description]) => {
-                  // If description is something like "3 slices x 1"
-                  if (typeof description === 'string' && description.includes(' x ')) {
-                    const parts = description.split(' x ');
-                    const quantity = parseInt(parts[parts.length - 1]) || 1;
-                    return {
-                      name: name,
-                      quantity: quantity,
-                      price: ''
-                    };
-                  }
-                  // If description is a simple number
-                  else if (typeof description === 'number') {
-                    return {
-                      name: name,
-                      quantity: description,
-                      price: ''
-                    };
-                  }
-                  // If description is a string with numeric value (like "2")
-                  else if (typeof description === 'string' && !isNaN(parseInt(description))) {
-                    return {
-                      name: name,
-                      quantity: parseInt(description),
-                      price: ''
-                    };
-                  }
-                  // For formats like "main size", "1 slice" - extract quantity if exists
-                  else if (typeof description === 'string') {
-                    // Check if it starts with a number followed by a space
-                    const match = description.match(/^(\d+)\s+/);
-                    if (match) {
-                      return {
-                        name: `${name} (${description})`,
-                        quantity: parseInt(match[1]),
-                        price: ''
-                      };
-                    }
-                    // Otherwise, show the size/description and use quantity 1
-                    return {
-                      name: `${name} (${description})`,
-                      quantity: 1,
-                      price: ''
-                    };
-                  }
-                  // Fallback for other formats
-                  return {
-                    name: name,
-                    quantity: 1,
-                    price: ''
-                  };
-                });
-              }
-            }
-          } catch (error) {
-            console.error("Error parsing order items:", error, order.items);
-            // Last resort fallback - if it's a string, return it as a single item
-            if (typeof order.items === 'string' && order.items.trim()) {
-              parsedItems = [{
-                name: order.items.trim(),
-                quantity: 1,
-                price: ''
-              }];
-            }
-            parsedItems = [];
+          const itemsObj = JSON.parse(order.items);
+          
+          if (Array.isArray(itemsObj)) {
+            parsedItems = itemsObj.map(item => ({
+              name: item.name || item.item || '',
+              quantity: item.quantity || item.qty || 1,
+              price: item.price || ''
+            }));
+          } else {
+            parsedItems = Object.entries(itemsObj).map(([name, quantity]) => ({
+              name,
+              quantity: quantity as number,
+              price: ''
+            }));
           }
         }
       } catch (e) {
@@ -233,7 +158,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
         parsedItems = [];
       }
     }
-
+    
     setItems(parsedItems);
   }, [order.items]);
 
@@ -337,7 +262,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                     {order.aiProcessed ? "Yes" : "No"}
                   </Badge>
                 </div>
-
+                
                 {order.callId && (
                   <div className="flex justify-between mt-2">
                     <span className="text-neutral-600">Phone Order</span>
@@ -363,7 +288,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                     setShowStatusDialog(true);
                   }}>Update Status</Button>
                 </div>
-
+                
                 {/* Status Update Dialog */}
                 <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
                   <DialogContent className="sm:max-w-[425px]">
@@ -373,7 +298,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                         Change the status of order #{order.id} for {order.customerName}
                       </DialogDescription>
                     </DialogHeader>
-
+                    
                     <div className="grid gap-4 py-4">
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium">Select a new status</h4>
@@ -426,7 +351,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                         </div>
                       </div>
                     </div>
-
+                    
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
                         Cancel
@@ -493,7 +418,7 @@ export default function Orders() {
             Track and manage orders processed by the AI assistant
           </p>
         </div>
-
+        
         <div className="mt-4 md:mt-0 flex items-center space-x-2">
           <Button
             variant="default"
@@ -603,7 +528,7 @@ export default function Orders() {
           )}
         </CardContent>
       </Card>
-
+      
       {/* Add Order Form */}
       <OrderForm
         open={showOrderForm}
