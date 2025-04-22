@@ -422,41 +422,7 @@ export default function Settings() {
         {/* Integrations Settings */}
         <TabsContent value="integrations">
           <div className="grid gap-6">
-            <SettingsForm 
-              title="n8n Integration" 
-              description="Configure integration with n8n automation"
-            >
-              <div className="space-y-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="n8n-url">n8n Webhook URL</Label>
-                  <Input id="n8n-url" defaultValue="https://n8n.yourdomain.com/webhook/ai-restaurant" />
-                </div>
-                
-                <div className="grid gap-2">
-                  <Label htmlFor="n8n-api-key">API Key</Label>
-                  <Input id="n8n-api-key" type="password" defaultValue="••••••••••••••••" />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <Label 
-                      htmlFor="n8n-active" 
-                      className="mb-1"
-                    >
-                      Active Connection
-                    </Label>
-                    <span className="text-sm text-neutral-500">
-                      Enable/Disable n8n integration
-                    </span>
-                  </div>
-                  <Switch id="n8n-active" defaultChecked />
-                </div>
-                
-                <div className="pt-2">
-                  <Button variant="outline">Test Connection</Button>
-                </div>
-              </div>
-            </SettingsForm>
+            
             
             <Card>
               <CardHeader>
