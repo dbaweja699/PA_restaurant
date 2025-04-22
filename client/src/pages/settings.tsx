@@ -711,13 +711,24 @@ export default function Settings() {
   );
 }
 
-// Restaurant Profile Form with state management
+// Restaurant Profile Form with state management and localStorage persistence
 function RestaurantProfileForm() {
-  const [restaurantName, setRestaurantName] = useState("Fine Dining Restaurant");
-  const [address, setAddress] = useState("123 Main Street, City, State, ZIP");
-  const [phone, setPhone] = useState("+1 (555) 123-4567");
-  const [email, setEmail] = useState("contact@finedinigrestaurant.com");
-  const [hours, setHours] = useState("Monday - Friday: 11:00 AM - 10:00 PM\nSaturday - Sunday: 10:00 AM - 11:00 PM");
+  // Initialize state with values from localStorage or defaults
+  const [restaurantName, setRestaurantName] = useState(() => 
+    localStorage.getItem('restaurantName') || "Fine Dining Restaurant"
+  );
+  const [address, setAddress] = useState(() => 
+    localStorage.getItem('restaurantAddress') || "123 Main Street, City, State, ZIP"
+  );
+  const [phone, setPhone] = useState(() => 
+    localStorage.getItem('restaurantPhone') || "+1 (555) 123-4567"
+  );
+  const [email, setEmail] = useState(() => 
+    localStorage.getItem('restaurantEmail') || "contact@finedinigrestaurant.com"
+  );
+  const [hours, setHours] = useState(() => 
+    localStorage.getItem('restaurantHours') || "Monday - Friday: 11:00 AM - 10:00 PM\nSaturday - Sunday: 10:00 AM - 11:00 PM"
+  );
   
   // Form input refs
   const nameRef = useRef<HTMLInputElement>(null);
@@ -752,6 +763,13 @@ function RestaurantProfileForm() {
       setPhone(newPhone);
       setEmail(newEmail);
       setHours(newHours);
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('restaurantName', newName);
+      localStorage.setItem('restaurantAddress', newAddress);
+      localStorage.setItem('restaurantPhone', newPhone);
+      localStorage.setItem('restaurantEmail', newEmail);
+      localStorage.setItem('restaurantHours', newHours);
       
       setHasChanges(false);
       setIsSaving(false);
