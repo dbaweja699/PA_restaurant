@@ -185,41 +185,96 @@ export default function Calls() {
     });
   };
 
-  const handlePlayAudio = (id: number, url: string) => {
+  // State to track download progress
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  
+  const handlePlayAudio = async (id: number, url: string) => {
     setCurrentAudioUrl(url);
     setAudioPlayerOpen(true);
     
-    if (playingAudioId === id) {
-      // If already playing this audio, toggle play/pause
-      if (audioRef.current) {
-        if (audioRef.current.paused) {
-          audioRef.current.play()
-            .then(() => {
-              setPlayingAudioId(id);
-            })
-            .catch((error) => {
-              console.error("Error playing audio:", error);
-              setPlayingAudioId(null);
-            });
-        } else {
-          audioRef.current.pause();
-          setPlayingAudioId(null);
-        }
-      }
-    } else {
-      // If playing a different audio, stop the current one and play the new one
-      if (audioRef.current) {
+    // If the same audio is already loaded and we're just toggling play/pause
+    if (playingAudioId === id && audioRef.current) {
+      if (audioRef.current.paused) {
+        audioRef.current.play()
+          .then(() => setPlayingAudioId(id))
+          .catch(error => {
+            console.error("Error playing audio:", error);
+            setPlayingAudioId(null);
+          });
+      } else {
         audioRef.current.pause();
         setPlayingAudioId(null);
       }
-
-      // Set up new audio element
-      const audio = new Audio(url);
+      return;
+    }
+    
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setPlayingAudioId(null);
+    }
+    
+    try {
+      // Show downloading state
+      setIsDownloading(true);
+      setDownloadProgress(0);
+      
+      // Fetch the audio file
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Get the total size for progress calculation
+      const contentLength = response.headers.get('Content-Length');
+      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      
+      // Use a ReadableStream to track download progress
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Failed to get reader from response");
+      
+      let receivedLength = 0;
+      const chunks: Uint8Array[] = [];
+      
+      // Read the stream chunks
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) break;
+        
+        chunks.push(value);
+        receivedLength += value.length;
+        
+        // Update download progress
+        if (total > 0) {
+          setDownloadProgress(Math.round((receivedLength / total) * 100));
+        }
+      }
+      
+      // Combine chunks into a single Uint8Array
+      const allChunks = new Uint8Array(receivedLength);
+      let position = 0;
+      for (const chunk of chunks) {
+        allChunks.set(chunk, position);
+        position += chunk.length;
+      }
+      
+      // Convert to blob with correct MIME type
+      const blob = new Blob([allChunks], { type: 'audio/mpeg' });
+      
+      // Create a local URL for the blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create and set up the audio element
+      const audio = new Audio(blobUrl);
       audioRef.current = audio;
-
-      // Add event listeners to update UI
+      
+      // Set up event listeners
       audio.addEventListener('loadedmetadata', () => {
         setAudioDuration(audio.duration);
+        setIsDownloading(false);
       });
       
       audio.addEventListener('timeupdate', () => {
@@ -231,22 +286,22 @@ export default function Calls() {
       audio.addEventListener('ended', () => {
         setPlayingAudioId(null);
         setAudioProgress(0);
+        // Clean up blob URL when done
+        URL.revokeObjectURL(blobUrl);
       });
-
+      
       // Play the audio
-      audio.play()
-        .then(() => {
-          setPlayingAudioId(id);
-        })
-        .catch((error) => {
-          console.error("Error playing audio:", error);
-          toast({
-            title: "Error",
-            description:
-              "Could not play audio. The URL may be invalid or the audio file is not accessible.",
-            variant: "destructive",
-          });
-        });
+      await audio.play();
+      setPlayingAudioId(id);
+      
+    } catch (error) {
+      console.error("Error handling audio:", error);
+      setIsDownloading(false);
+      toast({
+        title: "Error",
+        description: "Could not play audio. The file may be invalid or inaccessible.",
+        variant: "destructive",
+      });
     }
   };
   
@@ -254,8 +309,19 @@ export default function Calls() {
     if (audioRef.current) {
       // Only update the current time if within valid range and audio is loaded
       if (value >= 0 && value <= audioRef.current.duration && !isNaN(audioRef.current.duration)) {
+        // Set the current time
         audioRef.current.currentTime = value;
+        
+        // Update progress state immediately for responsive UI
         setAudioProgress(value);
+        
+        // Sometimes the timeupdate event doesn't fire immediately after seeking
+        // Force a UI update to match the actual position
+        setTimeout(() => {
+          if (audioRef.current) {
+            setAudioProgress(audioRef.current.currentTime);
+          }
+        }, 50);
       }
     }
   };
@@ -267,8 +333,11 @@ export default function Calls() {
   };
 
   // Audio cleanup and event handling
+  // Track blob URLs to properly clean them up
+  const [activeBlobUrl, setActiveBlobUrl] = useState<string | null>(null);
+  
   useEffect(() => {
-    // Cleanup function to remove event listeners and stop playback
+    // Cleanup function to remove event listeners, stop playback, and release blob URLs
     return () => {
       if (audioRef.current) {
         const audio = audioRef.current;
@@ -285,17 +354,29 @@ export default function Calls() {
         // Stop playback
         audio.pause();
         audioRef.current = null;
+        
+        // Clean up any blob URLs
+        if (activeBlobUrl) {
+          URL.revokeObjectURL(activeBlobUrl);
+          setActiveBlobUrl(null);
+        }
       }
     };
-  }, []);
+  }, [activeBlobUrl]);
   
-  // Dialog close handler to pause audio when dialog is closed
+  // Dialog close handler to pause audio and clean up when dialog is closed
   useEffect(() => {
-    if (!audioPlayerOpen && audioRef.current && !audioRef.current.paused) {
+    if (!audioPlayerOpen && audioRef.current) {
       audioRef.current.pause();
       setPlayingAudioId(null);
+      
+      // Clean up blob URL if dialog is closed
+      if (activeBlobUrl) {
+        URL.revokeObjectURL(activeBlobUrl);
+        setActiveBlobUrl(null);
+      }
     }
-  }, [audioPlayerOpen]);
+  }, [audioPlayerOpen, activeBlobUrl]);
 
   // Since we get data from API in snake_case but our schema is in camelCase,
   // we need to handle both formats to avoid type errors
@@ -327,146 +408,108 @@ export default function Calls() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex items-center justify-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  if (audioRef.current && !isNaN(audioRef.current.duration)) {
-                    // Go back 5 seconds
-                    const newTime = Math.max(0, audioRef.current.currentTime - 5);
-                    audioRef.current.currentTime = newTime;
-                    // Ensure UI updates immediately without waiting for timeupdate event
-                    setAudioProgress(newTime);
-                    
-                    // Force sync with audio element's actual time (can be delayed)
-                    setTimeout(() => {
-                      if (audioRef.current) {
-                        setAudioProgress(audioRef.current.currentTime);
-                      }
-                    }, 50);
-                  }
-                }}
-                title="Back 5 seconds"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 17l-5-5 5-5"/>
-                  <path d="M18 17l-5-5 5-5"/>
-                </svg>
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  if (audioRef.current) {
-                    if (audioRef.current.paused) {
-                      audioRef.current.play()
-                        .then(() => {
-                          if (currentAudioUrl) {
-                            // Find the call ID with this URL
-                            const call = calls.find(c => 
-                              (c.call_recording_url || c.callRecordingUrl) === currentAudioUrl
-                            );
-                            if (call) {
-                              setPlayingAudioId(call.id!);
+            {isDownloading ? (
+              <div className="space-y-2 py-4">
+                <div className="text-center mb-2">
+                  Downloading audio file... {downloadProgress}%
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-primary h-2.5 rounded-full transition-all" 
+                    style={{ width: `${downloadProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+                      // Go back 5 seconds
+                      const newTime = Math.max(0, audioRef.current.currentTime - 5);
+                      audioRef.current.currentTime = newTime;
+                      setAudioProgress(newTime);
+                    }
+                  }}
+                  disabled={isDownloading || !audioRef.current}
+                  title="Back 5 seconds"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 17l-5-5 5-5"/>
+                    <path d="M18 17l-5-5 5-5"/>
+                  </svg>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (audioRef.current) {
+                      if (audioRef.current.paused) {
+                        audioRef.current.play()
+                          .then(() => {
+                            if (currentAudioUrl) {
+                              // Find the call ID with this URL
+                              const call = calls.find(c => 
+                                (c.call_recording_url || c.callRecordingUrl) === currentAudioUrl
+                              );
+                              if (call) {
+                                setPlayingAudioId(call.id!);
+                              }
                             }
-                          }
-                        })
-                        .catch(err => console.error("Play error:", err));
-                    } else {
-                      audioRef.current.pause();
-                      setPlayingAudioId(null);
-                    }
-                  }
-                }}
-              >
-                {playingAudioId ? <Pause size={16} /> : <Play size={16} />}
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  if (audioRef.current && !isNaN(audioRef.current.duration)) {
-                    // Go forward 5 seconds
-                    const newTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
-                    audioRef.current.currentTime = newTime;
-                    // Ensure UI updates immediately without waiting for timeupdate event
-                    setAudioProgress(newTime);
-                    
-                    // Force sync with audio element's actual time (can be delayed)
-                    setTimeout(() => {
-                      if (audioRef.current) {
-                        setAudioProgress(audioRef.current.currentTime);
+                          })
+                          .catch(err => console.error("Play error:", err));
+                      } else {
+                        audioRef.current.pause();
+                        setPlayingAudioId(null);
                       }
-                    }, 50);
-                  }
-                }}
-                title="Forward 5 seconds"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M13 17l5-5-5-5"/>
-                  <path d="M6 17l5-5-5-5"/>
-                </svg>
-              </Button>
-              
-              <span className="text-sm w-12 text-right">{formatTime(audioProgress)}</span>
-              <input
-                type="range"
-                min="0"
-                max={audioDuration || 100}
-                value={audioProgress}
-                onChange={(e) => handleSeek(parseFloat(e.target.value))}
-                className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-200"
-                step="0.1" // For smoother seeking
-              />
-              <span className="text-sm w-12">{formatTime(audioDuration)}</span>
-            </div>
-            <div className="text-center text-sm text-muted-foreground">
-              {currentAudioUrl && (
-                <audio 
-                  className="hidden" 
-                  src={currentAudioUrl} 
-                  controls 
-                  preload="metadata" 
-                  ref={(el) => {
-                    // Update audioRef if it changes
-                    if (el && audioRef.current !== el) {
-                      audioRef.current = el;
-                      
-                      // Clear previous event listeners if any
-                      const oldEl = audioRef.current;
-                      if (oldEl) {
-                        oldEl.removeEventListener('loadedmetadata', () => {});
-                        oldEl.removeEventListener('timeupdate', () => {});
-                        oldEl.removeEventListener('seeking', () => {});
-                        oldEl.removeEventListener('seeked', () => {});
-                      }
-                      
-                      // Add new event listeners
-                      el.addEventListener('loadedmetadata', () => {
-                        setAudioDuration(el.duration);
-                        setAudioProgress(el.currentTime);
-                      });
-                      
-                      el.addEventListener('timeupdate', () => {
-                        setAudioProgress(el.currentTime);
-                      });
-                      
-                      el.addEventListener('seeking', () => {
-                        // When seeking starts, update UI accordingly
-                        setAudioProgress(el.currentTime);
-                      });
-                      
-                      el.addEventListener('seeked', () => {
-                        // When seeking ends, update UI with final position
-                        setAudioProgress(el.currentTime);
-                      });
                     }
-                  }} 
+                  }}
+                  disabled={isDownloading || !audioRef.current}
+                >
+                  {playingAudioId ? <Pause size={16} /> : <Play size={16} />}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    if (audioRef.current && !isNaN(audioRef.current.duration)) {
+                      // Go forward 5 seconds
+                      const newTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
+                      audioRef.current.currentTime = newTime;
+                      setAudioProgress(newTime);
+                    }
+                  }}
+                  disabled={isDownloading || !audioRef.current}
+                  title="Forward 5 seconds"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M13 17l5-5-5-5"/>
+                    <path d="M6 17l5-5-5-5"/>
+                  </svg>
+                </Button>
+                
+                <span className="text-sm w-12 text-right">{formatTime(audioProgress)}</span>
+                <input
+                  type="range"
+                  min="0"
+                  max={audioDuration || 100}
+                  value={audioProgress}
+                  onChange={(e) => handleSeek(parseFloat(e.target.value))}
+                  className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-200"
+                  step="0.1"
+                  disabled={isDownloading || !audioRef.current}
                 />
-              )}
+                <span className="text-sm w-12">{formatTime(audioDuration)}</span>
+              </div>
+            )}
+            
+            <div className="text-center text-sm text-muted-foreground">
+              {/* Hidden audio element */}
+              <audio className="hidden" controls preload="auto" ref={audioRef} />
             </div>
           </div>
         </DialogContent>
