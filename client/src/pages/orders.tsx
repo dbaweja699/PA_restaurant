@@ -93,47 +93,6 @@ function OrderDetailsRow({ order }: { order: Order }) {
     
     if (order.items) {
       try {
-        // Handle string format
-        if (typeof order.items === 'string') {
-          const itemsObj = JSON.parse(order.items);
-          if (typeof itemsObj === 'object' && !Array.isArray(itemsObj)) {
-            parsedItems = Object.entries(itemsObj).map(([name, description]) => {
-              const [_, quantityStr] = description.split(' x ');
-              const quantity = parseInt(quantityStr) || 1;
-              return { name, quantity, price: '' };
-            });
-          }
-        }
-        // Handle object format with "original" and "formatted"
-        else if (typeof order.items === 'object' && order.items !== null) {
-          if (order.items.original && Array.isArray(order.items.original)) {
-            parsedItems = order.items.original.map(item => ({
-              name: item.name || item.item || '',
-              quantity: item.quantity || item.qty || 1,
-              price: item.price || ''
-            }));
-          } else if (Array.isArray(order.items)) {
-            parsedItems = order.items.map(item => ({
-              name: item.name || item.item || '',
-              quantity: item.quantity || item.qty || 1,
-              price: item.price || ''
-            }));
-          } else if (order.items.formatted) {
-            parsedItems = Object.entries(order.items.formatted).map(([name, quantity]) => ({
-              name,
-              quantity: quantity as number,
-              price: ''
-            }));
-          }
-        }
-      } catch (e) {
-        console.error("Error parsing order items:", e, order.items);
-        parsedItems = [];
-      }
-    }
-    
-    setItems(parsedItems);
-  }, [order.items]);
         // Handle the new format where items can be a complex object with "original" and "formatted" properties
         if (typeof order.items === 'object' && order.items !== null) {
           // Case 1: New format with original and formatted properties
