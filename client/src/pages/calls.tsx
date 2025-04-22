@@ -188,11 +188,11 @@ export default function Calls() {
   // State to track download progress
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
-  
+
   const handlePlayAudio = async (id: number, url: string) => {
     setCurrentAudioUrl(url);
     setAudioPlayerOpen(true);
-    
+
     // If the same audio is already loaded and we're just toggling play/pause
     if (playingAudioId === id && audioRef.current) {
       if (audioRef.current.paused) {
@@ -208,51 +208,51 @@ export default function Calls() {
       }
       return;
     }
-    
+
     // Stop any currently playing audio
     if (audioRef.current) {
       audioRef.current.pause();
       setPlayingAudioId(null);
     }
-    
+
     try {
       // Show downloading state
       setIsDownloading(true);
       setDownloadProgress(0);
-      
+
       // Fetch the audio file
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       // Get the total size for progress calculation
       const contentLength = response.headers.get('Content-Length');
       const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
+
       // Use a ReadableStream to track download progress
       const reader = response.body?.getReader();
       if (!reader) throw new Error("Failed to get reader from response");
-      
+
       let receivedLength = 0;
       const chunks: Uint8Array[] = [];
-      
+
       // Read the stream chunks
       while (true) {
         const { done, value } = await reader.read();
-        
+
         if (done) break;
-        
+
         chunks.push(value);
         receivedLength += value.length;
-        
+
         // Update download progress
         if (total > 0) {
           setDownloadProgress(Math.round((receivedLength / total) * 100));
         }
       }
-      
+
       // Combine chunks into a single Uint8Array
       const allChunks = new Uint8Array(receivedLength);
       let position = 0;
@@ -260,27 +260,27 @@ export default function Calls() {
         allChunks.set(chunk, position);
         position += chunk.length;
       }
-      
+
       // Convert to blob with correct MIME type
       const blob = new Blob([allChunks], { type: 'audio/mpeg' });
-      
+
       // Create a local URL for the blob
       const blobUrl = URL.createObjectURL(blob);
-      
+
       // Create and set up the audio element
       const audio = new Audio(blobUrl);
       audioRef.current = audio;
-      
+
       // Set up event listeners
       audio.addEventListener('loadedmetadata', () => {
         setAudioDuration(audio.duration);
         setIsDownloading(false);
       });
-      
+
       audio.addEventListener('timeupdate', () => {
         setAudioProgress(audio.currentTime);
       });
-      
+
       audio.addEventListener('play', () => setPlayingAudioId(id));
       audio.addEventListener('pause', () => setPlayingAudioId(null));
       audio.addEventListener('ended', () => {
@@ -289,11 +289,11 @@ export default function Calls() {
         // Clean up blob URL when done
         URL.revokeObjectURL(blobUrl);
       });
-      
+
       // Play the audio
       await audio.play();
       setPlayingAudioId(id);
-      
+
     } catch (error) {
       console.error("Error handling audio:", error);
       setIsDownloading(false);
@@ -304,17 +304,17 @@ export default function Calls() {
       });
     }
   };
-  
+
   const handleSeek = (value: number) => {
     if (audioRef.current) {
       // Only update the current time if within valid range and audio is loaded
       if (value >= 0 && value <= audioRef.current.duration && !isNaN(audioRef.current.duration)) {
         // Set the current time
         audioRef.current.currentTime = value;
-        
+
         // Update progress state immediately for responsive UI
         setAudioProgress(value);
-        
+
         // Sometimes the timeupdate event doesn't fire immediately after seeking
         // Force a UI update to match the actual position
         setTimeout(() => {
@@ -325,7 +325,7 @@ export default function Calls() {
       }
     }
   };
-  
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -335,13 +335,13 @@ export default function Calls() {
   // Audio cleanup and event handling
   // Track blob URLs to properly clean them up
   const [activeBlobUrl, setActiveBlobUrl] = useState<string | null>(null);
-  
+
   useEffect(() => {
     // Cleanup function to remove event listeners, stop playback, and release blob URLs
     return () => {
       if (audioRef.current) {
         const audio = audioRef.current;
-        
+
         // Remove all event listeners
         audio.removeEventListener('loadedmetadata', () => {});
         audio.removeEventListener('timeupdate', () => {});
@@ -350,11 +350,11 @@ export default function Calls() {
         audio.removeEventListener('ended', () => {});
         audio.removeEventListener('seeking', () => {});
         audio.removeEventListener('seeked', () => {});
-        
+
         // Stop playback
         audio.pause();
         audioRef.current = null;
-        
+
         // Clean up any blob URLs
         if (activeBlobUrl) {
           URL.revokeObjectURL(activeBlobUrl);
@@ -363,13 +363,13 @@ export default function Calls() {
       }
     };
   }, [activeBlobUrl]);
-  
+
   // Dialog close handler to pause audio and clean up when dialog is closed
   useEffect(() => {
     if (!audioPlayerOpen && audioRef.current) {
       audioRef.current.pause();
       setPlayingAudioId(null);
-      
+
       // Clean up blob URL if dialog is closed
       if (activeBlobUrl) {
         URL.revokeObjectURL(activeBlobUrl);
@@ -433,7 +433,7 @@ export default function Calls() {
                       setAudioProgress(newTime);
                     }
                   }}
-                  disabled={isDownloading || !audioRef.current}
+                  disabled={!audioRef.current}
                   title="Back 5 seconds"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -441,7 +441,7 @@ export default function Calls() {
                     <path d="M18 17l-5-5 5-5"/>
                   </svg>
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   size="icon"
@@ -467,11 +467,11 @@ export default function Calls() {
                       }
                     }
                   }}
-                  disabled={isDownloading || !audioRef.current}
+                  disabled={!audioRef.current}
                 >
                   {playingAudioId ? <Pause size={16} /> : <Play size={16} />}
                 </Button>
-                
+
                 <Button
                   variant="outline"
                   size="icon"
@@ -483,7 +483,7 @@ export default function Calls() {
                       setAudioProgress(newTime);
                     }
                   }}
-                  disabled={isDownloading || !audioRef.current}
+                  disabled={!audioRef.current}
                   title="Forward 5 seconds"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -491,7 +491,7 @@ export default function Calls() {
                     <path d="M6 17l5-5-5-5"/>
                   </svg>
                 </Button>
-                
+
                 <span className="text-sm w-12 text-right">{formatTime(audioProgress)}</span>
                 <input
                   type="range"
@@ -501,12 +501,12 @@ export default function Calls() {
                   onChange={(e) => handleSeek(parseFloat(e.target.value))}
                   className="flex-1 h-2 rounded-lg appearance-none cursor-pointer bg-gray-200"
                   step="0.1"
-                  disabled={isDownloading || !audioRef.current}
+                  disabled={!audioRef.current}
                 />
                 <span className="text-sm w-12">{formatTime(audioDuration)}</span>
               </div>
             )}
-            
+
             <div className="text-center text-sm text-muted-foreground">
               {/* Hidden audio element */}
               <audio className="hidden" controls preload="auto" ref={audioRef} />
@@ -514,7 +514,7 @@ export default function Calls() {
           </div>
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={transcriptDialogOpen} onOpenChange={setTranscriptDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -645,7 +645,7 @@ export default function Calls() {
                                         .split(";")
                                         .map(line => line.trim())
                                         .join("\n");
-                                      
+
                                       setActiveTranscript(formattedTranscript);
                                       setTranscriptDialogOpen(true);
                                     }
@@ -689,7 +689,7 @@ export default function Calls() {
                                     </>
                                   )}
                                 </Button>
-                                
+
                                 {playingAudioId === call.id && (
                                   <span className="text-sm font-medium text-primary animate-pulse">
                                     <Volume2
