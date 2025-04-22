@@ -231,14 +231,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
         )}
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-3">
-        {isPosted ? (
-          <div className="flex items-center gap-2 w-full">
-            <Badge className="bg-blue-100 text-blue-800">Posted</Badge>
-            <div className="text-xs text-neutral-500 ml-auto">
-              Posted on {format(new Date(date || new Date()), "MMM d")}
-            </div>
-          </div>
-        ) : isPending && isAIGenerated && imageUrl ? (
+        {isAIGenerated && imageUrl ? (
           <div className="flex justify-between w-full">
             <Button 
               variant="outline" 
@@ -260,7 +253,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               )}
             </Button>
 
-            {isPending && (
+            {isPending ? (
               <Button 
                 onClick={async () => {
                   try {
@@ -297,7 +290,47 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               >
                 <Check className="mr-2 h-4 w-4" /> Approve & Post
               </Button>
+            ) : (
+              <Button 
+                onClick={async () => {
+                  try {
+                    // Repost functionality - same API calls as "Approve & Post"
+                    // but with different UI label
+                    await apiRequest("POST", "/api/proxy/socialmedia", {
+                      id,
+                      status: "post"
+                    });
+
+                    // Show success toast
+                    toast({
+                      title: "Post shared again",
+                      description: "Your post has been shared again on your social media."
+                    });
+
+                    // Refresh the social media list
+                    queryClient.invalidateQueries({ queryKey: ['/api/social'] });
+                  } catch (error) {
+                    console.error("Error reposting:", error);
+                    toast({
+                      title: "Error reposting",
+                      description: "There was a problem sharing your post again.",
+                      variant: "destructive"
+                    });
+                  }
+                }}
+                size="sm"
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
+              >
+                <Share2 className="mr-2 h-4 w-4" /> Repost
+              </Button>
             )}
+          </div>
+        ) : isPosted ? (
+          <div className="flex items-center gap-2 w-full">
+            <Badge className="bg-blue-100 text-blue-800">Posted</Badge>
+            <div className="text-xs text-neutral-500 ml-auto">
+              Posted on {format(new Date(date || new Date()), "MMM d")}
+            </div>
           </div>
         ) : aiResponse ? (
           <>
