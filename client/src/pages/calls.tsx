@@ -14,12 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-  DialogDescription
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -57,7 +57,7 @@ export default function Calls() {
   useEffect(() => {
     // Get id from URL query params
     const params = new URLSearchParams(window.location.search);
-    const callId = params.get('id');
+    const callId = params.get("id");
     if (callId) {
       // Set searchQuery to the call ID
       setSearchQuery(callId);
@@ -196,9 +196,10 @@ export default function Calls() {
     // If the same audio is already loaded and we're just toggling play/pause
     if (playingAudioId === id && audioRef.current) {
       if (audioRef.current.paused) {
-        audioRef.current.play()
+        audioRef.current
+          .play()
           .then(() => setPlayingAudioId(id))
-          .catch(error => {
+          .catch((error) => {
             console.error("Error playing audio:", error);
             setPlayingAudioId(null);
           });
@@ -228,7 +229,7 @@ export default function Calls() {
       }
 
       // Get the total size for progress calculation
-      const contentLength = response.headers.get('Content-Length');
+      const contentLength = response.headers.get("Content-Length");
       const total = contentLength ? parseInt(contentLength, 10) : 0;
 
       // Use a ReadableStream to track download progress
@@ -262,7 +263,7 @@ export default function Calls() {
       }
 
       // Convert to blob with correct MIME type
-      const blob = new Blob([allChunks], { type: 'audio/mpeg' });
+      const blob = new Blob([allChunks], { type: "audio/mpeg" });
 
       // Create a local URL for the blob
       const blobUrl = URL.createObjectURL(blob);
@@ -272,18 +273,18 @@ export default function Calls() {
       audioRef.current = audio;
 
       // Set up event listeners
-      audio.addEventListener('loadedmetadata', () => {
+      audio.addEventListener("loadedmetadata", () => {
         setAudioDuration(audio.duration);
         setIsDownloading(false);
       });
 
-      audio.addEventListener('timeupdate', () => {
+      audio.addEventListener("timeupdate", () => {
         setAudioProgress(audio.currentTime);
       });
 
-      audio.addEventListener('play', () => setPlayingAudioId(id));
-      audio.addEventListener('pause', () => setPlayingAudioId(null));
-      audio.addEventListener('ended', () => {
+      audio.addEventListener("play", () => setPlayingAudioId(id));
+      audio.addEventListener("pause", () => setPlayingAudioId(null));
+      audio.addEventListener("ended", () => {
         setPlayingAudioId(null);
         setAudioProgress(0);
         // Clean up blob URL when done
@@ -293,13 +294,13 @@ export default function Calls() {
       // Play the audio
       await audio.play();
       setPlayingAudioId(id);
-
     } catch (error) {
       console.error("Error handling audio:", error);
       setIsDownloading(false);
       toast({
         title: "Error",
-        description: "Could not play audio. The file may be invalid or inaccessible.",
+        description:
+          "Could not play audio. The file may be invalid or inaccessible.",
         variant: "destructive",
       });
     }
@@ -308,7 +309,11 @@ export default function Calls() {
   const handleSeek = (value: number) => {
     if (audioRef.current) {
       // Only update the current time if within valid range and audio is loaded
-      if (value >= 0 && value <= audioRef.current.duration && !isNaN(audioRef.current.duration)) {
+      if (
+        value >= 0 &&
+        value <= audioRef.current.duration &&
+        !isNaN(audioRef.current.duration)
+      ) {
         // Set the current time
         audioRef.current.currentTime = value;
 
@@ -329,7 +334,7 @@ export default function Calls() {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
   // Audio cleanup and event handling
@@ -343,13 +348,13 @@ export default function Calls() {
         const audio = audioRef.current;
 
         // Remove all event listeners
-        audio.removeEventListener('loadedmetadata', () => {});
-        audio.removeEventListener('timeupdate', () => {});
-        audio.removeEventListener('play', () => {});
-        audio.removeEventListener('pause', () => {});
-        audio.removeEventListener('ended', () => {});
-        audio.removeEventListener('seeking', () => {});
-        audio.removeEventListener('seeked', () => {});
+        audio.removeEventListener("loadedmetadata", () => {});
+        audio.removeEventListener("timeupdate", () => {});
+        audio.removeEventListener("play", () => {});
+        audio.removeEventListener("pause", () => {});
+        audio.removeEventListener("ended", () => {});
+        audio.removeEventListener("seeking", () => {});
+        audio.removeEventListener("seeked", () => {});
 
         // Stop playback
         audio.pause();
@@ -403,19 +408,15 @@ export default function Calls() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Audio Player</DialogTitle>
-            <DialogDescription>
-              Listen to the call recording
-            </DialogDescription>
+            <DialogDescription>Listen to the call recording</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             {isDownloading ? (
               <div className="space-y-2 py-4">
-                <div className="text-center mb-2">
-                  Downloading audio file... {downloadProgress}%
-                </div>
+                <div className="text-center mb-2">Loading audio file...</div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-primary h-2.5 rounded-full transition-all" 
+                  <div
+                    className="bg-primary h-2.5 rounded-full transition-all"
                     style={{ width: `${downloadProgress}%` }}
                   ></div>
                 </div>
@@ -428,7 +429,10 @@ export default function Calls() {
                   onClick={() => {
                     if (audioRef.current && !isNaN(audioRef.current.duration)) {
                       // Go back 5 seconds
-                      const newTime = Math.max(0, audioRef.current.currentTime - 5);
+                      const newTime = Math.max(
+                        0,
+                        audioRef.current.currentTime - 5,
+                      );
                       audioRef.current.currentTime = newTime;
                       setAudioProgress(newTime);
                     }
@@ -436,9 +440,19 @@ export default function Calls() {
                   disabled={!audioRef.current}
                   title="Back 5 seconds"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M11 17l-5-5 5-5"/>
-                    <path d="M18 17l-5-5 5-5"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M11 17l-5-5 5-5" />
+                    <path d="M18 17l-5-5 5-5" />
                   </svg>
                 </Button>
 
@@ -448,19 +462,22 @@ export default function Calls() {
                   onClick={() => {
                     if (audioRef.current) {
                       if (audioRef.current.paused) {
-                        audioRef.current.play()
+                        audioRef.current
+                          .play()
                           .then(() => {
                             if (currentAudioUrl) {
                               // Find the call ID with this URL
-                              const call = calls.find(c => 
-                                (c.call_recording_url || c.callRecordingUrl) === currentAudioUrl
+                              const call = calls.find(
+                                (c) =>
+                                  (c.call_recording_url ||
+                                    c.callRecordingUrl) === currentAudioUrl,
                               );
                               if (call) {
                                 setPlayingAudioId(call.id!);
                               }
                             }
                           })
-                          .catch(err => console.error("Play error:", err));
+                          .catch((err) => console.error("Play error:", err));
                       } else {
                         audioRef.current.pause();
                         setPlayingAudioId(null);
@@ -478,7 +495,10 @@ export default function Calls() {
                   onClick={() => {
                     if (audioRef.current && !isNaN(audioRef.current.duration)) {
                       // Go forward 5 seconds
-                      const newTime = Math.min(audioRef.current.duration, audioRef.current.currentTime + 5);
+                      const newTime = Math.min(
+                        audioRef.current.duration,
+                        audioRef.current.currentTime + 5,
+                      );
                       audioRef.current.currentTime = newTime;
                       setAudioProgress(newTime);
                     }
@@ -486,13 +506,25 @@ export default function Calls() {
                   disabled={!audioRef.current}
                   title="Forward 5 seconds"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M13 17l5-5-5-5"/>
-                    <path d="M6 17l5-5-5-5"/>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M13 17l5-5-5-5" />
+                    <path d="M6 17l5-5-5-5" />
                   </svg>
                 </Button>
 
-                <span className="text-sm w-12 text-right">{formatTime(audioProgress)}</span>
+                <span className="text-sm w-12 text-right">
+                  {formatTime(audioProgress)}
+                </span>
                 <input
                   type="range"
                   min="0"
@@ -503,19 +535,29 @@ export default function Calls() {
                   step="0.1"
                   disabled={!audioRef.current}
                 />
-                <span className="text-sm w-12">{formatTime(audioDuration)}</span>
+                <span className="text-sm w-12">
+                  {formatTime(audioDuration)}
+                </span>
               </div>
             )}
 
             <div className="text-center text-sm text-muted-foreground">
               {/* Hidden audio element */}
-              <audio className="hidden" controls preload="auto" ref={audioRef} />
+              <audio
+                className="hidden"
+                controls
+                preload="auto"
+                ref={audioRef}
+              />
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={transcriptDialogOpen} onOpenChange={setTranscriptDialogOpen}>
+      <Dialog
+        open={transcriptDialogOpen}
+        onOpenChange={setTranscriptDialogOpen}
+      >
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Call Transcript</DialogTitle>
@@ -627,8 +669,8 @@ export default function Calls() {
                             <div>
                               <h4 className="font-medium mb-1">Call Summary</h4>
                               <p className="text-sm text-muted-foreground">
-                                {call.summary.includes("%") 
-                                  ? call.summary.split("%")[0].trim() 
+                                {call.summary.includes("%")
+                                  ? call.summary.split("%")[0].trim()
                                   : call.summary}
                               </p>
                               {call.summary.includes("%") && (
@@ -638,12 +680,14 @@ export default function Calls() {
                                   className="mt-2"
                                   onClick={() => {
                                     // Extract transcript portion after the % symbol
-                                    const transcript = call.summary.split("%")[1]?.trim();
+                                    const transcript = call.summary
+                                      .split("%")[1]
+                                      ?.trim();
                                     if (transcript) {
                                       // Format transcript for dialog display
                                       const formattedTranscript = transcript
                                         .split(";")
-                                        .map(line => line.trim())
+                                        .map((line) => line.trim())
                                         .join("\n");
 
                                       setActiveTranscript(formattedTranscript);
