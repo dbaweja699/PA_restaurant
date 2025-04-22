@@ -192,7 +192,7 @@ export default function Calls() {
   const handlePlayAudio = async (id: number, url: string) => {
     setCurrentAudioUrl(url);
     setAudioPlayerOpen(true);
-
+    
     // If the same audio is already loaded and we're just toggling play/pause
     if (playingAudioId === id && audioRef.current) {
       if (audioRef.current.paused) {
@@ -216,87 +216,94 @@ export default function Calls() {
     }
 
     try {
-      // Show downloading state
-      setIsDownloading(true);
-      setDownloadProgress(0);
-
-      // Fetch the audio file
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Get the total size for progress calculation
-      const contentLength = response.headers.get('Content-Length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-
-      // Use a ReadableStream to track download progress
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error("Failed to get reader from response");
-
-      let receivedLength = 0;
-      const chunks: Uint8Array[] = [];
-
-      // Read the stream chunks
-      while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) break;
-
-        chunks.push(value);
-        receivedLength += value.length;
-
-        // Update download progress
-        if (total > 0) {
-          setDownloadProgress(Math.round((receivedLength / total) * 100));
-        }
-      }
-
-      // Combine chunks into a single Uint8Array
-      const allChunks = new Uint8Array(receivedLength);
-      let position = 0;
-      for (const chunk of chunks) {
-        allChunks.set(chunk, position);
-        position += chunk.length;
-      }
-
-      // Convert to blob with correct MIME type
-      const blob = new Blob([allChunks], { type: 'audio/mpeg' });
-
-      // Create a local URL for the blob
-      const blobUrl = URL.createObjectURL(blob);
-
-      // Create and set up the audio element
-      const audio = new Audio(blobUrl);
-      audioRef.current = audio;
-
-      // Set up event listeners
-      audio.addEventListener('loadedmetadata', () => {
-        setAudioDuration(audio.duration);
-        setIsDownloading(false);
+      // Hide download UI and do background download
+      setIsDownloading(false);
+      
+      // Create a new audio element to start preloading while we fetch the full file
+      const tempAudio = new Audio(url);
+      audioRef.current = tempAudio;
+      setAudioDuration(0); // Will be updated when metadata loads
+      
+      // Set up initial listeners for the streaming audio
+      tempAudio.addEventListener('loadedmetadata', () => {
+        setAudioDuration(tempAudio.duration);
       });
-
-      audio.addEventListener('timeupdate', () => {
-        setAudioProgress(audio.currentTime);
+      
+      tempAudio.addEventListener('timeupdate', () => {
+        setAudioProgress(tempAudio.currentTime);
       });
-
-      audio.addEventListener('play', () => setPlayingAudioId(id));
-      audio.addEventListener('pause', () => setPlayingAudioId(null));
-      audio.addEventListener('ended', () => {
-        setPlayingAudioId(null);
-        setAudioProgress(0);
-        // Clean up blob URL when done
-        URL.revokeObjectURL(blobUrl);
-      });
-
-      // Play the audio
-      await audio.play();
-      setPlayingAudioId(id);
+      
+      // Start playing the streaming version immediately
+      tempAudio.play()
+        .then(() => {
+          setPlayingAudioId(id);
+        })
+        .catch(error => {
+          console.error("Error playing streaming audio:", error);
+        });
+      
+      // In the background, fetch the full file for better playback
+      fetch(url)
+        .then(response => {
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          return response.blob();
+        })
+        .then(blob => {
+          // Only create a new blob URL if we're still playing this audio
+          if (playingAudioId === id) {
+            const blobUrl = URL.createObjectURL(blob);
+            setActiveBlobUrl(blobUrl);
+            
+            // Only replace the audio element if we're currently playing this track
+            const newAudio = new Audio(blobUrl);
+            
+            // Set the current time to match the streaming audio's position
+            if (tempAudio && !isNaN(tempAudio.currentTime)) {
+              newAudio.currentTime = tempAudio.currentTime;
+            }
+            
+            // Set up event listeners for the blob audio
+            newAudio.addEventListener('loadedmetadata', () => {
+              setAudioDuration(newAudio.duration);
+            });
+            
+            newAudio.addEventListener('timeupdate', () => {
+              setAudioProgress(newAudio.currentTime);
+            });
+            
+            newAudio.addEventListener('play', () => setPlayingAudioId(id));
+            newAudio.addEventListener('pause', () => setPlayingAudioId(null));
+            newAudio.addEventListener('ended', () => {
+              setPlayingAudioId(null);
+              setAudioProgress(0);
+              // Clean up blob URL when done
+              URL.revokeObjectURL(blobUrl);
+              setActiveBlobUrl(null);
+            });
+            
+            // If the temp audio was playing, start playing the new one
+            if (!tempAudio.paused) {
+              newAudio.play()
+                .then(() => {
+                  // Stop and remove the temp audio
+                  tempAudio.pause();
+                })
+                .catch(error => {
+                  console.error("Error playing blob audio:", error);
+                });
+            }
+            
+            // Replace the audio reference
+            audioRef.current = newAudio;
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching full audio:", error);
+          // Continue with streaming audio if fetch fails
+        });
 
     } catch (error) {
       console.error("Error handling audio:", error);
-      setIsDownloading(false);
       toast({
         title: "Error",
         description: "Could not play audio. The file may be invalid or inaccessible.",
@@ -408,19 +415,6 @@ export default function Calls() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {isDownloading ? (
-              <div className="space-y-2 py-4">
-                <div className="text-center mb-2">
-                  Downloading audio file... {downloadProgress}%
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div 
-                    className="bg-primary h-2.5 rounded-full transition-all" 
-                    style={{ width: `${downloadProgress}%` }}
-                  ></div>
-                </div>
-              </div>
-            ) : (
               <div className="flex items-center justify-center gap-2">
                 <Button
                   variant="outline"
@@ -505,8 +499,6 @@ export default function Calls() {
                 />
                 <span className="text-sm w-12">{formatTime(audioDuration)}</span>
               </div>
-            )}
-
             <div className="text-center text-sm text-muted-foreground">
               {/* Hidden audio element */}
               <audio className="hidden" controls preload="auto" ref={audioRef} />
