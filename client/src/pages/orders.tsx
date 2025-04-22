@@ -93,9 +93,9 @@ function OrderDetailsRow({ order }: { order: Order }) {
     
     if (order.items) {
       try {
-        // Handle the new format where items can be a complex object with "original" and "formatted" properties
+        // Handle different item formats
         if (typeof order.items === 'object' && order.items !== null) {
-          // Case 1: New format with original and formatted properties
+          // Case 1: Complex object with original and formatted properties
           if (order.items.original && Array.isArray(order.items.original)) {
             parsedItems = order.items.original.map(item => ({
               name: item.name || item.item || '',
@@ -103,7 +103,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
               price: item.price || ''
             }));
           }
-          // Case 2: If it's already an array (like [{"qty":1,"item":"Laptop"}])
+          // Case 2: Array of items
           else if (Array.isArray(order.items)) {
             parsedItems = order.items.map(item => ({
               name: item.name || item.item || '',
@@ -111,17 +111,17 @@ function OrderDetailsRow({ order }: { order: Order }) {
               price: item.price || ''
             }));
           }
-          // Case 3: If it's a formatted object (like {"Veg Manchurian":1})
+          // Case 3: Object with formatted property
           else if (order.items.formatted) {
             parsedItems = Object.entries(order.items.formatted).map(([name, quantity]) => ({
               name,
-              quantity: quantity as number,
+              quantity: typeof quantity === 'number' ? quantity : 1,
               price: ''
             }));
           }
-          // Case 4: If it's a simple object mapping names to quantities
+          // Case 4: Simple object mapping names to quantities
           else if (!Array.isArray(order.items) && typeof order.items === 'object') {
-            // Filter out non-object properties like "__proto__"
+            // Filter out non-object properties
             const entries = Object.entries(order.items).filter(
               ([key]) => !key.startsWith('_') && key !== 'original' && key !== 'formatted'
             );
@@ -135,22 +135,46 @@ function OrderDetailsRow({ order }: { order: Order }) {
             }
           }
         }
-        // Case 5: If it's a string representation of JSON
+        // Case 5: String representation of JSON
         else if (typeof order.items === 'string') {
           const itemsObj = JSON.parse(order.items);
           
           if (Array.isArray(itemsObj)) {
+            // Handle array format
             parsedItems = itemsObj.map(item => ({
               name: item.name || item.item || '',
               quantity: item.quantity || item.qty || 1,
               price: item.price || ''
             }));
-          } else {
-            parsedItems = Object.entries(itemsObj).map(([name, quantity]) => ({
-              name,
-              quantity: quantity as number,
-              price: ''
-            }));
+          } 
+          // Handle format: {"Cheesy Garlic Bread": "3 slices x 1", ...}
+          else if (typeof itemsObj === 'object') {
+            parsedItems = Object.entries(itemsObj).map(([name, description]) => {
+              // If description is something like "3 slices x 1"
+              if (typeof description === 'string' && description.includes(' x ')) {
+                const parts = description.split(' x ');
+                const quantity = parseInt(parts[parts.length - 1]) || 1;
+                return {
+                  name: name,
+                  quantity: quantity,
+                  price: ''
+                };
+              }
+              // If description is a simple number
+              else if (typeof description === 'number') {
+                return {
+                  name: name,
+                  quantity: description,
+                  price: ''
+                };
+              }
+              // Fallback for other formats
+              return {
+                name: name,
+                quantity: 1,
+                price: ''
+              };
+            });
           }
         }
       } catch (e) {
