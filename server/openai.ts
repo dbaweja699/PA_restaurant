@@ -15,7 +15,7 @@ Be concise, friendly, and professional. If you don't know the answer, admit it a
 Keep responses under 150 words unless a detailed explanation is specifically requested.`;
 
 const N8N_WEBHOOK_URL =
-  "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/a8da29a8-c2cd-42ad-8b74-126ce7252b1d";
+  "http://ec2-13-232-234-201.ap-south-1.compute.amazonaws.com:5678/webhook/dbb7d22a-8145-4d12-9153-d3479fdbb54d";
 
 // Keep track of active sessions
 const activeSessions = new Map<string, {
