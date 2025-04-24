@@ -294,7 +294,18 @@ export function AIChatbot() {
                       : 'bg-muted'
                   }`}
                 >
-                  <p className="text-sm">{msg.content}</p>
+                  <div 
+                    className="text-sm"
+                    dangerouslySetInnerHTML={{ 
+                      __html: msg.content
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/\n/g, '<br />')
+                        .replace(/\* (.*?)(?=(\n|$))/g, '<li>$1</li>')
+                        .replace(/<li>/g, '<ul class="list-disc ml-5"><li>')
+                        .replace(/<\/li>(?!\s*<li>)/g, '</li></ul>')
+                    }}
+                  />
                   <p className="text-xs mt-1 opacity-70 text-right">
                     {formatTime(msg.timestamp)}
                   </p>
