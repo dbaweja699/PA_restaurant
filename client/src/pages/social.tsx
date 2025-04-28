@@ -123,21 +123,21 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
   };
 
   return (
-    <Card className="mb-4">
-      <CardHeader className="pb-2">
+    <Card className="mb-5 bg-white border border-gray-100 shadow-sm">
+      <CardHeader className="pb-3 pt-5 px-6">
         <div className="flex justify-between items-start">
           <div className="flex items-center">
-            <div className="h-10 w-10 rounded-full flex items-center justify-center mr-3 bg-neutral-100">
+            <div className="h-12 w-12 rounded-full flex items-center justify-center mr-4 bg-neutral-100">
               <SocialPlatformIcon platform={platform} />
             </div>
             <div>
               <CardTitle className="text-base flex items-center">
                 {author || "AI Generated"}
                 {isAIGenerated && (
-                  <Badge variant="outline" className="ml-2">AI Generated</Badge>
+                  <Badge variant="outline" className="ml-3">AI Generated</Badge>
                 )}
                 {!isAIGenerated && (
-                  <Badge variant="outline" className="ml-2 capitalize">{platform}</Badge>
+                  <Badge variant="outline" className="ml-3 capitalize">{platform}</Badge>
                 )}
               </CardTitle>
               <div className="text-xs text-neutral-500 mt-1">
@@ -148,7 +148,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
           {getStatusBadge(status)}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-6 py-4">
         {/* For AI Generated post with image and caption */}
         {isAIGenerated && imageUrl && (
           <div className="mb-4">
@@ -230,7 +230,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between border-t pt-3">
+      <CardFooter className="flex justify-between border-t px-6 py-4">
         {isPosted ? (
           <div className="flex items-center gap-2 w-full">
             <Badge className="bg-[#e6f0e9] text-[#2A4833]">Posted</Badge>
@@ -733,7 +733,7 @@ export default function Social() {
       : caption;
 
     return (
-      <Card className="mb-4 overflow-hidden">
+      <Card className="mb-5 overflow-hidden bg-white border border-gray-100 shadow-sm">
         <div className="aspect-square max-h-[400px] w-full overflow-hidden bg-gray-100 relative">
           {!isImageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -754,7 +754,7 @@ export default function Social() {
             }}
           />
         </div>
-        <CardContent className="p-4">
+        <CardContent className="px-6 py-5">
           <p className="text-neutral-700">
             {displayCaption}
             {isLongCaption && (
