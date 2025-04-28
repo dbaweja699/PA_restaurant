@@ -784,7 +784,7 @@ export default function Social() {
 
         <Button 
           onClick={() => setIsGenerateOpen(true)}
-          className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+          className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]"
         >
           <Plus className="mr-2 h-4 w-4" /> Generate Post
         </Button>
@@ -851,7 +851,7 @@ export default function Social() {
                   </Button>
                   <Button 
                     onClick={handleRetry}
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                    className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]"
                   >
                     Generate with Suggestion
                   </Button>
