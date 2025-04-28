@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import logoImg from "@/assets/fasta-pasta-logo.png";
+import logoImg from "@/assets/basilico-logo.png";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
@@ -43,9 +43,9 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     setIsOpen(false);
   };
 
-  // Base classes for the sidebar - matching the exact logo gradient
+  // Base classes for the sidebar - matching the Basilico brand colors
   const sidebarClasses = cn(
-    "bg-gradient-to-r from-[#5229bd] to-[#1357bf] text-white w-72 flex flex-col",
+    "bg-gradient-to-r from-[#2A4833] to-[#1e6434] text-white w-72 flex flex-col",
     isOpen ? "fixed inset-y-0 left-0 z-50" : "hidden md:flex md:flex-shrink-0"
   );
 
@@ -53,10 +53,10 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     <div className={sidebarClasses}>
       <div className="flex items-center justify-center h-auto py-6 px-0">
         <div className="flex flex-col items-center w-full">
-          <div className="bg-white rounded-lg p-2 mb-3 w-[80%]">
-            <img src={logoImg} alt="Fasta Pasta Logo" className="w-full max-w-full h-auto" />
+          <div className="bg-white rounded-lg p-4 mb-3 w-[90%]">
+            <img src={logoImg} alt="Basilico Logo" className="w-full max-w-full h-auto" />
           </div>
-          <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent tracking-tight">
+          <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent tracking-tight">
             Restaurant AI Assistant
           </h1>
         </div>
@@ -69,8 +69,8 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             const itemClasses = cn(
               "flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors",
               isActive 
-                ? "bg-primary-light"
-                : "hover:bg-primary-light"
+                ? "bg-[#17532A]/30"
+                : "hover:bg-[#17532A]/20"
             );
 
             return (
@@ -89,10 +89,10 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       </div>
 
       {user && (
-        <div className="border-t border-primary-light">
+        <div className="border-t border-green-700/30">
           <div className="flex items-center p-4">
             <div className="flex-shrink-0">
-              <div className="h-10 w-10 rounded-full bg-primary-light flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-green-700/30 flex items-center justify-center">
                 {user.avatar_url && !user.avatar_url.includes("images.app.goo.gl") ? (
                   <img 
                     className="h-10 w-10 rounded-full" 
