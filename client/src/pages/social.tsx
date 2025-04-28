@@ -308,7 +308,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               <Button size="sm" variant="outline" className="flex items-center">
                 <ThumbsUp className="h-4 w-4 mr-1" /> Approve
               </Button>
-              <Button size="sm">Respond Manually</Button>
+              <Button size="sm" className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]">Respond Manually</Button>
             </div>
           </>
         ) : (
@@ -320,7 +320,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
               <Button size="sm" variant="outline" className="flex items-center">
                 <ThumbsUp className="h-4 w-4 mr-1" /> Approve
               </Button>
-              <Button size="sm">Respond Manually</Button>
+              <Button size="sm" className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]">Respond Manually</Button>
             </div>
           </>
         )}
@@ -949,8 +949,8 @@ export default function Social() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card 
           className={cn(
-            "cursor-pointer hover:border-primary/50 transition-colors",
-            activeTab === "all" ? "border-primary" : ""
+            "cursor-pointer hover:border-[#2A4833]/50 transition-colors",
+            activeTab === "all" ? "border-[#2A4833]" : ""
           )}
           onClick={() => setActiveTab("all")}
         >
@@ -1010,7 +1010,7 @@ export default function Social() {
                       variant="outline" 
                       className={cn(
                         "cursor-pointer flex items-center",
-                        activeTab === platform.toLowerCase() ? "border-primary" : ""
+                        activeTab === platform.toLowerCase() ? "border-[#2A4833]" : ""
                       )}
                       onClick={() => setActiveTab(platform.toLowerCase())}
                     >
