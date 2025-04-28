@@ -293,7 +293,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
                   }
                 }}
                 size="sm"
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]"
               >
                 <Check className="mr-2 h-4 w-4" /> Approve & Post
               </Button>
