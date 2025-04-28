@@ -1,0 +1,128 @@
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+data: '{"system__agent_id":"vHKi3EpUuOKptPE2bdSB","system__conversation_id":"FRTTJf3pnOHUqBwhzEfK","total":"twenty-four","pickup_time":"in one hour","items":"{\\"Margherita pizza\\": 1}","customer_name":"Shetij"}',
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+allowAbsoluteUrls: true
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+},
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+request: ClientRequest {
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_events: [Object: null prototype],
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_eventsCount: 7,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_maxListeners: undefined,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+outputData: [],
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+outputSize: 0,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+writable: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+destroyed: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_last: false,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+chunkedEncoding: false,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+shouldKeepAlive: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+maxRequestsOnConnectionReached: false,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_defaultKeepAlive: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+useChunkedEncodingByDefault: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+sendDate: false,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_removedTE: false,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+strictContentLength: false,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_contentLength: '203',
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+finished: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_headerSent: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_closed: true,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+socket: [Socket],
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+'Content-Type: application/json\r\n' +
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+'Content-Length: 203\r\n' +
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+'Connection: keep-alive\r\n' +
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+_onPendingData: [Function: nop],
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+method: 'POST',
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+upgradeOrConnect: false,
+2025-04-28 22:23:41.74
+dcb0fd19
+User
+parser: null,

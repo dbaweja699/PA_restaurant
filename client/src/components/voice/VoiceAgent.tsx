@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 // Agent ID from environment variables
-const AGENT_ID = "UEqDscBteVc9MEixiHyx";
+const AGENT_ID = "vHKi3EpUuOKptPE2bdSB";
 
 export function VoiceAgent() {
   const [open, setOpen] = useState(false);
@@ -119,7 +119,7 @@ export function VoiceAgent() {
         variant="outline"
         size="icon"
         onClick={() => setOpen(true)}
-        className="text-white hover:bg-white/10 bg-gradient-to-r from-indigo-500 to-purple-600"
+        className="text-white hover:bg-white/10 bg-gradient-to-r from-[#2A4833] to-[#1e6434]"
         title="Call AI Voice Agent"
       >
         <Phone className="h-5 w-5" />
@@ -129,7 +129,7 @@ export function VoiceAgent() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span className="bg-gradient-to-r from-indigo-500 to-purple-600 text-transparent bg-clip-text font-semibold">
+              <span className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] text-transparent bg-clip-text font-semibold">
                 AI Voice Agent
               </span>
               <div className="flex gap-2 items-center">
@@ -184,7 +184,7 @@ export function VoiceAgent() {
                 <Button
                   onClick={handleStartConversation}
                   disabled={!hasPermission}
-                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                  className="w-full bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]"
                 >
                   <Mic className="mr-2 h-4 w-4" />
                   Start Call
