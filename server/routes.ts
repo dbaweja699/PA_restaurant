@@ -987,7 +987,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Proxy endpoint for AI voice agent functionality
   app.post(`${apiPrefix}/proxy/ai_voice`, async (req, res) => {
     const ELEVENLABS_WEBHOOK_URL =
-      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook-test/67eff4f0-a0e3-4881-b179-249a9394a340";
+      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/ai_voice";
 
     try {
       // Log the incoming request for debugging
