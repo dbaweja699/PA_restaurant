@@ -116,7 +116,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
       case "flagged":
         return <Badge className="bg-red-100 text-red-800">{platform}</Badge>;
       case "posted":
-        return <Badge className="bg-blue-100 text-blue-800">{platform}</Badge>;
+        return <Badge className="bg-[#e6f0e9] text-[#2A4833]">{platform}</Badge>;
       default:
         return <Badge variant="outline">{platform}</Badge>;
     }
@@ -233,7 +233,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
       <CardFooter className="flex justify-between border-t pt-3">
         {isPosted ? (
           <div className="flex items-center gap-2 w-full">
-            <Badge className="bg-blue-100 text-blue-800">Posted</Badge>
+            <Badge className="bg-[#e6f0e9] text-[#2A4833]">Posted</Badge>
             <div className="text-xs text-neutral-500 ml-auto">
               Posted on {format(new Date(date || new Date()), "MMM d")}
             </div>
@@ -892,7 +892,7 @@ export default function Social() {
                       </Button>
                       <Button 
                         onClick={handleGeneratePost}
-                        className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                        className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]"
                       >
                         Generate
                       </Button>
@@ -933,7 +933,7 @@ export default function Social() {
                       <Button 
                         onClick={handleApprove}
                         disabled={isGenerating}
-                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                        className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]"
                       >
                         <Check className="mr-2 h-4 w-4" /> Approve
                       </Button>
