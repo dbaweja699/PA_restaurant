@@ -91,8 +91,8 @@ export default function SignIn() {
         <div className="w-full md:w-1/2 bg-white p-8">
           <div className="flex flex-col items-center mb-6">
             <img src={logoImg} alt="Restaurant AI Assistant Logo" className="h-20 w-40 mb-2 mx-auto" />
-            <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
-              Restaurant AI Assistant
+            <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-[#2A4833] to-[#1e6434] bg-clip-text text-transparent">
+              Basilico AI Assistant
             </h1>
           </div>
           
@@ -131,7 +131,7 @@ export default function SignIn() {
             
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]" 
               disabled={isSubmitting}
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
@@ -144,9 +144,9 @@ export default function SignIn() {
         </div>
         
         {/* Right side - hero */}
-        <div className="hidden md:block md:w-1/2 bg-gradient-to-r from-[hsl(270,80%,55%)] to-[hsl(210,80%,55%)] p-8 text-white">
+        <div className="hidden md:block md:w-1/2 bg-gradient-to-r from-[#2A4833] to-[#1e6434] p-8 text-white">
           <div className="h-full flex flex-col justify-center">
-            <h2 className="text-3xl font-bold mb-4 text-white">Restaurant AI Assistant</h2>
+            <h2 className="text-3xl font-bold mb-4 text-white">Basilico AI Assistant</h2>
             <p className="mb-6 text-white/90">
               Your all-in-one AI solution for managing customer interactions, reviews, 
               orders, and social media presence.

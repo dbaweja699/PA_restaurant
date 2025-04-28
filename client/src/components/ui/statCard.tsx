@@ -22,19 +22,19 @@ export function StatCard({
   footerLink
 }: StatCardProps) {
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="px-4 py-5 sm:p-6">
+    <Card className="overflow-hidden bg-white border border-gray-100 shadow-sm">
+      <CardContent className="px-6 py-7 sm:p-8">
         <div className="flex items-center">
           <div className={cn("flex-shrink-0 rounded-md p-3", iconBgColor)}>
             <i className={`${icon} text-xl text-white`}></i>
           </div>
-          <div className="ml-5 w-0 flex-1">
+          <div className="ml-6 w-0 flex-1">
             <dl>
-              <dt className="text-sm font-medium text-neutral-500 truncate">
+              <dt className="text-sm font-medium text-neutral-500 truncate mb-1">
                 {title}
               </dt>
               <dd>
-                <div className="text-lg font-semibold text-neutral-900">
+                <div className="text-xl font-semibold text-neutral-900">
                   {value}
                 </div>
               </dd>
@@ -42,7 +42,7 @@ export function StatCard({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="bg-neutral-50 px-4 py-3 flex items-center justify-between">
+      <CardFooter className="bg-neutral-50 px-6 py-4 flex items-center justify-between">
         <div className="text-sm text-accent font-medium">
           {footer}
         </div>
