@@ -251,11 +251,8 @@ const RecipeTable = ({
                   key={recipe.id} 
                   className={selectedRecipe?.id === recipe.id ? "bg-primary/5" : ""}
                   onClick={() => {
-                    // Make sure we clear and set the selected recipe properly
-                    // This forces a re-render and refetch of recipe items
-                    setSelectedRecipe(null);
-                    setTimeout(() => setSelectedRecipe(recipe), 10);
-                    console.log(`Selected recipe ID: ${recipe.id}, Name: ${recipe.dishName}`);
+                    // Update selected recipe and data will auto-refetch due to queryKey change
+                    setSelectedRecipe(recipe);
                   }}
                 >
                   <TableCell className="font-medium">{recipe.dishName}</TableCell>
@@ -339,20 +336,22 @@ export default function RecipesPage() {
   });
   
   // Fetch recipe items for selected recipe
-  const {
-    data: recipeItems = [],
-    isLoading: isLoadingRecipeItems,
-  } = useQuery({
+  const recipeItemsQuery = useQuery<RecipeItemWithDetails[]>({
     queryKey: ['/api/recipes', selectedRecipe?.id, 'items'],
     enabled: !!selectedRecipe,
     retry: 1,
-    onSuccess: (data) => {
-      console.log(`Loaded ${data.length} recipe items for recipe ID ${selectedRecipe?.id}:`, data);
-    },
-    onError: (error) => {
-      console.error(`Failed to load recipe items for recipe ID ${selectedRecipe?.id}:`, error);
-    }
   });
+  
+  // Extract data and loading state from the query
+  const recipeItems = recipeItemsQuery.data || [];
+  const isLoadingRecipeItems = recipeItemsQuery.isLoading;
+  
+  // Log recipe items and ensure they're loaded when selected recipe changes
+  useEffect(() => {
+    if (selectedRecipe) {
+      console.log(`Selected recipe: ${selectedRecipe.dishName} (ID: ${selectedRecipe.id})`);
+    }
+  }, [selectedRecipe]);
   
   // Create recipe mutation
   const createRecipeMutation = useMutation({
