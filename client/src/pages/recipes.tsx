@@ -107,6 +107,40 @@ interface RecipeItemWithDetails extends RecipeItem {
   inventoryItem: InventoryItem;
 }
 
+// Recipe Cost Estimate Component
+const RecipeCostEstimate = ({ recipeItems }: { recipeItems: RecipeItemWithDetails[] }) => {
+  // Calculate total cost
+  const totalCost = recipeItems.reduce((sum, item) => {
+    if (!item.inventoryItem?.unitPrice) return sum;
+    
+    try {
+      const unitPrice = parseFloat(item.inventoryItem.unitPrice);
+      const quantity = parseFloat(item.quantityRequired);
+      
+      if (isNaN(unitPrice) || isNaN(quantity)) return sum;
+      
+      return sum + (unitPrice * quantity);
+    } catch (error) {
+      console.error("Error calculating item cost:", error);
+      return sum;
+    }
+  }, 0);
+  
+  return (
+    <div className="bg-muted/50 p-3 rounded-md mt-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <DollarSign className="h-5 w-5 text-muted-foreground mr-2" />
+          <span className="text-sm font-medium">Estimated Recipe Cost:</span>
+        </div>
+        <span className="text-sm font-bold">
+          ${totalCost.toFixed(2)}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 // Component to handle recipe ingredients display
 const RecipeIngredients = ({ recipeId }: { recipeId: number }) => {
   // Direct fetch from API for recipe items
@@ -129,35 +163,45 @@ const RecipeIngredients = ({ recipeId }: { recipeId: number }) => {
 
   if (recipeItems.length === 0) {
     return (
-      <p className="text-muted-foreground text-center py-2">
-        No ingredients added yet. Add ingredients after saving the recipe.
-      </p>
+      <div className="flex flex-col items-center justify-center py-8">
+        <UtensilsCrossed className="h-12 w-12 text-muted-foreground mb-2" />
+        <p className="text-center text-muted-foreground">
+          No ingredients added yet. Add ingredients to complete the recipe.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="max-h-60 overflow-y-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Ingredient</TableHead>
-            <TableHead>Quantity</TableHead>
-            <TableHead>Unit</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {recipeItems.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">
-                {item.inventoryItem?.itemName || 
-                  (item.inventoryId ? `Ingredient #${item.inventoryId}` : 'Unknown')}
-              </TableCell>
-              <TableCell>{item.quantityRequired}</TableCell>
-              <TableCell>{item.unit}</TableCell>
+    <div>
+      <div className="max-h-60 overflow-y-auto border rounded-md">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Ingredient</TableHead>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Unit</TableHead>
+              <TableHead>Unit Price</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {recipeItems.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">
+                  {item.inventoryItem?.itemName || 
+                    (item.inventoryId ? `Ingredient #${item.inventoryId}` : 'Unknown')}
+                </TableCell>
+                <TableCell>{item.quantityRequired}</TableCell>
+                <TableCell>{item.unit}</TableCell>
+                <TableCell>{item.inventoryItem?.unitPrice ? `$${item.inventoryItem.unitPrice}` : 'N/A'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      
+      {/* Display cost estimate */}
+      <RecipeCostEstimate recipeItems={recipeItems} />
     </div>
   );
 };
@@ -209,46 +253,8 @@ const StockStatus = ({ current, ideal }: { current: number, ideal: number }) => 
   }
 };
 
-// Component to display recipe item cost estimate
-const RecipeCostEstimate = ({ recipeItems }: { recipeItems: RecipeItemWithDetails[] }) => {
-  // Calculate estimated cost of the recipe
-  const calculateCost = () => {
-    return recipeItems.reduce((total, item) => {
-      // Skip calculation if inventoryItem or unitPrice is missing
-      if (!item.inventoryItem || !item.inventoryItem.unitPrice) {
-        return total;
-      }
-      
-      const unitPrice = parseFloat(item.inventoryItem.unitPrice.replace(/[^0-9.]/g, ''));
-      const quantity = parseFloat(item.quantityRequired);
-      if (!isNaN(unitPrice) && !isNaN(quantity)) {
-        return total + (unitPrice * quantity);
-      }
-      return total;
-    }, 0);
-  };
-  
-  const totalCost = calculateCost();
-  
-  return (
-    <Card className="bg-green-50 border-green-200">
-      <CardHeader className="py-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <DollarSign className="h-5 w-5 text-green-600" />
-          Cost Estimate
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="pb-3">
-        <div className="text-3xl font-bold text-green-700">
-          ${totalCost.toFixed(2)}
-        </div>
-        <p className="text-sm text-green-600 mt-1">
-          Based on current inventory prices
-        </p>
-      </CardContent>
-    </Card>
-  );
-};
+// RecipeCostEstimate component is already defined at the top of the file
+// This duplicate definition has been removed
 
 // Recipe table component
 const RecipeTable = ({ 
@@ -1069,92 +1075,15 @@ export default function RecipesPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {isLoadingRecipeItems ? (
+              {!selectedRecipe ? (
                 <div className="flex justify-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
-              ) : recipeItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <UtensilsCrossed className="h-12 w-12 text-muted-foreground mb-2" />
-                  <p className="text-center text-muted-foreground">
-                    No ingredients added yet. Add ingredients to complete the recipe.
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => setAddIngredientDialogOpen(true)}
-                  >
-                    Add First Ingredient
-                  </Button>
-                </div>
               ) : (
-                <Table>
-                  <TableCaption>List of ingredients required for {selectedRecipe.dishName}</TableCaption>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Ingredient</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Unit</TableHead>
-                      <TableHead>Unit Price</TableHead>
-                      <TableHead>Stock Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recipeItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium">
-                          {item.inventoryItem?.itemName || 
-                            (item.inventoryId ? `Ingredient #${item.inventoryId}` : 'Unknown')}
-                        </TableCell>
-                        <TableCell>{item.quantityRequired}</TableCell>
-                        <TableCell>{item.unit}</TableCell>
-                        <TableCell>{item.inventoryItem?.unitPrice || 'N/A'}</TableCell>
-                        <TableCell>
-                          {item.inventoryItem ? (
-                            <StockStatus 
-                              current={item.inventoryItem.currentQty} 
-                              ideal={item.inventoryItem.idealQty} 
-                            />
-                          ) : (
-                            <Badge variant="outline">Unknown</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={async () => {
-                              try {
-                                await apiRequest('DELETE', `/api/recipes/${selectedRecipe.id}/items/${item.id}`);
-                                toast({
-                                  title: "Ingredient removed",
-                                  description: "Ingredient has been removed from the recipe.",
-                                });
-                                queryClient.invalidateQueries({ queryKey: ['/api/recipes', selectedRecipe.id, 'items'] });
-                              } catch (error) {
-                                toast({
-                                  title: "Error",
-                                  description: "Failed to remove ingredient.",
-                                  variant: "destructive",
-                                });
-                              }
-                            }}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <RecipeIngredients recipeId={selectedRecipe.id} />
               )}
               
-              {recipeItems.length > 0 && (
-                <div className="mt-6">
-                  <RecipeCostEstimate recipeItems={recipeItems} />
-                </div>
-              )}
+              {/* Cost estimate is now handled directly in the RecipeIngredients component */}
             </CardContent>
           </Card>
         )}
