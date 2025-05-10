@@ -15,10 +15,14 @@ import {
 } from "../shared/schema";
 import { setupOpenAIRoutes } from "./openai";
 import { pool } from "./db";
+import { registerInventoryRoutes } from "./inventory-routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for RestaurantAI Assistant
   const apiPrefix = "/api";
+  
+  // Register inventory routes
+  registerInventoryRoutes(app);
 
   // Dashboard stats endpoint will be implemented below
 
