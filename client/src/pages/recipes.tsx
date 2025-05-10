@@ -143,9 +143,9 @@ const RecipeCostEstimate = ({ recipeItems }: { recipeItems: RecipeItemWithDetail
 
 // Component to handle recipe ingredients display
 const RecipeIngredients = ({ recipeId }: { recipeId: number }) => {
-  // Direct fetch from API for recipe items
+  // Direct fetch from API for recipe items - use the correct path
   const { data: recipeItems = [], isLoading } = useQuery<RecipeItemWithDetails[]>({
-    queryKey: ['/api/recipes', recipeId, 'items'],
+    queryKey: [`/api/recipes/${recipeId}/items`],
     enabled: !!recipeId,
   });
 
