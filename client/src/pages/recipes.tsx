@@ -846,7 +846,10 @@ export default function RecipesPage() {
                                 <TableBody>
                                   {recipeItems.map((item) => (
                                     <TableRow key={item.id}>
-                                      <TableCell className="font-medium">{item.inventoryItem.itemName}</TableCell>
+                                      <TableCell className="font-medium">
+                                        {item.inventoryItem?.itemName || 
+                                          (item.inventoryId ? `Ingredient #${item.inventoryId}` : 'Unknown')}
+                                      </TableCell>
                                       <TableCell>{item.quantityRequired}</TableCell>
                                       <TableCell>{item.unit}</TableCell>
                                     </TableRow>
@@ -1079,15 +1082,22 @@ export default function RecipesPage() {
                   <TableBody>
                     {recipeItems.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.inventoryItem.itemName}</TableCell>
+                        <TableCell className="font-medium">
+                          {item.inventoryItem?.itemName || 
+                            (item.inventoryId ? `Ingredient #${item.inventoryId}` : 'Unknown')}
+                        </TableCell>
                         <TableCell>{item.quantityRequired}</TableCell>
                         <TableCell>{item.unit}</TableCell>
-                        <TableCell>{item.inventoryItem.unitPrice}</TableCell>
+                        <TableCell>{item.inventoryItem?.unitPrice || 'N/A'}</TableCell>
                         <TableCell>
-                          <StockStatus 
-                            current={item.inventoryItem.currentQty} 
-                            ideal={item.inventoryItem.idealQty} 
-                          />
+                          {item.inventoryItem ? (
+                            <StockStatus 
+                              current={item.inventoryItem.currentQty} 
+                              ideal={item.inventoryItem.idealQty} 
+                            />
+                          ) : (
+                            <Badge variant="outline">Unknown</Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
