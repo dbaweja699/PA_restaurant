@@ -974,6 +974,7 @@ export default function InventoryPage() {
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Current Qty</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Shelf Life</TableHead>
                       <TableHead>Last Updated</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -981,7 +982,7 @@ export default function InventoryPage() {
                   <TableBody>
                     {displayItems.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center h-32">
+                        <TableCell colSpan={9} className="text-center h-32">
                           {activeTab === 'all' ? (
                             <div className="flex flex-col items-center justify-center">
                               <Package className="h-12 w-12 text-muted-foreground mb-2" />
@@ -1018,6 +1019,9 @@ export default function InventoryPage() {
                           </TableCell>
                           <TableCell>
                             <StockStatus current={item.currentQty} ideal={item.idealQty} />
+                          </TableCell>
+                          <TableCell>
+                            {item.shelfLifeDays ? `${item.shelfLifeDays} days` : 'N/A'}
                           </TableCell>
                           <TableCell>
                             {formatDate(item.lastUpdated)}
