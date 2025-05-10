@@ -250,7 +250,13 @@ const RecipeTable = ({
                 <TableRow 
                   key={recipe.id} 
                   className={selectedRecipe?.id === recipe.id ? "bg-primary/5" : ""}
-                  onClick={() => setSelectedRecipe(recipe)}
+                  onClick={() => {
+                    // Make sure we clear and set the selected recipe properly
+                    // This forces a re-render and refetch of recipe items
+                    setSelectedRecipe(null);
+                    setTimeout(() => setSelectedRecipe(recipe), 10);
+                    console.log(`Selected recipe ID: ${recipe.id}, Name: ${recipe.dishName}`);
+                  }}
                 >
                   <TableCell className="font-medium">{recipe.dishName}</TableCell>
                   <TableCell>{recipe.category || 'Uncategorized'}</TableCell>
@@ -340,6 +346,12 @@ export default function RecipesPage() {
     queryKey: ['/api/recipes', selectedRecipe?.id, 'items'],
     enabled: !!selectedRecipe,
     retry: 1,
+    onSuccess: (data) => {
+      console.log(`Loaded ${data.length} recipe items for recipe ID ${selectedRecipe?.id}:`, data);
+    },
+    onError: (error) => {
+      console.error(`Failed to load recipe items for recipe ID ${selectedRecipe?.id}:`, error);
+    }
   });
   
   // Create recipe mutation
