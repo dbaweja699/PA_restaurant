@@ -107,6 +107,61 @@ interface RecipeItemWithDetails extends RecipeItem {
   inventoryItem: InventoryItem;
 }
 
+// Component to handle recipe ingredients display
+const RecipeIngredients = ({ recipeId }: { recipeId: number }) => {
+  // Direct fetch from API for recipe items
+  const { data: recipeItems = [], isLoading } = useQuery<RecipeItemWithDetails[]>({
+    queryKey: ['/api/recipes', recipeId, 'items'],
+    enabled: !!recipeId,
+  });
+
+  useEffect(() => {
+    console.log(`Fetched ${recipeItems.length} ingredients for recipe ID ${recipeId}:`, recipeItems);
+  }, [recipeId, recipeItems]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-4">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (recipeItems.length === 0) {
+    return (
+      <p className="text-muted-foreground text-center py-2">
+        No ingredients added yet. Add ingredients after saving the recipe.
+      </p>
+    );
+  }
+
+  return (
+    <div className="max-h-60 overflow-y-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Ingredient</TableHead>
+            <TableHead>Quantity</TableHead>
+            <TableHead>Unit</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {recipeItems.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell className="font-medium">
+                {item.inventoryItem?.itemName || 
+                  (item.inventoryId ? `Ingredient #${item.inventoryId}` : 'Unknown')}
+              </TableCell>
+              <TableCell>{item.quantityRequired}</TableCell>
+              <TableCell>{item.unit}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
 // Define schema for recipe form
 const recipeFormSchema = z.object({
   dishName: z.string().min(2, "Dish name must be at least 2 characters"),
@@ -335,23 +390,7 @@ export default function RecipesPage() {
     retry: 1,
   });
   
-  // Fetch recipe items for selected recipe
-  const recipeItemsQuery = useQuery<RecipeItemWithDetails[]>({
-    queryKey: ['/api/recipes', selectedRecipe?.id, 'items'],
-    enabled: !!selectedRecipe,
-    retry: 1,
-  });
-  
-  // Extract data and loading state from the query
-  const recipeItems = recipeItemsQuery.data || [];
-  const isLoadingRecipeItems = recipeItemsQuery.isLoading;
-  
-  // Log recipe items and ensure they're loaded when selected recipe changes
-  useEffect(() => {
-    if (selectedRecipe) {
-      console.log(`Selected recipe: ${selectedRecipe.dishName} (ID: ${selectedRecipe.id})`);
-    }
-  }, [selectedRecipe]);
+  // We'll now use the RecipeIngredients component to handle item fetching
   
   // Create recipe mutation
   const createRecipeMutation = useMutation({
@@ -840,41 +879,7 @@ export default function RecipesPage() {
                     <div className="border rounded-lg p-4 mt-4">
                       <h3 className="text-lg font-medium mb-2">Recipe Ingredients</h3>
                       {selectedRecipe && (
-                        <div>
-                          {isLoadingRecipeItems ? (
-                            <div className="flex justify-center py-4">
-                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                            </div>
-                          ) : recipeItems.length === 0 ? (
-                            <p className="text-muted-foreground text-center py-2">
-                              No ingredients added yet. Add ingredients after saving the recipe.
-                            </p>
-                          ) : (
-                            <div className="max-h-60 overflow-y-auto">
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead>Ingredient</TableHead>
-                                    <TableHead>Quantity</TableHead>
-                                    <TableHead>Unit</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {recipeItems.map((item) => (
-                                    <TableRow key={item.id}>
-                                      <TableCell className="font-medium">
-                                        {item.inventoryItem?.itemName || 
-                                          (item.inventoryId ? `Ingredient #${item.inventoryId}` : 'Unknown')}
-                                      </TableCell>
-                                      <TableCell>{item.quantityRequired}</TableCell>
-                                      <TableCell>{item.unit}</TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
-                          )}
-                        </div>
+                        <RecipeIngredients recipeId={selectedRecipe.id} />
                       )}
                     </div>
 
