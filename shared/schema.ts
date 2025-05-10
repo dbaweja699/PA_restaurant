@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -311,3 +312,104 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+
+// Inventory Management schema
+export const inventory = pgTable("inventory", {
+  id: serial("id").primaryKey(),
+  itemName: text("item_name").notNull(),
+  unitOfMeasurement: text("unit_of_measurement").notNull(), // e.g., kg, liter, piece
+  boxOrPackageQty: integer("box_or_package_qty").notNull(),
+  unitPrice: text("unit_price").notNull(),
+  totalPrice: text("total_price").notNull(),
+  idealQty: integer("ideal_qty").notNull(), // Safe stock level
+  currentQty: integer("current_qty").notNull().default(0),
+  shelfLifeDays: integer("shelf_life_days"),
+  lastUpdated: timestamp("last_updated").notNull().defaultNow(),
+  category: text("category"), // e.g., dairy, produce, meat, packaging
+});
+
+export const insertInventorySchema = createInsertSchema(inventory).pick({
+  itemName: true,
+  unitOfMeasurement: true,
+  boxOrPackageQty: true,
+  unitPrice: true,
+  totalPrice: true,
+  idealQty: true,
+  currentQty: true,
+  shelfLifeDays: true,
+  category: true,
+}).extend({
+  // Override lastUpdated to accept ISO string
+  lastUpdated: z.string().transform((str) => new Date(str)).optional(),
+});
+
+export type InsertInventory = z.infer<typeof insertInventorySchema>;
+export type Inventory = typeof inventory.$inferSelect;
+
+// Recipe schema
+export const recipes = pgTable("recipes", {
+  id: serial("id").primaryKey(),
+  dishName: text("dish_name").notNull(),
+  orderType: text("order_type").notNull(), // dine_in or takeaway
+  description: text("description"),
+  sellingPrice: text("selling_price"),
+  category: text("category"), // e.g., appetizer, main, dessert
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertRecipeSchema = createInsertSchema(recipes).pick({
+  dishName: true,
+  orderType: true,
+  description: true,
+  sellingPrice: true,
+  category: true,
+  isActive: true,
+}).extend({
+  // Override timestamps to accept ISO strings
+  createdAt: z.string().transform((str) => new Date(str)).optional(),
+  updatedAt: z.string().transform((str) => new Date(str)).optional(),
+});
+
+export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
+export type Recipe = typeof recipes.$inferSelect;
+
+// RecipeItems junction table
+export const recipeItems = pgTable("recipe_items", {
+  id: serial("id").primaryKey(),
+  recipeId: integer("recipe_id").notNull().references(() => recipes.id, { onDelete: 'cascade' }),
+  inventoryId: integer("inventory_id").notNull().references(() => inventory.id, { onDelete: 'cascade' }),
+  quantityRequired: text("quantity_required").notNull(),
+  unit: text("unit").notNull(),
+});
+
+export const insertRecipeItemSchema = createInsertSchema(recipeItems).pick({
+  recipeId: true,
+  inventoryId: true,
+  quantityRequired: true,
+  unit: true,
+});
+
+export type InsertRecipeItem = z.infer<typeof insertRecipeItemSchema>;
+export type RecipeItem = typeof recipeItems.$inferSelect;
+
+// Define relations
+export const inventoryRelations = relations(inventory, ({ many }) => ({
+  recipeItems: many(recipeItems),
+}));
+
+export const recipesRelations = relations(recipes, ({ many }) => ({
+  recipeItems: many(recipeItems),
+}));
+
+export const recipeItemsRelations = relations(recipeItems, ({ one }) => ({
+  recipe: one(recipes, {
+    fields: [recipeItems.recipeId],
+    references: [recipes.id],
+  }),
+  inventoryItem: one(inventory, {
+    fields: [recipeItems.inventoryId],
+    references: [inventory.id],
+  }),
+}));

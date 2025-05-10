@@ -9,7 +9,10 @@ import {
   type ActivityLog, type InsertActivityLog,
   type SocialMedia, type InsertSocialMedia,
   type DashboardStats, type InsertDashboardStats,
-  type Notification, type InsertNotification
+  type Notification, type InsertNotification,
+  type Inventory, type InsertInventory,
+  type Recipe, type InsertRecipe,
+  type RecipeItem, type InsertRecipeItem
 } from "../shared/schema";
 
 export interface IStorage {
@@ -75,6 +78,33 @@ export interface IStorage {
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
   markAllNotificationsAsRead(userId?: number): Promise<void>;
+  
+  // Inventory Management operations
+  getInventoryItems(): Promise<Inventory[]>;
+  getInventoryItemById(id: number): Promise<Inventory | undefined>;
+  getInventoryItemsByCategory(category: string): Promise<Inventory[]>;
+  getLowStockItems(): Promise<Inventory[]>;
+  createInventoryItem(item: InsertInventory): Promise<Inventory>;
+  updateInventoryItem(id: number, item: Partial<InsertInventory>): Promise<Inventory | undefined>;
+  updateInventoryStock(id: number, quantityChange: number, unitPrice?: string, totalPrice?: string): Promise<Inventory | undefined>;
+  
+  // Recipe Management operations
+  getRecipes(): Promise<Recipe[]>;
+  getRecipeById(id: number): Promise<Recipe | undefined>;
+  getRecipesByCategory(category: string): Promise<Recipe[]>;
+  getRecipesByOrderType(orderType: string): Promise<Recipe[]>;
+  createRecipe(recipe: InsertRecipe): Promise<Recipe>;
+  updateRecipe(id: number, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined>;
+  
+  // Recipe Items operations
+  getRecipeItems(recipeId: number): Promise<RecipeItem[]>;
+  getRecipeItemsWithDetails(recipeId: number): Promise<(RecipeItem & { inventoryItem: Inventory })[]>;
+  createRecipeItem(item: InsertRecipeItem): Promise<RecipeItem>;
+  updateRecipeItem(id: number, item: Partial<InsertRecipeItem>): Promise<RecipeItem | undefined>;
+  deleteRecipeItem(id: number): Promise<void>;
+  
+  // Process order and update inventory
+  processOrderInventory(dishName: string, orderType: string): Promise<{ success: boolean, lowStockItems: Inventory[] }>;
 }
 
 export class MemStorage implements IStorage {
@@ -90,6 +120,11 @@ export class MemStorage implements IStorage {
   private notifications: Map<number, Notification>;
   private dashboardStats: DashboardStats | undefined;
   
+  // Inventory management
+  private inventory: Map<number, Inventory>;
+  private recipes: Map<number, Recipe>;
+  private recipeItems: Map<number, RecipeItem>;
+  
   private userCurrentId: number;
   private callCurrentId: number;
   private chatCurrentId: number;
@@ -101,6 +136,9 @@ export class MemStorage implements IStorage {
   private socialMediaCurrentId: number;
   private notificationCurrentId: number;
   private dashboardStatsCurrentId: number;
+  private inventoryCurrentId: number;
+  private recipeCurrentId: number;
+  private recipeItemCurrentId: number;
 
   constructor() {
     this.users = new Map();
@@ -114,6 +152,11 @@ export class MemStorage implements IStorage {
     this.socialMedia = new Map();
     this.notifications = new Map();
     
+    // Initialize inventory management maps
+    this.inventory = new Map();
+    this.recipes = new Map();
+    this.recipeItems = new Map();
+    
     this.userCurrentId = 1;
     this.callCurrentId = 1;
     this.chatCurrentId = 1;
@@ -125,6 +168,9 @@ export class MemStorage implements IStorage {
     this.socialMediaCurrentId = 1;
     this.notificationCurrentId = 1;
     this.dashboardStatsCurrentId = 1;
+    this.inventoryCurrentId = 1;
+    this.recipeCurrentId = 1;
+    this.recipeItemCurrentId = 1;
     
     // Initialize with some demo data
     this.initializeDemoData();

@@ -15,30 +15,40 @@ Be concise, friendly, and professional. If you don't know the answer, admit it a
 Keep responses under 150 words unless a detailed explanation is specifically requested.`;
 
 const N8N_WEBHOOK_URL =
-  "http://ec2-13-232-234-201.ap-south-1.compute.amazonaws.com:5678/webhook/dbb7d22a-8145-4d12-9153-d3479fdbb54d";
+  "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/restaurant_chatbot";
 
 // Keep track of active sessions
-const activeSessions = new Map<string, {
-  userId?: number;
-  customerName: string;
-  status: string;
-  lastActive: Date;
-}>();
+const activeSessions = new Map<
+  string,
+  {
+    userId?: number;
+    customerName: string;
+    status: string;
+    lastActive: Date;
+  }
+>();
 
 // Setup route handler
 export function setupOpenAIRoutes(app: Express) {
   // Chat completion endpoint
   app.post("/api/chatbot", async (req: Request, res: Response) => {
     try {
-      const { message, chatHistory, customerName, sessionId: requestSessionId, userId } = req.body;
+      const {
+        message,
+        chatHistory,
+        customerName,
+        sessionId: requestSessionId,
+        userId,
+      } = req.body;
 
       if (!message) {
         return res.status(400).json({ error: "Message is required" });
       }
 
       // Create or retrieve session ID
-      const sessionId = requestSessionId || `user-${userId || 'guest'}-${Date.now()}`;
-      
+      const sessionId =
+        requestSessionId || `user-${userId || "guest"}-${Date.now()}`;
+
       // Get user info if available
       let userInfo = null;
       if (userId) {
@@ -48,15 +58,15 @@ export function setupOpenAIRoutes(app: Express) {
           console.warn("Could not retrieve user information:", error);
         }
       }
-      
+
       // Update or create session information
       activeSessions.set(sessionId, {
         userId: userId,
-        customerName: customerName || (userInfo?.full_name || "Guest"),
+        customerName: customerName || userInfo?.full_name || "Guest",
         status: "active",
-        lastActive: new Date()
+        lastActive: new Date(),
       });
-      
+
       // Log active sessions occasionally (for debugging)
       if (Math.random() < 0.1) {
         console.log(`Active sessions: ${activeSessions.size}`);
@@ -68,8 +78,8 @@ export function setupOpenAIRoutes(app: Express) {
         sessionId,
         timestamp: new Date().toISOString(),
         source: "Website",
-        customerName: customerName || (userInfo?.full_name || "Guest"),
-        status: activeSessions.get(sessionId)?.status || "active"
+        customerName: customerName || userInfo?.full_name || "Guest",
+        status: activeSessions.get(sessionId)?.status || "active",
       };
 
       console.log("Sending to n8n webhook:", JSON.stringify(payload));
@@ -92,16 +102,21 @@ export function setupOpenAIRoutes(app: Express) {
         });
       }
 
-      const data = await response.json() as { content?: string; message?: string; output?: string };
+      const data = (await response.json()) as {
+        content?: string;
+        message?: string;
+        output?: string;
+      };
 
       // Validate response from n8n
       const responseContent = data.content || data.message || data.output;
       if (!responseContent) {
-        console.error('Invalid response from n8n webhook:', data);
+        console.error("Invalid response from n8n webhook:", data);
         return res.status(502).json({
-          content: "I apologize, but I'm having trouble processing your request right now. Could you please try again?",
+          content:
+            "I apologize, but I'm having trouble processing your request right now. Could you please try again?",
           model: "error_response",
-          sessionId: payload.sessionId
+          sessionId: payload.sessionId,
         });
       }
 

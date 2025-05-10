@@ -12,7 +12,10 @@ import {
   ActivityLog, InsertActivityLog,
   SocialMedia, InsertSocialMedia,
   DashboardStats, InsertDashboardStats,
-  Notification, InsertNotification
+  Notification, InsertNotification,
+  Inventory, InsertInventory,
+  Recipe, InsertRecipe,
+  RecipeItem, InsertRecipeItem
 } from "../shared/schema";
 
 export class SupabaseStorage implements IStorage {
@@ -977,6 +980,687 @@ export class SupabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error('Error in markAllNotificationsAsRead:', error);
+    }
+  }
+
+  // Inventory Management Operations
+  async getInventoryItems(): Promise<Inventory[]> {
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .select('*')
+        .order('id');
+      
+      if (error) {
+        console.error('Error fetching inventory items:', error);
+        return [];
+      }
+      
+      return data.map(item => ({
+        id: item.id,
+        itemName: item.item_name,
+        unitOfMeasurement: item.unit_of_measurement,
+        boxOrPackageQty: item.box_or_package_qty,
+        unitPrice: item.unit_price,
+        totalPrice: item.total_price,
+        idealQty: item.ideal_qty,
+        currentQty: item.current_qty,
+        shelfLifeDays: item.shelf_life_days,
+        lastUpdated: new Date(item.last_updated),
+        category: item.category
+      }));
+    } catch (error) {
+      console.error('Error in getInventoryItems:', error);
+      return [];
+    }
+  }
+
+  async getInventoryItemById(id: number): Promise<Inventory | undefined> {
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error || !data) {
+        console.error('Error fetching inventory item by ID:', error);
+        return undefined;
+      }
+      
+      return {
+        id: data.id,
+        itemName: data.item_name,
+        unitOfMeasurement: data.unit_of_measurement,
+        boxOrPackageQty: data.box_or_package_qty,
+        unitPrice: data.unit_price,
+        totalPrice: data.total_price,
+        idealQty: data.ideal_qty,
+        currentQty: data.current_qty,
+        shelfLifeDays: data.shelf_life_days,
+        lastUpdated: new Date(data.last_updated),
+        category: data.category
+      };
+    } catch (error) {
+      console.error('Error in getInventoryItemById:', error);
+      return undefined;
+    }
+  }
+
+  async getInventoryItemsByCategory(category: string): Promise<Inventory[]> {
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('category', category)
+        .order('item_name');
+      
+      if (error) {
+        console.error('Error fetching inventory items by category:', error);
+        return [];
+      }
+      
+      return data.map(item => ({
+        id: item.id,
+        itemName: item.item_name,
+        unitOfMeasurement: item.unit_of_measurement,
+        boxOrPackageQty: item.box_or_package_qty,
+        unitPrice: item.unit_price,
+        totalPrice: item.total_price,
+        idealQty: item.ideal_qty,
+        currentQty: item.current_qty,
+        shelfLifeDays: item.shelf_life_days,
+        lastUpdated: new Date(item.last_updated),
+        category: item.category
+      }));
+    } catch (error) {
+      console.error('Error in getInventoryItemsByCategory:', error);
+      return [];
+    }
+  }
+
+  async getLowStockItems(): Promise<Inventory[]> {
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .select('*')
+        .filter('current_qty', 'lt', supabase.raw('ideal_qty'))
+        .order('item_name');
+      
+      if (error) {
+        console.error('Error fetching low stock items:', error);
+        return [];
+      }
+      
+      return data.map(item => ({
+        id: item.id,
+        itemName: item.item_name,
+        unitOfMeasurement: item.unit_of_measurement,
+        boxOrPackageQty: item.box_or_package_qty,
+        unitPrice: item.unit_price,
+        totalPrice: item.total_price,
+        idealQty: item.ideal_qty,
+        currentQty: item.current_qty,
+        shelfLifeDays: item.shelf_life_days,
+        lastUpdated: new Date(item.last_updated),
+        category: item.category
+      }));
+    } catch (error) {
+      console.error('Error in getLowStockItems:', error);
+      return [];
+    }
+  }
+
+  async createInventoryItem(item: InsertInventory): Promise<Inventory> {
+    try {
+      const { data, error } = await supabase
+        .from('inventory')
+        .insert([{
+          item_name: item.itemName,
+          unit_of_measurement: item.unitOfMeasurement,
+          box_or_package_qty: item.boxOrPackageQty,
+          unit_price: item.unitPrice,
+          total_price: item.totalPrice,
+          ideal_qty: item.idealQty,
+          current_qty: item.currentQty || 0,
+          shelf_life_days: item.shelfLifeDays || null,
+          last_updated: new Date().toISOString(),
+          category: item.category || null
+        }])
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error creating inventory item:', error);
+        throw new Error('Failed to create inventory item');
+      }
+      
+      return {
+        id: data.id,
+        itemName: data.item_name,
+        unitOfMeasurement: data.unit_of_measurement,
+        boxOrPackageQty: data.box_or_package_qty,
+        unitPrice: data.unit_price,
+        totalPrice: data.total_price,
+        idealQty: data.ideal_qty,
+        currentQty: data.current_qty,
+        shelfLifeDays: data.shelf_life_days,
+        lastUpdated: new Date(data.last_updated),
+        category: data.category
+      };
+    } catch (error) {
+      console.error('Error in createInventoryItem:', error);
+      throw new Error('Failed to create inventory item');
+    }
+  }
+
+  async updateInventoryItem(id: number, item: Partial<InsertInventory>): Promise<Inventory | undefined> {
+    try {
+      const updateData: Record<string, any> = {};
+      
+      if (item.itemName !== undefined) updateData.item_name = item.itemName;
+      if (item.unitOfMeasurement !== undefined) updateData.unit_of_measurement = item.unitOfMeasurement;
+      if (item.boxOrPackageQty !== undefined) updateData.box_or_package_qty = item.boxOrPackageQty;
+      if (item.unitPrice !== undefined) updateData.unit_price = item.unitPrice;
+      if (item.totalPrice !== undefined) updateData.total_price = item.totalPrice;
+      if (item.idealQty !== undefined) updateData.ideal_qty = item.idealQty;
+      if (item.currentQty !== undefined) updateData.current_qty = item.currentQty;
+      if (item.shelfLifeDays !== undefined) updateData.shelf_life_days = item.shelfLifeDays;
+      if (item.category !== undefined) updateData.category = item.category;
+      
+      // Always update the last_updated timestamp
+      updateData.last_updated = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('inventory')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error updating inventory item:', error);
+        return undefined;
+      }
+      
+      return {
+        id: data.id,
+        itemName: data.item_name,
+        unitOfMeasurement: data.unit_of_measurement,
+        boxOrPackageQty: data.box_or_package_qty,
+        unitPrice: data.unit_price,
+        totalPrice: data.total_price,
+        idealQty: data.ideal_qty,
+        currentQty: data.current_qty,
+        shelfLifeDays: data.shelf_life_days,
+        lastUpdated: new Date(data.last_updated),
+        category: data.category
+      };
+    } catch (error) {
+      console.error('Error in updateInventoryItem:', error);
+      return undefined;
+    }
+  }
+
+  async updateInventoryStock(id: number, quantityChange: number, unitPrice?: string, totalPrice?: string): Promise<Inventory | undefined> {
+    try {
+      // First get the current inventory item
+      const { data: existingItem, error: fetchError } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (fetchError || !existingItem) {
+        console.error('Error fetching inventory item for stock update:', fetchError);
+        return undefined;
+      }
+      
+      // Prepare update data
+      const updateData: Record<string, any> = {
+        current_qty: existingItem.current_qty + quantityChange,
+        last_updated: new Date().toISOString()
+      };
+      
+      if (unitPrice) updateData.unit_price = unitPrice;
+      if (totalPrice) updateData.total_price = totalPrice;
+      
+      // Update the inventory item
+      const { data, error } = await supabase
+        .from('inventory')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error updating inventory stock:', error);
+        return undefined;
+      }
+      
+      return {
+        id: data.id,
+        itemName: data.item_name,
+        unitOfMeasurement: data.unit_of_measurement,
+        boxOrPackageQty: data.box_or_package_qty,
+        unitPrice: data.unit_price,
+        totalPrice: data.total_price,
+        idealQty: data.ideal_qty,
+        currentQty: data.current_qty,
+        shelfLifeDays: data.shelf_life_days,
+        lastUpdated: new Date(data.last_updated),
+        category: data.category
+      };
+    } catch (error) {
+      console.error('Error in updateInventoryStock:', error);
+      return undefined;
+    }
+  }
+
+  // Recipe Management Operations
+  async getRecipes(): Promise<Recipe[]> {
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .order('dish_name');
+      
+      if (error) {
+        console.error('Error fetching recipes:', error);
+        return [];
+      }
+      
+      return data.map(recipe => ({
+        id: recipe.id,
+        dishName: recipe.dish_name,
+        orderType: recipe.order_type,
+        description: recipe.description,
+        sellingPrice: recipe.selling_price,
+        category: recipe.category,
+        isActive: recipe.is_active,
+        createdAt: new Date(recipe.created_at),
+        updatedAt: new Date(recipe.updated_at)
+      }));
+    } catch (error) {
+      console.error('Error in getRecipes:', error);
+      return [];
+    }
+  }
+
+  async getRecipeById(id: number): Promise<Recipe | undefined> {
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error || !data) {
+        console.error('Error fetching recipe by ID:', error);
+        return undefined;
+      }
+      
+      return {
+        id: data.id,
+        dishName: data.dish_name,
+        orderType: data.order_type,
+        description: data.description,
+        sellingPrice: data.selling_price,
+        category: data.category,
+        isActive: data.is_active,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('Error in getRecipeById:', error);
+      return undefined;
+    }
+  }
+
+  async getRecipesByCategory(category: string): Promise<Recipe[]> {
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('category', category)
+        .order('dish_name');
+      
+      if (error) {
+        console.error('Error fetching recipes by category:', error);
+        return [];
+      }
+      
+      return data.map(recipe => ({
+        id: recipe.id,
+        dishName: recipe.dish_name,
+        orderType: recipe.order_type,
+        description: recipe.description,
+        sellingPrice: recipe.selling_price,
+        category: recipe.category,
+        isActive: recipe.is_active,
+        createdAt: new Date(recipe.created_at),
+        updatedAt: new Date(recipe.updated_at)
+      }));
+    } catch (error) {
+      console.error('Error in getRecipesByCategory:', error);
+      return [];
+    }
+  }
+
+  async getRecipesByOrderType(orderType: string): Promise<Recipe[]> {
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('order_type', orderType)
+        .order('dish_name');
+      
+      if (error) {
+        console.error('Error fetching recipes by order type:', error);
+        return [];
+      }
+      
+      return data.map(recipe => ({
+        id: recipe.id,
+        dishName: recipe.dish_name,
+        orderType: recipe.order_type,
+        description: recipe.description,
+        sellingPrice: recipe.selling_price,
+        category: recipe.category,
+        isActive: recipe.is_active,
+        createdAt: new Date(recipe.created_at),
+        updatedAt: new Date(recipe.updated_at)
+      }));
+    } catch (error) {
+      console.error('Error in getRecipesByOrderType:', error);
+      return [];
+    }
+  }
+
+  async createRecipe(recipe: InsertRecipe): Promise<Recipe> {
+    try {
+      const now = new Date().toISOString();
+      
+      const { data, error } = await supabase
+        .from('recipes')
+        .insert([{
+          dish_name: recipe.dishName,
+          order_type: recipe.orderType,
+          description: recipe.description || null,
+          selling_price: recipe.sellingPrice || null,
+          category: recipe.category || null,
+          is_active: recipe.isActive !== undefined ? recipe.isActive : true,
+          created_at: now,
+          updated_at: now
+        }])
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error creating recipe:', error);
+        throw new Error('Failed to create recipe');
+      }
+      
+      return {
+        id: data.id,
+        dishName: data.dish_name,
+        orderType: data.order_type,
+        description: data.description,
+        sellingPrice: data.selling_price,
+        category: data.category,
+        isActive: data.is_active,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('Error in createRecipe:', error);
+      throw new Error('Failed to create recipe');
+    }
+  }
+
+  async updateRecipe(id: number, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined> {
+    try {
+      const updateData: Record<string, any> = {
+        updated_at: new Date().toISOString()
+      };
+      
+      if (recipe.dishName !== undefined) updateData.dish_name = recipe.dishName;
+      if (recipe.orderType !== undefined) updateData.order_type = recipe.orderType;
+      if (recipe.description !== undefined) updateData.description = recipe.description;
+      if (recipe.sellingPrice !== undefined) updateData.selling_price = recipe.sellingPrice;
+      if (recipe.category !== undefined) updateData.category = recipe.category;
+      if (recipe.isActive !== undefined) updateData.is_active = recipe.isActive;
+      
+      const { data, error } = await supabase
+        .from('recipes')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error updating recipe:', error);
+        return undefined;
+      }
+      
+      return {
+        id: data.id,
+        dishName: data.dish_name,
+        orderType: data.order_type,
+        description: data.description,
+        sellingPrice: data.selling_price,
+        category: data.category,
+        isActive: data.is_active,
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at)
+      };
+    } catch (error) {
+      console.error('Error in updateRecipe:', error);
+      return undefined;
+    }
+  }
+
+  // Recipe Items Operations
+  async getRecipeItems(recipeId: number): Promise<RecipeItem[]> {
+    try {
+      const { data, error } = await supabase
+        .from('recipe_items')
+        .select('*')
+        .eq('recipe_id', recipeId);
+      
+      if (error) {
+        console.error('Error fetching recipe items:', error);
+        return [];
+      }
+      
+      return data.map(item => ({
+        id: item.id,
+        recipeId: item.recipe_id,
+        inventoryId: item.inventory_id,
+        quantityRequired: item.quantity_required,
+        unit: item.unit
+      }));
+    } catch (error) {
+      console.error('Error in getRecipeItems:', error);
+      return [];
+    }
+  }
+
+  async getRecipeItemsWithDetails(recipeId: number): Promise<(RecipeItem & { inventoryItem: Inventory })[]> {
+    try {
+      const { data, error } = await supabase
+        .from('recipe_items')
+        .select(`
+          *,
+          inventory:inventory_id (*)
+        `)
+        .eq('recipe_id', recipeId);
+      
+      if (error) {
+        console.error('Error fetching recipe items with details:', error);
+        return [];
+      }
+      
+      return data.map(item => {
+        const inventoryItem = item.inventory;
+        return {
+          id: item.id,
+          recipeId: item.recipe_id,
+          inventoryId: item.inventory_id,
+          quantityRequired: item.quantity_required,
+          unit: item.unit,
+          inventoryItem: {
+            id: inventoryItem.id,
+            itemName: inventoryItem.item_name,
+            unitOfMeasurement: inventoryItem.unit_of_measurement,
+            boxOrPackageQty: inventoryItem.box_or_package_qty,
+            unitPrice: inventoryItem.unit_price,
+            totalPrice: inventoryItem.total_price,
+            idealQty: inventoryItem.ideal_qty,
+            currentQty: inventoryItem.current_qty,
+            shelfLifeDays: inventoryItem.shelf_life_days,
+            lastUpdated: new Date(inventoryItem.last_updated),
+            category: inventoryItem.category
+          }
+        };
+      });
+    } catch (error) {
+      console.error('Error in getRecipeItemsWithDetails:', error);
+      return [];
+    }
+  }
+
+  async createRecipeItem(item: InsertRecipeItem): Promise<RecipeItem> {
+    try {
+      const { data, error } = await supabase
+        .from('recipe_items')
+        .insert([{
+          recipe_id: item.recipeId,
+          inventory_id: item.inventoryId,
+          quantity_required: item.quantityRequired,
+          unit: item.unit
+        }])
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error creating recipe item:', error);
+        throw new Error('Failed to create recipe item');
+      }
+      
+      return {
+        id: data.id,
+        recipeId: data.recipe_id,
+        inventoryId: data.inventory_id,
+        quantityRequired: data.quantity_required,
+        unit: data.unit
+      };
+    } catch (error) {
+      console.error('Error in createRecipeItem:', error);
+      throw new Error('Failed to create recipe item');
+    }
+  }
+
+  async updateRecipeItem(id: number, item: Partial<InsertRecipeItem>): Promise<RecipeItem | undefined> {
+    try {
+      const updateData: Record<string, any> = {};
+      
+      if (item.recipeId !== undefined) updateData.recipe_id = item.recipeId;
+      if (item.inventoryId !== undefined) updateData.inventory_id = item.inventoryId;
+      if (item.quantityRequired !== undefined) updateData.quantity_required = item.quantityRequired;
+      if (item.unit !== undefined) updateData.unit = item.unit;
+      
+      const { data, error } = await supabase
+        .from('recipe_items')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error || !data) {
+        console.error('Error updating recipe item:', error);
+        return undefined;
+      }
+      
+      return {
+        id: data.id,
+        recipeId: data.recipe_id,
+        inventoryId: data.inventory_id,
+        quantityRequired: data.quantity_required,
+        unit: data.unit
+      };
+    } catch (error) {
+      console.error('Error in updateRecipeItem:', error);
+      return undefined;
+    }
+  }
+
+  async deleteRecipeItem(id: number): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('recipe_items')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting recipe item:', error);
+        throw new Error('Failed to delete recipe item');
+      }
+    } catch (error) {
+      console.error('Error in deleteRecipeItem:', error);
+      throw new Error('Failed to delete recipe item');
+    }
+  }
+
+  // Process Order and Update Inventory
+  async processOrderInventory(dishName: string, orderType: string): Promise<{ success: boolean, lowStockItems: Inventory[] }> {
+    try {
+      // First, find the recipe
+      const { data: recipeData, error: recipeError } = await supabase
+        .from('recipes')
+        .select('id')
+        .eq('dish_name', dishName)
+        .eq('order_type', orderType)
+        .single();
+      
+      if (recipeError || !recipeData) {
+        console.error(`Recipe not found for dish: ${dishName}, order type: ${orderType}`, recipeError);
+        throw new Error(`Recipe not found for dish: ${dishName}, order type: ${orderType}`);
+      }
+      
+      const recipeId = recipeData.id;
+      
+      // Get all recipe items with their inventory details
+      const recipeItems = await this.getRecipeItemsWithDetails(recipeId);
+      
+      if (recipeItems.length === 0) {
+        throw new Error(`No ingredients found for recipe: ${dishName}`);
+      }
+      
+      // Deduct quantities from inventory
+      const updatedInventory: Inventory[] = [];
+      
+      for (const item of recipeItems) {
+        // Parse quantity required
+        const qtyRequired = parseFloat(item.quantityRequired);
+        
+        // Update inventory (deduct quantity)
+        const updatedItem = await this.updateInventoryStock(item.inventoryId, -qtyRequired);
+        if (updatedItem) {
+          updatedInventory.push(updatedItem);
+        }
+      }
+      
+      // Find items that are below ideal stock level
+      const lowStockItems = await this.getLowStockItems();
+      
+      return {
+        success: true,
+        lowStockItems
+      };
+    } catch (error) {
+      console.error('Error in processOrderInventory:', error);
+      throw new Error(`Error processing order: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }

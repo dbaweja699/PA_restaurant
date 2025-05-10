@@ -954,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Proxying request to social media webhook:", req.body);
 
       const response = await fetch(
-        "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/socialmedia",
+        "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/restaurant_social_media",
         {
           method: "POST",
           headers: {
@@ -987,29 +987,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Proxy endpoint for AI voice agent functionality
   app.post(`${apiPrefix}/proxy/ai_voice`, async (req, res) => {
     const ELEVENLABS_WEBHOOK_URL =
-      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/ai_voice";
+      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/67eff4f0-a0e3-4881-b179-249a9394a340";
 
     try {
-      // Log the incoming request for debugging
-      console.log("Received AI voice webhook request:", req.body);
-      
       // Send the request as-is to the webhook URL
       const response = await axios.post(ELEVENLABS_WEBHOOK_URL, req.body, {
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         timeout: 30000, // 30 second timeout
       });
 
-      // Log the webhook response
-      console.log("AI voice webhook response:", response.data);
-      
       // Return the response from the webhook
       res.json(response.data);
     } catch (error) {
       // Log the detailed error
       console.error("Error proxying to AI voice webhook:", error);
-      
+
       // Handle axios errors specifically
       if (axios.isAxiosError(error)) {
         const axiosError = error;
@@ -1019,7 +1013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data: axiosError.response?.data,
         });
       }
-      
+
       // Send a clear error response
       res.status(500).json({
         error: "Failed to connect to AI voice webhook service",
