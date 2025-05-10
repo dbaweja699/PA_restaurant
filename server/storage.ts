@@ -56,6 +56,7 @@ export interface IStorage {
   getPerformanceMetrics(): Promise<PerformanceMetrics[]>;
   getLatestPerformanceMetrics(): Promise<PerformanceMetrics | undefined>;
   createPerformanceMetrics(metrics: InsertPerformanceMetrics): Promise<PerformanceMetrics>;
+  updatePerformanceMetrics(metrics: Partial<InsertPerformanceMetrics>): Promise<PerformanceMetrics | undefined>;
   
   // Activity log operations
   getActivityLogs(): Promise<ActivityLog[]>;

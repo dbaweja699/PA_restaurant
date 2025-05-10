@@ -555,6 +555,35 @@ export class SupabaseStorage implements IStorage {
     if (error) throw error;
     return data;
   }
+  
+  async updatePerformanceMetrics(metrics: Partial<InsertPerformanceMetrics>): Promise<PerformanceMetrics | undefined> {
+    try {
+      // Get the latest metrics first
+      const latestMetrics = await this.getLatestPerformanceMetrics();
+      if (!latestMetrics) {
+        // If no metrics exist, create new ones
+        return await this.createPerformanceMetrics(metrics as InsertPerformanceMetrics);
+      }
+      
+      // Update the existing metrics
+      const { data, error } = await supabase
+        .from('performance_metrics')
+        .update(metrics)
+        .eq('id', latestMetrics.id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating performance metrics:', error);
+        throw error;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Exception in updatePerformanceMetrics:', error);
+      return undefined;
+    }
+  }
 
   // Activity log methods
   async getActivityLogs(): Promise<ActivityLog[]> {
