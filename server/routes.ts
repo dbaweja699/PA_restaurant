@@ -1314,6 +1314,347 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+  
+  // ===== INVENTORY MANAGEMENT ENDPOINTS =====
+  
+  // Get all inventory items
+  app.get(`${apiPrefix}/inventory`, async (req, res) => {
+    try {
+      const items = await storage.getInventoryItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching inventory items:", error);
+      res.status(500).json({ error: "Failed to fetch inventory items" });
+    }
+  });
+  
+  // Get inventory items with low stock
+  app.get(`${apiPrefix}/inventory/low-stock`, async (req, res) => {
+    try {
+      const lowStockItems = await storage.getLowStockItems();
+      res.json(lowStockItems);
+    } catch (error) {
+      console.error("Error fetching low stock items:", error);
+      res.status(500).json({ error: "Failed to fetch low stock items" });
+    }
+  });
+  
+  // Get inventory items by category
+  app.get(`${apiPrefix}/inventory/category/:category`, async (req, res) => {
+    try {
+      const { category } = req.params;
+      const items = await storage.getInventoryItemsByCategory(category);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching inventory items by category:", error);
+      res.status(500).json({ error: "Failed to fetch inventory items by category" });
+    }
+  });
+  
+  // Get a single inventory item
+  app.get(`${apiPrefix}/inventory/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+      }
+      
+      const item = await storage.getInventoryItemById(id);
+      if (!item) {
+        return res.status(404).json({ error: "Inventory item not found" });
+      }
+      
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching inventory item:", error);
+      res.status(500).json({ error: "Failed to fetch inventory item" });
+    }
+  });
+  
+  // Create a new inventory item
+  app.post(`${apiPrefix}/inventory`, async (req, res) => {
+    try {
+      const item = req.body;
+      const newItem = await storage.createInventoryItem(item);
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error("Error creating inventory item:", error);
+      res.status(400).json({
+        error: "Failed to create inventory item",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // Update an inventory item
+  app.patch(`${apiPrefix}/inventory/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+      }
+      
+      const updatedItem = await storage.updateInventoryItem(id, req.body);
+      if (!updatedItem) {
+        return res.status(404).json({ error: "Inventory item not found" });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating inventory item:", error);
+      res.status(400).json({
+        error: "Failed to update inventory item",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // Update inventory stock (specific endpoint for deliveries)
+  app.patch(`${apiPrefix}/inventory/:id/stock`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+      }
+      
+      const { quantityChange, unitPrice, totalPrice } = req.body;
+      
+      if (quantityChange === undefined) {
+        return res.status(400).json({ error: "Quantity change is required" });
+      }
+      
+      const updatedItem = await storage.updateInventoryStock(
+        id, 
+        quantityChange, 
+        unitPrice, 
+        totalPrice
+      );
+      
+      if (!updatedItem) {
+        return res.status(404).json({ error: "Inventory item not found" });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating inventory stock:", error);
+      res.status(400).json({
+        error: "Failed to update inventory stock",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // ===== RECIPE MANAGEMENT ENDPOINTS =====
+  
+  // Get all recipes
+  app.get(`${apiPrefix}/recipes`, async (req, res) => {
+    try {
+      const recipes = await storage.getRecipes();
+      res.json(recipes);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      res.status(500).json({ error: "Failed to fetch recipes" });
+    }
+  });
+  
+  // Get recipes by category
+  app.get(`${apiPrefix}/recipes/category/:category`, async (req, res) => {
+    try {
+      const { category } = req.params;
+      const recipes = await storage.getRecipesByCategory(category);
+      res.json(recipes);
+    } catch (error) {
+      console.error("Error fetching recipes by category:", error);
+      res.status(500).json({ error: "Failed to fetch recipes by category" });
+    }
+  });
+  
+  // Get recipes by order type
+  app.get(`${apiPrefix}/recipes/order-type/:orderType`, async (req, res) => {
+    try {
+      const { orderType } = req.params;
+      const recipes = await storage.getRecipesByOrderType(orderType);
+      res.json(recipes);
+    } catch (error) {
+      console.error("Error fetching recipes by order type:", error);
+      res.status(500).json({ error: "Failed to fetch recipes by order type" });
+    }
+  });
+  
+  // Get a single recipe
+  app.get(`${apiPrefix}/recipes/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+      }
+      
+      const recipe = await storage.getRecipeById(id);
+      if (!recipe) {
+        return res.status(404).json({ error: "Recipe not found" });
+      }
+      
+      res.json(recipe);
+    } catch (error) {
+      console.error("Error fetching recipe:", error);
+      res.status(500).json({ error: "Failed to fetch recipe" });
+    }
+  });
+  
+  // Create a new recipe
+  app.post(`${apiPrefix}/recipes`, async (req, res) => {
+    try {
+      const recipe = req.body;
+      const newRecipe = await storage.createRecipe(recipe);
+      res.status(201).json(newRecipe);
+    } catch (error) {
+      console.error("Error creating recipe:", error);
+      res.status(400).json({
+        error: "Failed to create recipe",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // Update a recipe
+  app.patch(`${apiPrefix}/recipes/:id`, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ error: "Invalid ID format" });
+      }
+      
+      const updatedRecipe = await storage.updateRecipe(id, req.body);
+      if (!updatedRecipe) {
+        return res.status(404).json({ error: "Recipe not found" });
+      }
+      
+      res.json(updatedRecipe);
+    } catch (error) {
+      console.error("Error updating recipe:", error);
+      res.status(400).json({
+        error: "Failed to update recipe",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // ===== RECIPE ITEMS ENDPOINTS =====
+  
+  // Get all items for a recipe with inventory details
+  app.get(`${apiPrefix}/recipes/:recipeId/items`, async (req, res) => {
+    try {
+      const recipeId = parseInt(req.params.recipeId);
+      if (isNaN(recipeId)) {
+        return res.status(400).json({ error: "Invalid recipe ID format" });
+      }
+      
+      const recipeItems = await storage.getRecipeItemsWithDetails(recipeId);
+      res.json(recipeItems);
+    } catch (error) {
+      console.error("Error fetching recipe items:", error);
+      res.status(500).json({
+        error: "Failed to fetch recipe items",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // Add an item to a recipe
+  app.post(`${apiPrefix}/recipes/:recipeId/items`, async (req, res) => {
+    try {
+      const recipeId = parseInt(req.params.recipeId);
+      if (isNaN(recipeId)) {
+        return res.status(400).json({ error: "Invalid recipe ID format" });
+      }
+      
+      // Make sure recipe exists
+      const recipe = await storage.getRecipeById(recipeId);
+      if (!recipe) {
+        return res.status(404).json({ error: "Recipe not found" });
+      }
+      
+      // Create the recipe item
+      const recipeItem = {
+        ...req.body,
+        recipeId,
+      };
+      
+      const newRecipeItem = await storage.createRecipeItem(recipeItem);
+      res.status(201).json(newRecipeItem);
+    } catch (error) {
+      console.error("Error adding item to recipe:", error);
+      res.status(400).json({
+        error: "Failed to add item to recipe",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // Update a recipe item
+  app.patch(`${apiPrefix}/recipes/:recipeId/items/:itemId`, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.itemId);
+      if (isNaN(itemId)) {
+        return res.status(400).json({ error: "Invalid item ID format" });
+      }
+      
+      const updatedItem = await storage.updateRecipeItem(itemId, req.body);
+      if (!updatedItem) {
+        return res.status(404).json({ error: "Recipe item not found" });
+      }
+      
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error updating recipe item:", error);
+      res.status(400).json({
+        error: "Failed to update recipe item",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // Delete a recipe item
+  app.delete(`${apiPrefix}/recipes/:recipeId/items/:itemId`, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.itemId);
+      if (isNaN(itemId)) {
+        return res.status(400).json({ error: "Invalid item ID format" });
+      }
+      
+      await storage.deleteRecipeItem(itemId);
+      res.status(200).json({ message: "Recipe item deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting recipe item:", error);
+      res.status(500).json({
+        error: "Failed to delete recipe item",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+  
+  // Process order and update inventory
+  app.post(`${apiPrefix}/inventory/process-order`, async (req, res) => {
+    try {
+      const { dishName, orderType } = req.body;
+      
+      if (!dishName || !orderType) {
+        return res.status(400).json({ 
+          error: "Missing required fields", 
+          details: "Both dishName and orderType are required" 
+        });
+      }
+      
+      const result = await storage.processOrderInventory(dishName, orderType);
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing order inventory:", error);
+      res.status(500).json({
+        error: "Failed to process order inventory",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
 
   // Setup AI chatbot routes
   setupOpenAIRoutes(app);
