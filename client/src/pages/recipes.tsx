@@ -250,7 +250,7 @@ const RecipeTable = ({
                   <TableCell className="font-medium">{recipe.dishName}</TableCell>
                   <TableCell>{recipe.category || 'Uncategorized'}</TableCell>
                   <TableCell>
-                    {recipe.orderType === 'dine_in' ? (
+                    {recipe.orderType === 'dine-in' || recipe.orderType === 'dine_in' ? (
                       <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-300">
                         Dine In
                       </Badge>
@@ -258,9 +258,13 @@ const RecipeTable = ({
                       <Badge variant="outline" className="bg-purple-50 text-purple-800 border-purple-300">
                         Versatile
                       </Badge>
-                    ) : (
+                    ) : recipe.orderType === 'takeaway' || recipe.orderType === 'takeout' ? (
                       <Badge variant="outline" className="bg-green-50 text-green-800 border-green-300">
                         Takeaway
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">
+                        {recipe.orderType || 'Unknown'}
                       </Badge>
                     )}
                   </TableCell>
@@ -419,7 +423,7 @@ export default function RecipesPage() {
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       dishName: '',
-      orderType: 'dine_in',
+      orderType: 'dine-in',
       description: '',
       sellingPrice: '',
       category: '',
@@ -559,7 +563,7 @@ export default function RecipesPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="dine_in">Dine In</SelectItem>
+                              <SelectItem value="dine-in">Dine In</SelectItem>
                               <SelectItem value="takeaway">Takeaway</SelectItem>
                               <SelectItem value="both">Both</SelectItem>
                             </SelectContent>
@@ -713,7 +717,7 @@ export default function RecipesPage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="dine_in">Dine In</SelectItem>
+                                <SelectItem value="dine-in">Dine In</SelectItem>
                                 <SelectItem value="takeaway">Takeaway</SelectItem>
                                 <SelectItem value="both">Both</SelectItem>
                               </SelectContent>
@@ -926,7 +930,8 @@ export default function RecipesPage() {
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="all">All Recipes</TabsTrigger>
-            <TabsTrigger value="dine_in">Dine In</TabsTrigger>
+            <TabsTrigger value="dine-in">Dine In</TabsTrigger>
+            <TabsTrigger value="takeaway">Takeaway</TabsTrigger>
             <TabsTrigger value="both">Versatile</TabsTrigger>
           </TabsList>
           
@@ -940,9 +945,19 @@ export default function RecipesPage() {
             />
           </TabsContent>
           
-          <TabsContent value="dine_in">
+          <TabsContent value="dine-in">
             <RecipeTable 
-              recipes={recipes.filter(recipe => recipe.orderType === 'dine_in')} 
+              recipes={recipes.filter(recipe => recipe.orderType === 'dine-in' || recipe.orderType === 'dine_in')} 
+              setSelectedRecipe={setSelectedRecipe}
+              setEditRecipe={setEditRecipe}
+              setAddDialogOpen={setAddDialogOpen}
+              selectedRecipe={selectedRecipe}
+            />
+          </TabsContent>
+          
+          <TabsContent value="takeaway">
+            <RecipeTable 
+              recipes={recipes.filter(recipe => recipe.orderType === 'takeaway' || recipe.orderType === 'takeout')} 
               setSelectedRecipe={setSelectedRecipe}
               setEditRecipe={setEditRecipe}
               setAddDialogOpen={setAddDialogOpen}
