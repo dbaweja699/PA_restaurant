@@ -4,6 +4,7 @@ import { LiveActivity } from "@/components/dashboard/LiveActivity";
 import { PerformanceMetrics } from "@/components/dashboard/PerformanceMetrics";
 import { RecentReviews } from "@/components/dashboard/RecentReviews";
 import { UpcomingBookings } from "@/components/dashboard/UpcomingBookings";
+import { InventoryStatsCard } from "@/components/inventory/InventoryStatsCard";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect } from "react";
@@ -53,6 +54,7 @@ export default function Dashboard() {
         {/* Right Column */}
         <div className="space-y-6">
           <PerformanceMetrics />
+          <InventoryStatsCard />
           <RecentReviews />
           <UpcomingBookings />
         </div>
