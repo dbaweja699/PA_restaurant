@@ -159,6 +159,11 @@ const RecipeCostEstimate = ({ recipeItems }: { recipeItems: RecipeItemWithDetail
   // Calculate estimated cost of the recipe
   const calculateCost = () => {
     return recipeItems.reduce((total, item) => {
+      // Skip calculation if inventoryItem or unitPrice is missing
+      if (!item.inventoryItem || !item.inventoryItem.unitPrice) {
+        return total;
+      }
+      
       const unitPrice = parseFloat(item.inventoryItem.unitPrice.replace(/[^0-9.]/g, ''));
       const quantity = parseFloat(item.quantityRequired);
       if (!isNaN(unitPrice) && !isNaN(quantity)) {
