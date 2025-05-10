@@ -285,6 +285,7 @@ const RecipeTable = ({
                       onClick={(e) => {
                         e.stopPropagation();
                         setEditRecipe(recipe);
+                        setSelectedRecipe(recipe); // Set selected recipe to fetch items
                       }}
                     >
                       <Settings className="h-4 w-4" />
@@ -675,7 +676,15 @@ export default function RecipesPage() {
           </Dialog>
           
           {/* Edit Recipe Dialog */}
-          <Dialog open={!!editRecipe} onOpenChange={(open) => !open && setEditRecipe(null)}>
+          <Dialog open={!!editRecipe} onOpenChange={(open) => {
+            if (!open) {
+              setEditRecipe(null);
+              // Only reset selectedRecipe if we clicked it through the settings button
+              if (selectedRecipe && selectedRecipe.id === editRecipe?.id) {
+                setSelectedRecipe(null);
+              }
+            }
+          }}>
             <DialogContent className="sm:max-w-[550px]">
               <DialogHeader>
                 <DialogTitle>Edit Recipe</DialogTitle>
@@ -810,6 +819,45 @@ export default function RecipesPage() {
                         </FormItem>
                       )}
                     />
+
+                    {/* Recipe ingredients section */}
+                    <div className="border rounded-lg p-4 mt-4">
+                      <h3 className="text-lg font-medium mb-2">Recipe Ingredients</h3>
+                      {selectedRecipe && (
+                        <div>
+                          {isLoadingRecipeItems ? (
+                            <div className="flex justify-center py-4">
+                              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : recipeItems.length === 0 ? (
+                            <p className="text-muted-foreground text-center py-2">
+                              No ingredients added yet. Add ingredients after saving the recipe.
+                            </p>
+                          ) : (
+                            <div className="max-h-60 overflow-y-auto">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Ingredient</TableHead>
+                                    <TableHead>Quantity</TableHead>
+                                    <TableHead>Unit</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {recipeItems.map((item) => (
+                                    <TableRow key={item.id}>
+                                      <TableCell className="font-medium">{item.inventoryItem.itemName}</TableCell>
+                                      <TableCell>{item.quantityRequired}</TableCell>
+                                      <TableCell>{item.unit}</TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
 
                     <DialogFooter>
                       <Button type="submit" disabled={updateRecipeMutation.isPending}>
