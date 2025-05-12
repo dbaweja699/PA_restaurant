@@ -987,6 +987,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to connect to webhook service" });
     }
   });
+  
+  // Proxy endpoint for order webhook notifications
+  app.post(`${apiPrefix}/proxy/order-webhook`, async (req, res) => {
+    try {
+      console.log("Proxying order to webhook:", req.body);
+
+      if (!process.env.N8N_WEBHOOK_URL) {
+        console.error("N8N_WEBHOOK_URL environment variable is not defined");
+        return res.status(500).json({ error: "Webhook URL is not configured" });
+      }
+
+      const response = await fetch(
+        process.env.N8N_WEBHOOK_URL + "/order_made",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(req.body),
+        },
+      );
+
+      if (!response.ok) {
+        console.error(
+          "Error from order webhook:",
+          response.status,
+          response.statusText,
+        );
+        return res.status(response.status).json({
+          error: `Order webhook responded with status ${response.status}`,
+        });
+      }
+
+      const data = await response.json();
+      console.log("Order webhook response:", data);
+      res.json(data);
+    } catch (error) {
+      console.error("Error proxying to order webhook:", error);
+      res.status(500).json({ error: "Failed to connect to order webhook service" });
+    }
+  });
 
   // Proxy endpoint for AI voice agent functionality
   app.post(`${apiPrefix}/proxy/ai_voice`, async (req, res) => {

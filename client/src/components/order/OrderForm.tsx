@@ -229,6 +229,38 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
         variant: "default",
       });
       
+      // Send the order ID to the webhook
+      if (data.id) {
+        const webhookUrl = process.env.N8N_WEBHOOK_URL + "/order_made";
+        try {
+          fetch('/api/proxy/order-webhook', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              orderId: data.id,
+              customerName: data.customerName || data.customer_name,
+              orderTime: data.orderTime || data.order_time,
+              total: data.total,
+              items: data.items
+            })
+          })
+          .then(response => {
+            if (!response.ok) {
+              console.error("Failed to send order to webhook:", response.statusText);
+            } else {
+              console.log("Order webhook notification sent successfully");
+            }
+          })
+          .catch(error => {
+            console.error("Error sending order to webhook:", error);
+          });
+        } catch (webhookError) {
+          console.error("Error sending order to webhook:", webhookError);
+        }
+      }
+      
       // Reset form and state
       form.reset(defaultValues);
       setOrderItems([{ name: "", price: "", quantity: 1 }]);
