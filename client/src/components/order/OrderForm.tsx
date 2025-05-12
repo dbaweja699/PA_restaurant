@@ -231,7 +231,6 @@ export function OrderForm({ open, onOpenChange }: OrderFormProps) {
       
       // Send the order ID to the webhook
       if (data.id) {
-        const webhookUrl = process.env.N8N_WEBHOOK_URL + "/order_made";
         try {
           fetch('/api/proxy/order-webhook', {
             method: 'POST',
