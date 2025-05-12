@@ -20,7 +20,7 @@ import { registerInventoryRoutes } from "./inventory-routes";
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for RestaurantAI Assistant
   const apiPrefix = "/api";
-  
+
   // Register inventory routes
   registerInventoryRoutes(app);
 
@@ -29,7 +29,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Proxy endpoint to N8N webhook
   app.post(`${apiPrefix}/proxy`, async (req, res) => {
     const EC2_HTTP_URL =
-      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/67eff4f0-a0e3-4881-b179-249a9394a340";
+      process.env.N8N_WEBHOOK_URL + "/67eff4f0-a0e3-4881-b179-249a9394a340";
     try {
       const response = await axios.post(EC2_HTTP_URL, req.body);
       res.json(response.data);
@@ -958,7 +958,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Proxying request to social media webhook:", req.body);
 
       const response = await fetch(
-        "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/restaurant_social_media",
+        process.env.N8N_WEBHOOK_URL + "/restaurant_social_media",
         {
           method: "POST",
           headers: {
@@ -991,7 +991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Proxy endpoint for AI voice agent functionality
   app.post(`${apiPrefix}/proxy/ai_voice`, async (req, res) => {
     const ELEVENLABS_WEBHOOK_URL =
-      "http://ec2-13-58-27-158.us-east-2.compute.amazonaws.com:5678/webhook/67eff4f0-a0e3-4881-b179-249a9394a340";
+      process.env.N8N_WEBHOOK_URL + "/67eff4f0-a0e3-4881-b179-249a9394a340";
 
     try {
       // Send the request as-is to the webhook URL
@@ -1318,9 +1318,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // ===== INVENTORY MANAGEMENT ENDPOINTS =====
-  
+
   // Get all inventory items
   app.get(`${apiPrefix}/inventory`, async (req, res) => {
     try {
@@ -1331,7 +1331,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch inventory items" });
     }
   });
-  
+
   // Get inventory items with low stock
   app.get(`${apiPrefix}/inventory/low-stock`, async (req, res) => {
     try {
@@ -1342,7 +1342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch low stock items" });
     }
   });
-  
+
   // Get inventory items by category
   app.get(`${apiPrefix}/inventory/category/:category`, async (req, res) => {
     try {
@@ -1351,10 +1351,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(items);
     } catch (error) {
       console.error("Error fetching inventory items by category:", error);
-      res.status(500).json({ error: "Failed to fetch inventory items by category" });
+      res
+        .status(500)
+        .json({ error: "Failed to fetch inventory items by category" });
     }
   });
-  
+
   // Get a single inventory item
   app.get(`${apiPrefix}/inventory/:id`, async (req, res) => {
     try {
@@ -1362,19 +1364,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid ID format" });
       }
-      
+
       const item = await storage.getInventoryItemById(id);
       if (!item) {
         return res.status(404).json({ error: "Inventory item not found" });
       }
-      
+
       res.json(item);
     } catch (error) {
       console.error("Error fetching inventory item:", error);
       res.status(500).json({ error: "Failed to fetch inventory item" });
     }
   });
-  
+
   // Create a new inventory item
   app.post(`${apiPrefix}/inventory`, async (req, res) => {
     try {
@@ -1389,7 +1391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Update an inventory item
   app.patch(`${apiPrefix}/inventory/:id`, async (req, res) => {
     try {
@@ -1397,12 +1399,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid ID format" });
       }
-      
+
       const updatedItem = await storage.updateInventoryItem(id, req.body);
       if (!updatedItem) {
         return res.status(404).json({ error: "Inventory item not found" });
       }
-      
+
       res.json(updatedItem);
     } catch (error) {
       console.error("Error updating inventory item:", error);
@@ -1412,7 +1414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Update inventory stock (specific endpoint for deliveries)
   app.patch(`${apiPrefix}/inventory/:id/stock`, async (req, res) => {
     try {
@@ -1420,24 +1422,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid ID format" });
       }
-      
+
       const { quantityChange, unitPrice, totalPrice } = req.body;
-      
+
       if (quantityChange === undefined) {
         return res.status(400).json({ error: "Quantity change is required" });
       }
-      
+
       const updatedItem = await storage.updateInventoryStock(
-        id, 
-        quantityChange, 
-        unitPrice, 
-        totalPrice
+        id,
+        quantityChange,
+        unitPrice,
+        totalPrice,
       );
-      
+
       if (!updatedItem) {
         return res.status(404).json({ error: "Inventory item not found" });
       }
-      
+
       res.json(updatedItem);
     } catch (error) {
       console.error("Error updating inventory stock:", error);
@@ -1447,9 +1449,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // ===== RECIPE MANAGEMENT ENDPOINTS =====
-  
+
   // Get all recipes
   app.get(`${apiPrefix}/recipes`, async (req, res) => {
     try {
@@ -1460,7 +1462,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch recipes" });
     }
   });
-  
+
   // Get recipes by category
   app.get(`${apiPrefix}/recipes/category/:category`, async (req, res) => {
     try {
@@ -1472,7 +1474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch recipes by category" });
     }
   });
-  
+
   // Get recipes by order type
   app.get(`${apiPrefix}/recipes/order-type/:orderType`, async (req, res) => {
     try {
@@ -1484,7 +1486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch recipes by order type" });
     }
   });
-  
+
   // Get a single recipe
   app.get(`${apiPrefix}/recipes/:id`, async (req, res) => {
     try {
@@ -1492,19 +1494,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid ID format" });
       }
-      
+
       const recipe = await storage.getRecipeById(id);
       if (!recipe) {
         return res.status(404).json({ error: "Recipe not found" });
       }
-      
+
       res.json(recipe);
     } catch (error) {
       console.error("Error fetching recipe:", error);
       res.status(500).json({ error: "Failed to fetch recipe" });
     }
   });
-  
+
   // Create a new recipe
   app.post(`${apiPrefix}/recipes`, async (req, res) => {
     try {
@@ -1519,7 +1521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Update a recipe
   app.patch(`${apiPrefix}/recipes/:id`, async (req, res) => {
     try {
@@ -1527,12 +1529,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(id)) {
         return res.status(400).json({ error: "Invalid ID format" });
       }
-      
+
       const updatedRecipe = await storage.updateRecipe(id, req.body);
       if (!updatedRecipe) {
         return res.status(404).json({ error: "Recipe not found" });
       }
-      
+
       res.json(updatedRecipe);
     } catch (error) {
       console.error("Error updating recipe:", error);
@@ -1542,9 +1544,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // ===== RECIPE ITEMS ENDPOINTS =====
-  
+
   // Get all items for a recipe with inventory details
   app.get(`${apiPrefix}/recipes/:recipeId/items`, async (req, res) => {
     try {
@@ -1552,7 +1554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(recipeId)) {
         return res.status(400).json({ error: "Invalid recipe ID format" });
       }
-      
+
       const recipeItems = await storage.getRecipeItemsWithDetails(recipeId);
       res.json(recipeItems);
     } catch (error) {
@@ -1563,7 +1565,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Add an item to a recipe
   app.post(`${apiPrefix}/recipes/:recipeId/items`, async (req, res) => {
     try {
@@ -1571,19 +1573,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (isNaN(recipeId)) {
         return res.status(400).json({ error: "Invalid recipe ID format" });
       }
-      
+
       // Make sure recipe exists
       const recipe = await storage.getRecipeById(recipeId);
       if (!recipe) {
         return res.status(404).json({ error: "Recipe not found" });
       }
-      
+
       // Create the recipe item
       const recipeItem = {
         ...req.body,
         recipeId,
       };
-      
+
       const newRecipeItem = await storage.createRecipeItem(recipeItem);
       res.status(201).json(newRecipeItem);
     } catch (error) {
@@ -1594,61 +1596,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // Update a recipe item
-  app.patch(`${apiPrefix}/recipes/:recipeId/items/:itemId`, async (req, res) => {
-    try {
-      const itemId = parseInt(req.params.itemId);
-      if (isNaN(itemId)) {
-        return res.status(400).json({ error: "Invalid item ID format" });
+  app.patch(
+    `${apiPrefix}/recipes/:recipeId/items/:itemId`,
+    async (req, res) => {
+      try {
+        const itemId = parseInt(req.params.itemId);
+        if (isNaN(itemId)) {
+          return res.status(400).json({ error: "Invalid item ID format" });
+        }
+
+        const updatedItem = await storage.updateRecipeItem(itemId, req.body);
+        if (!updatedItem) {
+          return res.status(404).json({ error: "Recipe item not found" });
+        }
+
+        res.json(updatedItem);
+      } catch (error) {
+        console.error("Error updating recipe item:", error);
+        res.status(400).json({
+          error: "Failed to update recipe item",
+          details: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-      
-      const updatedItem = await storage.updateRecipeItem(itemId, req.body);
-      if (!updatedItem) {
-        return res.status(404).json({ error: "Recipe item not found" });
-      }
-      
-      res.json(updatedItem);
-    } catch (error) {
-      console.error("Error updating recipe item:", error);
-      res.status(400).json({
-        error: "Failed to update recipe item",
-        details: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  });
-  
+    },
+  );
+
   // Delete a recipe item
-  app.delete(`${apiPrefix}/recipes/:recipeId/items/:itemId`, async (req, res) => {
-    try {
-      const itemId = parseInt(req.params.itemId);
-      if (isNaN(itemId)) {
-        return res.status(400).json({ error: "Invalid item ID format" });
+  app.delete(
+    `${apiPrefix}/recipes/:recipeId/items/:itemId`,
+    async (req, res) => {
+      try {
+        const itemId = parseInt(req.params.itemId);
+        if (isNaN(itemId)) {
+          return res.status(400).json({ error: "Invalid item ID format" });
+        }
+
+        await storage.deleteRecipeItem(itemId);
+        res.status(200).json({ message: "Recipe item deleted successfully" });
+      } catch (error) {
+        console.error("Error deleting recipe item:", error);
+        res.status(500).json({
+          error: "Failed to delete recipe item",
+          details: error instanceof Error ? error.message : "Unknown error",
+        });
       }
-      
-      await storage.deleteRecipeItem(itemId);
-      res.status(200).json({ message: "Recipe item deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting recipe item:", error);
-      res.status(500).json({
-        error: "Failed to delete recipe item",
-        details: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  });
-  
+    },
+  );
+
   // Process order and update inventory
   app.post(`${apiPrefix}/inventory/process-order`, async (req, res) => {
     try {
       const { dishName, orderType } = req.body;
-      
+
       if (!dishName || !orderType) {
-        return res.status(400).json({ 
-          error: "Missing required fields", 
-          details: "Both dishName and orderType are required" 
+        return res.status(400).json({
+          error: "Missing required fields",
+          details: "Both dishName and orderType are required",
         });
       }
-      
+
       const result = await storage.processOrderInventory(dishName, orderType);
       res.json(result);
     } catch (error) {
