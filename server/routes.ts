@@ -16,6 +16,9 @@ import {
 import { setupOpenAIRoutes } from "./openai";
 import { pool } from "./db";
 import { registerInventoryRoutes } from "./inventory-routes";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes for RestaurantAI Assistant
@@ -987,7 +990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to connect to webhook service" });
     }
   });
-  
+
   // Proxy endpoint for order webhook notifications
   app.post(`${apiPrefix}/proxy/order-webhook`, async (req, res) => {
     try {
@@ -1025,7 +1028,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(data);
     } catch (error) {
       console.error("Error proxying to order webhook:", error);
-      res.status(500).json({ error: "Failed to connect to order webhook service" });
+      res
+        .status(500)
+        .json({ error: "Failed to connect to order webhook service" });
     }
   });
 
