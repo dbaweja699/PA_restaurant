@@ -53,9 +53,9 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     setIsOpen(false);
   };
 
-  // Base classes for the sidebar - matching the Basilico brand colors
+  // Base classes for the sidebar - matching the Prince Albert Hotel Gawler colors
   const sidebarClasses = cn(
-    "bg-gradient-to-r from-[#2A4833] to-[#1e6434] text-white w-72 flex flex-col",
+    "bg-gradient-to-r from-black to-[#1a1a1a] text-white w-72 flex flex-col",
     isOpen ? "fixed inset-y-0 left-0 z-50" : "hidden md:flex md:flex-shrink-0"
   );
 
@@ -63,11 +63,11 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     <div className={sidebarClasses}>
       <div className="flex items-center justify-center h-auto py-6 px-0">
         <div className="flex flex-col items-center w-full">
-          <div className="bg-white rounded-lg p-4 mb-3 w-[90%]">
-            <img src={logoImg} alt="Basilico Logo" className="w-full max-w-full h-auto" />
+          <div className="bg-black rounded-lg p-4 mb-3 w-[90%]">
+            <img src={logoImg} alt="Prince Albert Hotel Gawler Logo" className="w-full max-w-full h-auto" />
           </div>
-          <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent tracking-tight">
-            Restaurant AI Assistant
+          <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent tracking-tight">
+            Hotel AI Assistant
           </h1>
         </div>
       </div>
@@ -79,8 +79,8 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             const itemClasses = cn(
               "flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors",
               isActive 
-                ? "bg-[#17532A]/30"
-                : "hover:bg-[#17532A]/20"
+                ? "bg-white/20"
+                : "hover:bg-white/10"
             );
 
             return (
@@ -99,10 +99,10 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       </div>
 
       {user && (
-        <div className="border-t border-green-700/30">
+        <div className="border-t border-white/20">
           <div className="flex items-center p-4">
             <div className="flex-shrink-0">
-              <div className="h-10 w-10 rounded-full bg-green-700/30 flex items-center justify-center">
+              <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
                 {user.avatar_url && !user.avatar_url.includes("images.app.goo.gl") ? (
                   <img 
                     className="h-10 w-10 rounded-full" 

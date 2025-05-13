@@ -213,7 +213,7 @@ export default function TopNav({ openSidebar }: TopNavProps) {
   };
 
   return (
-    <div className="relative z-10 flex-shrink-0 flex h-16 bg-gradient-to-r from-[#2A4833] to-[#1e6434] shadow">
+    <div className="relative z-10 flex-shrink-0 flex h-16 bg-gradient-to-r from-black to-[#1a1a1a] shadow">
       <button 
         type="button" 
         className="md:hidden px-4 text-white"
