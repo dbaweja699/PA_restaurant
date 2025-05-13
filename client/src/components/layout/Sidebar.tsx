@@ -76,8 +76,11 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         <nav className="flex-1 px-2 space-y-1">
           {navigationItems.map((item) => {
             const isActive = location === item.path;
+            const isDisabled = item.label === "Inventory" || item.label === "Recipes";
+            
             const itemClasses = cn(
               "flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors",
+              isDisabled && "opacity-50 cursor-not-allowed pointer-events-none",
               isActive 
                 ? "bg-white/20"
                 : "hover:bg-white/10"
@@ -89,6 +92,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 href={item.path} 
                 className={itemClasses}
                 onClick={handleCloseSidebar}
+                title={isDisabled ? "Coming soon" : ""}
               >
                 <i className={`${item.icon} text-lg mr-3`}></i>
                 {item.label}
