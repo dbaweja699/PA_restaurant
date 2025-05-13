@@ -110,15 +110,15 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
 
     switch (cleanStatus) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">{platform}</Badge>;
+        return <Badge variant="outline" className="bg-gray-200 text-gray-800">{platform}</Badge>;
       case "responded":
-        return <Badge className="bg-green-100 text-green-800">{platform}</Badge>;
+        return <Badge className="bg-black text-white">{platform}</Badge>;
       case "flagged":
-        return <Badge className="bg-red-100 text-red-800">{platform}</Badge>;
+        return <Badge className="bg-gray-700 text-white">{platform}</Badge>;
       case "posted":
-        return <Badge className="bg-[#e6f0e9] text-[#2A4833]">{platform}</Badge>;
+        return <Badge className="bg-gray-500 text-white">{platform}</Badge>;
       default:
-        return <Badge variant="outline">{platform}</Badge>;
+        return <Badge variant="outline" className="bg-gray-200 text-gray-800">{platform}</Badge>;
     }
   };
 

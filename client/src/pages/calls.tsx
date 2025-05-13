@@ -148,28 +148,28 @@ export default function Calls() {
   };
 
   const getStatusBadge = (status: string | null | undefined) => {
-    if (!status) return <Badge variant="outline">Unknown</Badge>;
+    if (!status) return <Badge variant="outline" className="bg-gray-200 text-gray-800">Unknown</Badge>;
 
     switch (status.toLowerCase()) {
       case "completed":
         return (
           <Badge
             variant="outline"
-            className="bg-green-500 text-white hover:bg-green-600"
+            className="bg-black text-white hover:bg-gray-800"
           >
             Completed
           </Badge>
         );
       case "in_progress":
         return (
-          <Badge variant="secondary" className="bg-blue-500 hover:bg-blue-600">
+          <Badge variant="outline" className="bg-gray-700 text-white hover:bg-gray-600">
             In Progress
           </Badge>
         );
       case "pending":
-        return <Badge variant="outline">Pending</Badge>;
+        return <Badge variant="outline" className="bg-gray-200 text-gray-800 hover:bg-gray-300">Pending</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline" className="bg-gray-200 text-gray-800">{status}</Badge>;
     }
   };
 
