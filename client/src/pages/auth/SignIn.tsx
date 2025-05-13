@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import logoImg from "@/assets/dblytics-logo.png";
+import logoImg from "@/assets/prince-albert-logo.png";
 
 export default function SignIn() {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
@@ -90,9 +90,11 @@ export default function SignIn() {
         {/* Left side - form */}
         <div className="w-full md:w-1/2 bg-white p-8">
           <div className="flex flex-col items-center mb-6">
-            <img src={logoImg} alt="Restaurant AI Assistant Logo" className="h-20 w-40 mb-2 mx-auto" />
-            <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-[#2A4833] to-[#1e6434] bg-clip-text text-transparent">
-              Basilico AI Assistant
+            <div className="bg-black rounded-full p-3 mb-2">
+              <img src={logoImg} alt="Prince Albert Hotel Gawler Logo" className="h-20 w-auto mb-0 mx-auto" />
+            </div>
+            <h1 className="text-2xl font-bold text-center bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
+              Prince Albert Hotel AI
             </h1>
           </div>
           
@@ -131,7 +133,7 @@ export default function SignIn() {
             
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]" 
+              className="w-full bg-gradient-to-r from-black to-[#1a1a1a] hover:from-[#0a0a0a] hover:to-[#2a2a2a]" 
               disabled={isSubmitting}
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
@@ -144,17 +146,17 @@ export default function SignIn() {
         </div>
         
         {/* Right side - hero */}
-        <div className="hidden md:block md:w-1/2 bg-gradient-to-r from-[#2A4833] to-[#1e6434] p-8 text-white">
+        <div className="hidden md:block md:w-1/2 bg-gradient-to-r from-black to-[#1a1a1a] p-8 text-white">
           <div className="h-full flex flex-col justify-center">
-            <h2 className="text-3xl font-bold mb-4 text-white">Basilico AI Assistant</h2>
+            <h2 className="text-3xl font-bold mb-4 text-white">Prince Albert Hotel Gawler</h2>
             <p className="mb-6 text-white/90">
-              Your all-in-one AI solution for managing customer interactions, reviews, 
-              orders, and social media presence.
+              Your all-in-one AI solution for managing hotel operations, guest interactions, reviews, 
+              bookings, and social media presence.
             </p>
             <ul className="space-y-2">
               <li className="flex items-center">
                 <span className="mr-2">✓</span>
-                Automated call and chat handling
+                Automated guest communication
               </li>
               <li className="flex items-center">
                 <span className="mr-2">✓</span>
@@ -162,11 +164,11 @@ export default function SignIn() {
               </li>
               <li className="flex items-center">
                 <span className="mr-2">✓</span>
-                Smart booking management
+                Smart room booking management
               </li>
               <li className="flex items-center">
                 <span className="mr-2">✓</span>
-                Social media engagement tools
+                Hotel inventory and order tracking
               </li>
             </ul>
           </div>
