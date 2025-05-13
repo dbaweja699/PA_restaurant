@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import logoImg from "@/assets/basilico-logo.png";
+import logoImg from "@/assets/prince-albert-logo.png";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 
