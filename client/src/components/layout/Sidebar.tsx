@@ -67,7 +67,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             <img src={logoImg} alt="Prince Albert Hotel Gawler Logo" className="w-full max-w-full h-auto" />
           </div>
           <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent tracking-tight">
-            Hotel AI Assistant
+            Prince Albert Hotel AI
           </h1>
         </div>
       </div>
