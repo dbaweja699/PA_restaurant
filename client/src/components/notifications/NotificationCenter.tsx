@@ -60,12 +60,12 @@ function NotificationCard({ notification, onMarkAsRead }: {
       icon: <div className="bg-orange-500 p-2 rounded-full text-white">🛒</div>
     },
     conversation: { 
-      bgColor: 'bg-purple-100', 
-      icon: <div className="bg-purple-500 p-2 rounded-full text-white">💬</div>
+      bgColor: 'bg-slate-100', 
+      icon: <div className="bg-slate-600 p-2 rounded-full text-white">💬</div>
     },
     chat: { 
-      bgColor: 'bg-purple-100', 
-      icon: <div className="bg-purple-500 p-2 rounded-full text-white">💬</div>
+      bgColor: 'bg-slate-100', 
+      icon: <div className="bg-slate-600 p-2 rounded-full text-white">💬</div>
     },
     default: { 
       bgColor: 'bg-gray-100', 

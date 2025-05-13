@@ -91,7 +91,7 @@ export function PerformanceMetrics() {
       <CardFooter className="border-t border-neutral-200 pt-4">
         <div className="flex justify-between items-center w-full">
           <span className="text-sm font-medium text-neutral-600">Overall AI Efficiency</span>
-          <span className="text-sm font-bold text-accent">
+          <span className="text-sm font-bold text-black">
             {metrics.overallEfficiency ?? 0}%
           </span>
         </div>

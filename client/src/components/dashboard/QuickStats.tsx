@@ -50,7 +50,7 @@ export function QuickStats() {
     
     return (
       <>
-        <span className="inline-block w-2 h-2 bg-accent rounded-full animate-pulse mr-1"></span>
+        <span className="inline-block w-2 h-2 bg-black rounded-full animate-pulse mr-1"></span>
         {needAttention} need attention
       </>
     );
@@ -69,7 +69,7 @@ export function QuickStats() {
   const statsCards = [
     {
       icon: "ri-customer-service-2-line",
-      iconBgColor: "bg-secondary-light",
+      iconBgColor: "bg-gray-200",
       title: "Calls Handled Today",
       value: stats.callsHandledToday || 0,
       footer: getCallsFooter(),
@@ -80,7 +80,7 @@ export function QuickStats() {
     },
     {
       icon: "ri-message-3-line",
-      iconBgColor: "bg-accent-light",
+      iconBgColor: "bg-gray-100",
       title: "Active Chats",
       value: stats.activeChats || 0,
       footer: getChatsFooter(),
@@ -91,7 +91,7 @@ export function QuickStats() {
     },
     {
       icon: "ri-calendar-check-line",
-      iconBgColor: "bg-primary-light",
+      iconBgColor: "bg-gray-300",
       title: "Today's Bookings",
       value: stats.todaysBookings || 0,
       footer: getBookingsFooter(),
@@ -102,7 +102,7 @@ export function QuickStats() {
     },
     {
       icon: "ri-shopping-cart-2-line",
-      iconBgColor: "bg-secondary-light",
+      iconBgColor: "bg-gray-200",
       title: "Orders Processed",
       value: stats.ordersProcessed || 0,
       footer: (
