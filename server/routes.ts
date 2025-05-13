@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Proxy endpoint to N8N webhook
   app.post(`${apiPrefix}/proxy`, async (req, res) => {
     const EC2_HTTP_URL =
-      process.env.N8N_WEBHOOK_URL + "/67eff4f0-a0e3-4881-b179-249a9394a340";
+      process.env.N8N_WEBHOOK_URL! + "/67eff4f0-a0e3-4881-b179-249a9394a340";
     try {
       const response = await axios.post(EC2_HTTP_URL, req.body);
       res.json(response.data);
@@ -961,7 +961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Proxying request to social media webhook:", req.body);
 
       const response = await fetch(
-        process.env.N8N_WEBHOOK_URL + "/restaurant_social_media",
+        process.env.N8N_WEBHOOK_URL! + "/restaurant_social_media",
         {
           method: "POST",
           headers: {
@@ -996,13 +996,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Proxying order to webhook:", req.body);
 
-      if (!process.env.N8N_WEBHOOK_URL) {
+      if (!process.env.N8N_WEBHOOK_URL!) {
         console.error("N8N_WEBHOOK_URL environment variable is not defined");
         return res.status(500).json({ error: "Webhook URL is not configured" });
       }
 
       const response = await fetch(
-        process.env.N8N_WEBHOOK_URL + "/order_made",
+        process.env.N8N_WEBHOOK_URL! + "/order_made",
         {
           method: "POST",
           headers: {
@@ -1037,7 +1037,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Proxy endpoint for AI voice agent functionality
   app.post(`${apiPrefix}/proxy/ai_voice`, async (req, res) => {
     const ELEVENLABS_WEBHOOK_URL =
-      process.env.N8N_WEBHOOK_URL + "/67eff4f0-a0e3-4881-b179-249a9394a340";
+      process.env.N8N_WEBHOOK_URL! + "/67eff4f0-a0e3-4881-b179-249a9394a340";
 
     try {
       // Send the request as-is to the webhook URL
