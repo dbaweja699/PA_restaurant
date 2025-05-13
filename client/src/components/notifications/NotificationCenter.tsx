@@ -237,16 +237,16 @@ export function NotificationCenter() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative text-white">
           {unreadNotifications.length > 0 ? (
             <>
-              <BellDot className="h-5 w-5" />
-              <Badge className="absolute -top-2 -right-1 h-5 min-w-[1.25rem] px-1">
+              <BellDot className="h-5 w-5 text-white" />
+              <Badge className="absolute -top-2 -right-1 h-5 min-w-[1.25rem] px-1 bg-white text-black">
                 {unreadNotifications.length}
               </Badge>
             </>
           ) : (
-            <Bell className="h-5 w-5" />
+            <Bell className="h-5 w-5 text-white" />
           )}
         </Button>
       </PopoverTrigger>
