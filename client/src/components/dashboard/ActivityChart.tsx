@@ -198,7 +198,7 @@ export function ActivityChart() {
         <div className="bg-white p-2 border border-neutral-200 shadow rounded-md">
           <p className="text-sm">{`${label}: ${payload[0].value} interactions`}</p>
           {data.isPeak && (
-            <p className="text-xs text-secondary font-medium">Peak Activity</p>
+            <p className="text-xs text-gray-600 font-medium">Peak Activity</p>
           )}
         </div>
       );
@@ -262,7 +262,7 @@ export function ActivityChart() {
               <Tooltip content={<CustomTooltip />} />
               <Bar
                 dataKey="interactions"
-                fill={(entry) => (entry.isPeak ? "hsl(24, 94%, 53%)" : "hsl(222.2, 47.4%, 20%)")}
+                fill={(entry) => (entry.isPeak ? "hsl(0, 0%, 40%)" : "hsl(0, 0%, 0%)")}
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
@@ -270,11 +270,11 @@ export function ActivityChart() {
         </div>
         <div className="flex items-center justify-center space-x-8 mt-4">
           <div className="flex items-center">
-            <span className="w-3 h-3 bg-primary rounded-sm mr-2"></span>
+            <span className="w-3 h-3 bg-black rounded-sm mr-2"></span>
             <span className="text-sm text-neutral-600">AI Interactions</span>
           </div>
           <div className="flex items-center">
-            <span className="w-3 h-3 bg-secondary rounded-sm mr-2"></span>
+            <span className="w-3 h-3 bg-gray-500 rounded-sm mr-2"></span>
             <span className="text-sm text-neutral-600">Peak Activity</span>
           </div>
         </div>
