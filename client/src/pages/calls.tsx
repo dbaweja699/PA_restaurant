@@ -77,6 +77,7 @@ export default function Calls() {
   const [currentAudioUrl, setCurrentAudioUrl] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const queryClient = useQueryClient();
   const { data: calls = [] } = useQuery<CallData[]>({
     queryKey: ["/api/calls"],
     queryFn: async () => {
@@ -86,7 +87,17 @@ export default function Calls() {
       }
       return response.json();
     },
+    refetchInterval: 12000, // Refetch every 12 seconds
   });
+
+  // Set up periodic refetching
+  useEffect(() => {
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["/api/calls"] });
+    }, 12000);
+
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
   // Mutation to update call status
   const updateCallStatus = useMutation({
