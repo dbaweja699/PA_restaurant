@@ -53,19 +53,19 @@ function OrderDetailsRow({ order }: { order: Order }) {
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
+
   // Status update mutation
   const updateStatusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
       const response = await apiRequest("PATCH", `/api/orders/${order.id}`, { 
         status: newStatus 
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Failed to update order status");
       }
-      
+
       return await response.json();
     },
     onSuccess: () => {
@@ -87,10 +87,10 @@ function OrderDetailsRow({ order }: { order: Order }) {
 
   // Parse items based on format (could be array or object)
   const [items, setItems] = useState<OrderItem[]>([]);
-  
+
   useEffect(() => {
     let parsedItems: OrderItem[] = [];
-    
+
     if (order.items) {
       try {
         // Handle the new format where items can be a complex object with "original" and "formatted" properties
@@ -125,7 +125,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
             const entries = Object.entries(order.items).filter(
               ([key]) => !key.startsWith('_') && key !== 'original' && key !== 'formatted'
             );
-            
+
             if (entries.length > 0) {
               parsedItems = entries.map(([name, quantity]) => ({
                 name,
@@ -138,7 +138,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
         // Case 5: If it's a string representation of JSON
         else if (typeof order.items === 'string') {
           const itemsObj = JSON.parse(order.items);
-          
+
           if (Array.isArray(itemsObj)) {
             parsedItems = itemsObj.map(item => ({
               name: item.name || item.item || '',
@@ -158,7 +158,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
         parsedItems = [];
       }
     }
-    
+
     setItems(parsedItems);
   }, [order.items]);
 
@@ -262,7 +262,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                     {order.aiProcessed ? "Yes" : "No"}
                   </Badge>
                 </div>
-                
+
                 {order.callId && (
                   <div className="flex justify-between mt-2">
                     <span className="text-neutral-600">Phone Order</span>
@@ -288,7 +288,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                     setShowStatusDialog(true);
                   }}>Update Status</Button>
                 </div>
-                
+
                 {/* Status Update Dialog */}
                 <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
                   <DialogContent className="sm:max-w-[425px]">
@@ -298,7 +298,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                         Change the status of order #{order.id} for {order.customerName}
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="grid gap-4 py-4">
                       <div className="space-y-2">
                         <h4 className="text-sm font-medium">Select a new status</h4>
@@ -351,7 +351,7 @@ function OrderDetailsRow({ order }: { order: Order }) {
                         </div>
                       </div>
                     </div>
-                    
+
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
                         Cancel
@@ -371,8 +371,11 @@ function OrderDetailsRow({ order }: { order: Order }) {
 export default function Orders() {
   const { data: orders, isLoading } = useQuery<Order[]>({ 
     queryKey: ['/api/orders'],
+    refetchInterval: 10000, // Refetch data every 10 seconds
+    refetchIntervalInBackground: true, // Continue refetching even when tab is not focused
   });
 
+  // Initialize with undefined to show all bookings by default
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showOrderForm, setShowOrderForm] = useState(false);
 
@@ -418,7 +421,7 @@ export default function Orders() {
             Track and manage orders processed by the AI assistant
           </p>
         </div>
-        
+
         <div className="mt-4 md:mt-0 flex items-center space-x-2">
           <Button
             variant="default"
@@ -528,7 +531,7 @@ export default function Orders() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Add Order Form */}
       <OrderForm
         open={showOrderForm}
