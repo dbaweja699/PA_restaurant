@@ -104,7 +104,7 @@ export function AIChatbot() {
     {
       id: '1',
       role: 'assistant',
-      content: "Hello! I'm your Dblytics Restaurant AI Assistant. How can I help you today?",
+      content: "Hello! I'm your Prince Albert Hotel AI Assistant. How can I help you today?",
       timestamp: new Date()
     }
   ]);
@@ -254,7 +254,7 @@ export function AIChatbot() {
           </Avatar>
           <div>
             <h3 className="font-semibold text-sm">AI Assistant</h3>
-            <p className="text-xs opacity-90">Dblytics Restaurant Helper</p>
+            <p className="text-xs opacity-90">Prince Albert Hotel Helper</p>
           </div>
         </div>
         <div className="flex">
