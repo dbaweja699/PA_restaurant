@@ -31,8 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Proxy endpoint to N8N webhook
   app.post(`${apiPrefix}/proxy`, async (req, res) => {
-    const EC2_HTTP_URL =
-      process.env.N8N_WEBHOOK_URL! + "/67eff4f0-a0e3-4881-b179-249a9394a340";
+    const EC2_HTTP_URL = process.env.N8N_WEBHOOK_URL! + "/call_agent";
     try {
       const response = await axios.post(EC2_HTTP_URL, req.body);
       res.json(response.data);
@@ -1036,8 +1035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Proxy endpoint for AI voice agent functionality
   app.post(`${apiPrefix}/proxy/ai_voice`, async (req, res) => {
-    const ELEVENLABS_WEBHOOK_URL =
-      process.env.N8N_WEBHOOK_URL! + "/67eff4f0-a0e3-4881-b179-249a9394a340";
+    const ELEVENLABS_WEBHOOK_URL = process.env.N8N_WEBHOOK_URL! + "/call_agent";
 
     try {
       // Send the request as-is to the webhook URL

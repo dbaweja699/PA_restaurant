@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 // Agent ID from environment variables
-const AGENT_ID = "vHKi3EpUuOKptPE2bdSB";
+const AGENT_ID = "DEcQdAmwL4h59znAA3kT";
 
 export function VoiceAgent() {
   const [open, setOpen] = useState(false);
