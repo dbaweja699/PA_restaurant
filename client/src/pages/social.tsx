@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { type SocialMedia } from "@shared/schema";
 import { 
   Card, 
@@ -8,6 +8,12 @@ import {
   CardTitle,
   CardFooter
 } from "@/components/ui/card";
+import {
+  CameraIcon,
+  ImageIcon,
+  RefreshCw,
+  Send
+} from "lucide-react";
 import {
   Tabs,
   TabsContent,
@@ -1251,7 +1257,7 @@ function GalleryContent() {
     <>
       {photos.length === 0 ? (
         <div className="col-span-3 p-6 bg-gray-50 rounded-lg text-center">
-          <Camera className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <CameraIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
           <p className="text-gray-500">No photos in gallery yet</p>
         </div>
       ) : (
@@ -1267,7 +1273,7 @@ function GalleryContent() {
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <Image className="h-16 w-16 text-gray-400" />
+                    <ImageIcon className="h-16 w-16 text-gray-400" />
                   </div>
                 )}
                 {photo.status === 'posted' && (
