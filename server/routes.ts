@@ -960,7 +960,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Proxying request to social media webhook:", req.body);
 
       const response = await fetch(
-        process.env.N8N_WEBHOOK_URL! + "/restaurant_social_media",
+        process.env.N8N_WEBHOOK_URL! + "/PA_content_flow",
         {
           method: "POST",
           headers: {
