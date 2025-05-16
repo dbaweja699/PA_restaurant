@@ -106,6 +106,13 @@ export interface IStorage {
   
   // Process order and update inventory
   processOrderInventory(dishName: string, orderType: string): Promise<{ success: boolean, lowStockItems: Inventory[] }>;
+  
+  // Photo Gallery operations
+  getPhotoGallery(): Promise<PhotoGallary[]>;
+  getPhotoById(id: number): Promise<PhotoGallary | undefined>;
+  createPhoto(photo: InsertPhotoGallary): Promise<PhotoGallary>;
+  updatePhoto(id: number, photo: Partial<InsertPhotoGallary>): Promise<PhotoGallary | undefined>;
+  generateAICaption(id: number): Promise<string | undefined>;
 }
 
 export class MemStorage implements IStorage {

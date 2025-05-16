@@ -16,6 +16,7 @@ import {
 import { setupOpenAIRoutes } from "./openai";
 import { pool } from "./db";
 import { registerInventoryRoutes } from "./inventory-routes";
+import { registerPhotoGalleryRoutes } from "./photo-gallery-routes";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -26,6 +27,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register inventory routes
   registerInventoryRoutes(app);
+  
+  // Register photo gallery routes
+  registerPhotoGalleryRoutes(app);
 
   // Dashboard stats endpoint will be implemented below
 

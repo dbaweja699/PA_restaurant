@@ -413,3 +413,20 @@ export const recipeItemsRelations = relations(recipeItems, ({ one }) => ({
     references: [inventory.id],
   }),
 }));
+
+// Photo Gallery schema
+export const photoGallary = pgTable("photo_gallary", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  caption: text("caption"),
+  imageUrl: text("image_url"),
+  status: text("status"),
+});
+
+export const insertPhotoGallarySchema = createInsertSchema(photoGallary).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertPhotoGallary = z.infer<typeof insertPhotoGallarySchema>;
+export type PhotoGallary = typeof photoGallary.$inferSelect;
