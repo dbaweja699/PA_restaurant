@@ -1242,7 +1242,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
   // Mutation to generate AI caption
   const generateCaptionMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("POST", "/api/proxy/socialmedia", {
+      const response = await apiRequest("POST", "/api/proxy/pa_gallery", {
         id: id,
         status: "caption"
       });
@@ -1300,7 +1300,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
   // Mutation to post photo to social media
   const postPhotoMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest("POST", "/api/proxy/socialmedia", {
+      const response = await apiRequest("POST", "/api/proxy/pa_gallery", {
         id: id,
         status: "post"
       });
