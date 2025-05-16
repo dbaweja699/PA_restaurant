@@ -1212,12 +1212,6 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
       };
     }
   }, [fileInputRef]);
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
-  const [captionDialog, setCaptionDialog] = useState(false);
-  const [caption, setCaption] = useState("");
-  const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
   
   // Fetch gallery photos
   const { data: photos = [], isLoading, isError } = useQuery({
