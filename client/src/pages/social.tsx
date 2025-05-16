@@ -1081,6 +1081,19 @@ export default function Social() {
               Browse and manage photos from Prince Albert Hotel
             </p>
           </div>
+          <Button 
+            onClick={() => document.getElementById('gallery-upload').click()}
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            <Upload className="mr-2 h-4 w-4" /> Upload Image
+          </Button>
+          <input 
+            type="file" 
+            id="gallery-upload" 
+            className="hidden" 
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1091,6 +1104,67 @@ export default function Social() {
     </div>
   );
 }
+
+// Handle image upload for gallery
+const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { toast } = useToast();
+  if (!e.target.files || e.target.files.length === 0) {
+    return;
+  }
+
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  
+  reader.onloadend = async () => {
+    try {
+      const base64Image = reader.result?.toString().split(',')[1];
+      if (!base64Image) {
+        throw new Error('Failed to process image');
+      }
+
+      // Show loading toast
+      toast({
+        title: 'Uploading Image',
+        description: 'Please wait while your image is being processed...',
+      });
+
+      // Get the webhook URL from the environment
+      const response = await apiRequest('POST', '/api/proxy/pa_gallery', {
+        image: base64Image,
+        caption: 'New gallery image', // Default caption
+        timestamp: new Date().toISOString()
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      
+      // Success toast
+      toast({
+        title: 'Image Uploaded',
+        description: 'Your image has been successfully uploaded to the gallery.',
+      });
+
+      // Refresh gallery data
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'There was a problem uploading your image.',
+        variant: 'destructive',
+      });
+    }
+    
+    // Reset file input
+    e.target.value = '';
+  };
+
+  reader.readAsDataURL(file);
+};
 
 // Gallery component
 function GalleryContent() {

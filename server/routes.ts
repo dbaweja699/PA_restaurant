@@ -27,7 +27,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register inventory routes
   registerInventoryRoutes(app);
-  
+
   // Register photo gallery routes
   registerPhotoGalleryRoutes(app);
 
@@ -991,6 +991,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error proxying to webhook:", error);
       res.status(500).json({ error: "Failed to connect to webhook service" });
+    }
+  });
+
+  // Proxy a request to the n8n webhook for social media interactions
+  app.post('/api/proxy/socialmedia', async (req: Request, res: Response) => {
+    try {
+      // Get the webhook URL from environment variables
+      const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+
+      if (!n8nWebhookUrl) {
+        return res.status(500).json({ error: 'Webhook URL not configured' });
+      }
+
+      // Forward the request to n8n
+      const n8nResponse = await fetch(n8nWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body),
+      });
+
+      // Return the n8n response
+      const data = await n8nResponse.json();
+      res.status(n8nResponse.status).json(data);
+    } catch (error) {
+      console.error('Error proxying to n8n webhook:', error);
+      res.status(500).json({ error: 'Failed to process webhook request' });
+    }
+  });
+
+  // Proxy a request to the n8n webhook for gallery image uploads
+  app.post('/api/proxy/pa_gallery', async (req: Request, res: Response) => {
+    try {
+      // Get the webhook URL from environment variables
+      const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
+
+      if (!n8nWebhookUrl) {
+        return res.status(500).json({ error: 'Webhook URL not configured' });
+      }
+
+      // Build the full webhook URL with the /pa_gallery endpoint
+      const galleryWebhookUrl = `${n8nWebhookUrl}/pa_gallery`;
+
+      // Forward the request to n8n
+      const n8nResponse = await fetch(galleryWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(req.body),
+      });
+
+      // Return the n8n response
+      const data = await n8nResponse.json();
+      res.status(n8nResponse.status).json(data);
+    } catch (error) {
+      console.error('Error proxying to n8n gallery webhook:', error);
+      res.status(500).json({ error: 'Failed to process gallery upload request' });
     }
   });
 
