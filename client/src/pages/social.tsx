@@ -187,7 +187,7 @@ function SocialCard({ post }: { post: SocialMedia | any }) {
             )}
           </div>
         )}
-        
+
         {/* Image Modal for full-size view */}
         <Dialog open={imageModalOpen} onOpenChange={setImageModalOpen}>
           <DialogContent className="max-w-4xl w-full p-1 bg-transparent border-none">
@@ -788,7 +788,7 @@ export default function Social() {
             Monitor and respond to social media interactions with AI assistance
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -797,7 +797,7 @@ export default function Social() {
           >
             <i className="ri-image-line mr-2"></i> Photo Gallery
           </Button>
-          
+
           <Button 
             onClick={() => setIsGenerateOpen(true)}
             className="bg-black text-white hover:bg-gray-800"
@@ -888,6 +888,8 @@ export default function Social() {
             ) : !generatedContent ? (
               // Initial prompt input or loading state
               <>
+```text
+
                 {!isGenerating ? (
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
@@ -1140,7 +1142,8 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
   const [captionDialog, setCaptionDialog] = useState(false);
   const [caption, setCaption] = useState("");
   const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
-  
+  const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
+
   // Handle image upload for gallery
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) {
@@ -1148,7 +1151,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
     }
 
     const file = e.target.files[0];
-    
+
     // Check file size before processing
     if (file.size > 15000000) { // 15MB limit
       toast({
@@ -1158,9 +1161,9 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
       });
       return;
     }
-    
+
     const reader = new FileReader();
-    
+
     reader.onloadend = async () => {
       try {
         const base64Image = reader.result?.toString().split(',')[1];
@@ -1186,7 +1189,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
         }
 
         const data = await response.json();
-        
+
         // Success toast
         toast({
           title: 'Image Uploaded',
@@ -1195,7 +1198,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
 
         // Refresh gallery data
         queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
-        
+
       } catch (error) {
         console.error('Error uploading image:', error);
         toast({
@@ -1204,7 +1207,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
           variant: 'destructive',
         });
       }
-      
+
       // Reset file input
       e.target.value = '';
     };
@@ -1217,13 +1220,13 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
     if (fileInputRef.current) {
       const fileInput = fileInputRef.current;
       fileInput.addEventListener('change', handleImageUpload as any);
-      
+
       return () => {
         fileInput.removeEventListener('change', handleImageUpload as any);
       };
     }
   }, [fileInputRef]);
-  
+
   // Fetch gallery photos
   const { data: photos = [], isLoading, isError } = useQuery({
     queryKey: ['/api/gallery'],
@@ -1239,22 +1242,51 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
   // Mutation to generate AI caption
   const generateCaptionMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/gallery/${id}/generate-caption`, {
-        method: 'POST',
+      const response = await apiRequest("POST", "/api/proxy/socialmedia", {
+        id: id,
+        status: "caption"
       });
       if (!response.ok) {
         throw new Error('Failed to generate caption');
       }
+      
+      // Pooling to check the changes in caption
+      const maxAttempts = 10;
+      let attempts = 0
+
+      const checkForCaption = async () => {
+        attempts++;
+        console.log(`Checking for caption attempt ${attempts}/${maxAttempts}`);
+
+        const updatedPhoto = await fetch(`/api/gallery/${id}`).then(res => res.json());
+
+        if(updatedPhoto && updatedPhoto.caption) {
+          setCaption(updatedPhoto.caption);
+          setIsGeneratingCaption(false);
+          toast({
+            title: "Caption Generated",
+            description: "AI has successfully generated a caption for your image",
+          });
+          return;
+        }
+
+        if(attempts >= maxAttempts) {
+          setIsGeneratingCaption(false);
+          toast({
+            title: "Failed to Generate Caption",
+            description: "Caption generation taking longer than expected",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        setTimeout(checkForCaption, 3000);
+      }
+      setTimeout(checkForCaption, 3000);
+
       return response.json();
     },
-    onSuccess: (data) => {
-      setCaption(data.caption);
-      setIsGeneratingCaption(false);
-      toast({
-        title: "Caption Generated",
-        description: "AI has successfully generated a caption for your image",
-      });
-    },
+   
     onError: (error: any) => {
       setIsGeneratingCaption(false);
       toast({
@@ -1268,26 +1300,51 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
   // Mutation to post photo to social media
   const postPhotoMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/gallery/${id}/post`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id }),
+      const response = await apiRequest("POST", "/api/proxy/socialmedia", {
+        id: id,
+        status: "post"
       });
+
       if (!response.ok) {
         throw new Error('Failed to post photo');
       }
+
+       // Pooling to check the changes in status
+       const maxAttempts = 10;
+       let attempts = 0;
+ 
+       const checkForStatus = async () => {
+         attempts++;
+         console.log(`Checking for post status attempt ${attempts}/${maxAttempts}`);
+ 
+         const updatedPhoto = await fetch(`/api/gallery/${id}`).then(res => res.json());
+ 
+         if(updatedPhoto && updatedPhoto.status === 'posted') {
+          queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+          toast({
+            title: "Photo Posted",
+            description: "Your photo has been successfully posted",
+          });
+          setCaptionDialog(false);
+           return;
+         }
+ 
+         if(attempts >= maxAttempts) {
+          toast({
+            title: "Failed to Post Photo",
+            description: "Posting taking longer than expected",
+            variant: "destructive",
+          });
+           return;
+         }
+ 
+         setTimeout(checkForStatus, 3000);
+       }
+       setTimeout(checkForStatus, 3000);
+
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
-      toast({
-        title: "Photo Posted",
-        description: "Your photo has been successfully posted",
-      });
-      setCaptionDialog(false);
-    },
+    
     onError: (error: any) => {
       toast({
         title: "Failed to Post Photo",
@@ -1338,7 +1395,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
 
   const handleSaveCaption = () => {
     if (!selectedPhoto) return;
-    
+
     updateCaptionMutation.mutate({
       id: selectedPhoto.id,
       caption: caption,
@@ -1387,7 +1444,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
         <>
           {photos.map((photo: any) => (
             <Card key={photo.id} className="overflow-hidden">
-              <div className="relative h-64 bg-gray-100">
+              <div className="relative h-64 bg-gray-100 cursor-pointer" onClick={() => setFullScreenImage(photo.imageUrl)}>
                 {photo.imageUrl ? (
                   <img
                     src={photo.imageUrl}
@@ -1443,13 +1500,29 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
         </>
       )}
 
+       {/* Full Screen Image Modal */}
+       <Dialog open={!!fullScreenImage} onOpenChange={() => setFullScreenImage(null)}>
+        <DialogContent className="sm:max-w-[90%] max-w-[100%]">
+          <DialogHeader>
+            <DialogTitle>Full Screen Image</DialogTitle>
+          </DialogHeader>
+          {fullScreenImage && (
+            <img
+              src={fullScreenImage}
+              alt="Full Screen"
+              className="w-full object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Caption Dialog */}
       <Dialog open={captionDialog} onOpenChange={setCaptionDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Caption & Post</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-2">
             {selectedPhoto?.imageUrl && (
               <div className="w-full h-48 rounded-md overflow-hidden">
@@ -1460,7 +1533,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
                 />
               </div>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="caption">Caption</Label>
               <div className="relative">
@@ -1482,7 +1555,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
               </p>
             </div>
           </div>
-          
+
           <div className="flex justify-between mt-4">
             <Button 
               variant="outline" 
