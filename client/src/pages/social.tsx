@@ -1075,100 +1075,143 @@ export default function Social() {
 
       {/* Photo Gallery Section */}
       <div id="gallery" className="mt-12 pt-6 border-t border-gray-200">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold text-neutral-900">Prince Albert Hotel Gallery</h2>
-            <p className="mt-1 text-sm text-neutral-600">
-              Browse and manage photos from Prince Albert Hotel
-            </p>
-          </div>
-          <Button 
-            onClick={() => document.getElementById('gallery-upload').click()}
-            className="bg-black text-white hover:bg-gray-800"
-          >
-            <Upload className="mr-2 h-4 w-4" /> Upload Image
-          </Button>
-          <input 
-            type="file" 
-            id="gallery-upload" 
-            className="hidden" 
-            accept="image/*"
-            onChange={handleImageUpload}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Gallery content will be loaded here */}
-          <GalleryContent />
-        </div>
+        <GallerySection />
       </div>
     </div>
   );
 }
 
-// Handle image upload for gallery
-const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { toast } = useToast();
-  if (!e.target.files || e.target.files.length === 0) {
-    return;
-  }
+// Gallery Section Component
+function GallerySection() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const file = e.target.files[0];
-  const reader = new FileReader();
-  
-  reader.onloadend = async () => {
-    try {
-      const base64Image = reader.result?.toString().split(',')[1];
-      if (!base64Image) {
-        throw new Error('Failed to process image');
-      }
-
-      // Show loading toast
-      toast({
-        title: 'Uploading Image',
-        description: 'Please wait while your image is being processed...',
-      });
-
-      // Get the webhook URL from the environment
-      const response = await apiRequest('POST', '/api/proxy/pa_gallery', {
-        image: base64Image,
-        caption: 'New gallery image', // Default caption
-        timestamp: new Date().toISOString()
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const data = await response.json();
-      
-      // Success toast
-      toast({
-        title: 'Image Uploaded',
-        description: 'Your image has been successfully uploaded to the gallery.',
-      });
-
-      // Refresh gallery data
-      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
-      
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({
-        title: 'Upload Failed',
-        description: 'There was a problem uploading your image.',
-        variant: 'destructive',
-      });
+  const handleButtonClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
-    
-    // Reset file input
-    e.target.value = '';
   };
 
-  reader.readAsDataURL(file);
-};
+  return (
+    <>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-bold text-neutral-900">Prince Albert Hotel Gallery</h2>
+          <p className="mt-1 text-sm text-neutral-600">
+            Browse and manage photos from Prince Albert Hotel
+          </p>
+        </div>
+        <Button 
+          onClick={handleButtonClick}
+          className="bg-black text-white hover:bg-gray-800"
+        >
+          <Upload className="mr-2 h-4 w-4" /> Upload Image
+        </Button>
+        <input 
+          ref={fileInputRef}
+          type="file" 
+          className="hidden" 
+          accept="image/*"
+          onChange={(e) => {
+            // Process the image upload in the GalleryContent component
+            if (e.target.files && e.target.files.length > 0) {
+              // Trigger the handleImageUpload function in GalleryContent
+              // We'll store the file in a state here to pass it to the component
+              // Or we can just hide implementation details in this component
+              if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+              }
+            }
+          }}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <GalleryContent fileInputRef={fileInputRef} />
+      </div>
+    </>
+  );
+}
 
 // Gallery component
-function GalleryContent() {
+function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLInputElement> }) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
+  const [captionDialog, setCaptionDialog] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
+  
+  // Handle image upload for gallery
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return;
+    }
+
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    
+    reader.onloadend = async () => {
+      try {
+        const base64Image = reader.result?.toString().split(',')[1];
+        if (!base64Image) {
+          throw new Error('Failed to process image');
+        }
+
+        // Show loading toast
+        toast({
+          title: 'Uploading Image',
+          description: 'Please wait while your image is being processed...',
+        });
+
+        // Get the webhook URL from the environment
+        const response = await apiRequest('POST', '/api/proxy/pa_gallery', {
+          image: base64Image,
+          caption: 'New gallery image', // Default caption
+          timestamp: new Date().toISOString()
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload image');
+        }
+
+        const data = await response.json();
+        
+        // Success toast
+        toast({
+          title: 'Image Uploaded',
+          description: 'Your image has been successfully uploaded to the gallery.',
+        });
+
+        // Refresh gallery data
+        queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+        
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast({
+          title: 'Upload Failed',
+          description: 'There was a problem uploading your image.',
+          variant: 'destructive',
+        });
+      }
+      
+      // Reset file input
+      e.target.value = '';
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  // Set up effect to handle file uploads when fileInputRef changes
+  useEffect(() => {
+    if (fileInputRef.current) {
+      const fileInput = fileInputRef.current;
+      fileInput.addEventListener('change', handleImageUpload as any);
+      
+      return () => {
+        fileInput.removeEventListener('change', handleImageUpload as any);
+      };
+    }
+  }, [fileInputRef]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
