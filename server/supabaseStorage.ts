@@ -15,7 +15,8 @@ import {
   Notification, InsertNotification,
   Inventory, InsertInventory,
   Recipe, InsertRecipe,
-  RecipeItem, InsertRecipeItem
+  RecipeItem, InsertRecipeItem,
+  PhotoGallary, InsertPhotoGallary
 } from "../shared/schema";
 
 export class SupabaseStorage implements IStorage {

@@ -108,10 +108,10 @@ export interface IStorage {
   processOrderInventory(dishName: string, orderType: string): Promise<{ success: boolean, lowStockItems: Inventory[] }>;
   
   // Photo Gallery operations
-  getPhotoGallery(): Promise<PhotoGallary[]>;
-  getPhotoById(id: number): Promise<PhotoGallary | undefined>;
-  createPhoto(photo: InsertPhotoGallary): Promise<PhotoGallary>;
-  updatePhoto(id: number, photo: Partial<InsertPhotoGallary>): Promise<PhotoGallary | undefined>;
+  getPhotoGallery(): Promise<PhotoGallery[]>;
+  getPhotoById(id: number): Promise<PhotoGallery | undefined>;
+  createPhoto(photo: InsertPhotoGallery): Promise<PhotoGallery>;
+  updatePhoto(id: number, photo: Partial<InsertPhotoGallery>): Promise<PhotoGallery | undefined>;
   generateAICaption(id: number): Promise<string | undefined>;
 }
 

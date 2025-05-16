@@ -15,6 +15,7 @@ import Reviews from "@/pages/reviews";
 import Orders from "@/pages/orders";
 import Bookings from "@/pages/bookings";
 import Social from "@/pages/social";
+import Gallery from "@/pages/gallery";
 import Inventory from "@/pages/inventory";
 import Recipes from "@/pages/recipes";
 import Settings from "@/pages/settings";
@@ -37,6 +38,7 @@ function AppRouter() {
       <Route path="/orders" component={Orders} />
       <Route path="/bookings" component={Bookings} />
       <Route path="/social" component={Social} />
+      <Route path="/gallery" component={Gallery} />
       <Route path="/inventory" component={Inventory} />
       <Route path="/recipes" component={Recipes} />
       <Route path="/settings" component={Settings} />
