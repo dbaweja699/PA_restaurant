@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { storage } from './storage';
-import { insertPhotoGallarySchema } from '../shared/schema';
+import { insertPhotoGallerySchema } from '../shared/schema';
 import { z } from 'zod';
 
 export function registerPhotoGalleryRoutes(app: any) {
@@ -38,7 +38,7 @@ export function registerPhotoGalleryRoutes(app: any) {
   // Create a new photo entry
   app.post('/api/gallery', async (req: Request, res: Response) => {
     try {
-      const validation = insertPhotoGallarySchema.safeParse(req.body);
+      const validation = insertPhotoGallerySchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ 
           error: 'Invalid photo data', 
@@ -63,7 +63,7 @@ export function registerPhotoGalleryRoutes(app: any) {
       }
 
       // Validate the update data
-      const updateSchema = insertPhotoGallarySchema.partial();
+      const updateSchema = insertPhotoGallerySchema.partial();
       const validation = updateSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ 

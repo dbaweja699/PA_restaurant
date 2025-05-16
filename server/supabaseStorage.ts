@@ -16,10 +16,160 @@ import {
   Inventory, InsertInventory,
   Recipe, InsertRecipe,
   RecipeItem, InsertRecipeItem,
-  PhotoGallary, InsertPhotoGallary
+  PhotoGallery, InsertPhotoGallery
 } from "../shared/schema";
 
 export class SupabaseStorage implements IStorage {
+  // Photo Gallery operations
+  async getPhotoGallery(): Promise<PhotoGallery[]> {
+    try {
+      const { data, error } = await supabase
+        .from('photo_gallery')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching photo gallery:', error);
+        return [];
+      }
+      
+      // Map the database results to the PhotoGallery type
+      return data.map(photo => ({
+        id: photo.id,
+        createdAt: new Date(photo.created_at),
+        caption: photo.caption,
+        imageUrl: photo.image_url,
+        status: photo.status
+      }));
+    } catch (error) {
+      console.error('Failed to fetch photo gallery:', error);
+      return [];
+    }
+  }
+
+  async getPhotoById(id: number): Promise<PhotoGallery | undefined> {
+    try {
+      const { data, error } = await supabase
+        .from('photo_gallery')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        console.error(`Error fetching photo with id ${id}:`, error);
+        return undefined;
+      }
+      
+      if (!data) {
+        return undefined;
+      }
+      
+      // Map the database result to the PhotoGallery type
+      return {
+        id: data.id,
+        createdAt: new Date(data.created_at),
+        caption: data.caption,
+        imageUrl: data.image_url,
+        status: data.status
+      };
+    } catch (error) {
+      console.error(`Failed to fetch photo with id ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async createPhoto(photo: InsertPhotoGallery): Promise<PhotoGallery> {
+    try {
+      const { data, error } = await supabase
+        .from('photo_gallery')
+        .insert([{
+          caption: photo.caption,
+          image_url: photo.imageUrl,
+          status: photo.status || 'active'
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating photo:', error);
+        throw new Error('Failed to create photo in database');
+      }
+      
+      return {
+        id: data.id,
+        createdAt: new Date(data.created_at),
+        caption: data.caption,
+        imageUrl: data.image_url,
+        status: data.status
+      };
+    } catch (error) {
+      console.error('Failed to create photo:', error);
+      throw new Error('Failed to create photo in database');
+    }
+  }
+
+  async updatePhoto(id: number, photo: Partial<InsertPhotoGallery>): Promise<PhotoGallery | undefined> {
+    try {
+      // Build update object with only the fields that are provided
+      const updateData: any = {};
+      if (photo.caption !== undefined) updateData.caption = photo.caption;
+      if (photo.imageUrl !== undefined) updateData.image_url = photo.imageUrl;
+      if (photo.status !== undefined) updateData.status = photo.status;
+      
+      const { data, error } = await supabase
+        .from('photo_gallery')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error(`Error updating photo with id ${id}:`, error);
+        return undefined;
+      }
+      
+      return {
+        id: data.id,
+        createdAt: new Date(data.created_at),
+        caption: data.caption,
+        imageUrl: data.image_url,
+        status: data.status
+      };
+    } catch (error) {
+      console.error(`Failed to update photo with id ${id}:`, error);
+      return undefined;
+    }
+  }
+
+  async generateAICaption(id: number): Promise<string | undefined> {
+    try {
+      // Get the photo to generate a caption for
+      const photo = await this.getPhotoById(id);
+      if (!photo) {
+        return undefined;
+      }
+      
+      // Simulate AI caption generation
+      const captions = [
+        "A delicious plate of food at Prince Albert Hotel",
+        "Guests enjoying their time at the restaurant",
+        "The beautiful interior of Prince Albert Hotel",
+        "Special event at Prince Albert Hotel Gawler",
+        "Signature dish prepared by our chef"
+      ];
+      
+      // Generate a random caption for now
+      const randomCaption = captions[Math.floor(Math.random() * captions.length)];
+      
+      // Update the photo with the new caption
+      await this.updatePhoto(id, { caption: randomCaption });
+      
+      return randomCaption;
+    } catch (error) {
+      console.error(`Failed to generate AI caption for photo with id ${id}:`, error);
+      return undefined;
+    }
+  }
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     try {

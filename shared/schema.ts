@@ -415,7 +415,7 @@ export const recipeItemsRelations = relations(recipeItems, ({ one }) => ({
 }));
 
 // Photo Gallery schema
-export const photoGallary = pgTable("photo_gallary", {
+export const photoGallery = pgTable("photo_gallery", {
   id: serial("id").primaryKey(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   caption: text("caption"),
@@ -423,10 +423,10 @@ export const photoGallary = pgTable("photo_gallary", {
   status: text("status"),
 });
 
-export const insertPhotoGallarySchema = createInsertSchema(photoGallary).omit({
+export const insertPhotoGallerySchema = createInsertSchema(photoGallery).omit({
   id: true,
   createdAt: true,
 });
 
-export type InsertPhotoGallary = z.infer<typeof insertPhotoGallarySchema>;
-export type PhotoGallary = typeof photoGallary.$inferSelect;
+export type InsertPhotoGallery = z.infer<typeof insertPhotoGallerySchema>;
+export type PhotoGallery = typeof photoGallery.$inferSelect;
