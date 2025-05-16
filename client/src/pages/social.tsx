@@ -781,13 +781,23 @@ export default function Social() {
             Monitor and respond to social media interactions with AI assistance
           </p>
         </div>
-
-        <Button 
-          onClick={() => setIsGenerateOpen(true)}
-          className="bg-gradient-to-r from-[#2A4833] to-[#1e6434] hover:from-[#234029] hover:to-[#19542c]"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Generate Post
-        </Button>
+        
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = "#gallery"}
+            className="border-black text-black hover:bg-gray-100"
+          >
+            <i className="ri-image-line mr-2"></i> Photo Gallery
+          </Button>
+          
+          <Button 
+            onClick={() => setIsGenerateOpen(true)}
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Generate Post
+          </Button>
+        </div>
 
         {/* Generate Post Dialog */}
         <Dialog 
@@ -1055,6 +1065,315 @@ export default function Social() {
           filteredPosts.map(post => <SocialCard key={post.id} post={post} />)
         )}
       </div>
+
+      {/* Photo Gallery Section */}
+      <div id="gallery" className="mt-12 pt-6 border-t border-gray-200">
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-bold text-neutral-900">Prince Albert Hotel Gallery</h2>
+            <p className="mt-1 text-sm text-neutral-600">
+              Browse and manage photos from Prince Albert Hotel
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Gallery content will be loaded here */}
+          <GalleryContent />
+        </div>
+      </div>
     </div>
+  );
+}
+
+// Gallery component
+function GalleryContent() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedPhoto, setSelectedPhoto] = useState<any | null>(null);
+  const [captionDialog, setCaptionDialog] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [isGeneratingCaption, setIsGeneratingCaption] = useState(false);
+  
+  // Fetch gallery photos
+  const { data: photos = [], isLoading, isError } = useQuery({
+    queryKey: ['/api/gallery'],
+    queryFn: async () => {
+      const response = await fetch('/api/gallery');
+      if (!response.ok) {
+        throw new Error('Failed to fetch gallery');
+      }
+      return response.json();
+    },
+  });
+
+  // Mutation to generate AI caption
+  const generateCaptionMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/gallery/${id}/generate-caption`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to generate caption');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setCaption(data.caption);
+      setIsGeneratingCaption(false);
+      toast({
+        title: "Caption Generated",
+        description: "AI has successfully generated a caption for your image",
+      });
+    },
+    onError: (error: any) => {
+      setIsGeneratingCaption(false);
+      toast({
+        title: "Failed to Generate Caption",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation to post photo to social media
+  const postPhotoMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/gallery/${id}/post`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to post photo');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      toast({
+        title: "Photo Posted",
+        description: "Your photo has been successfully posted",
+      });
+      setCaptionDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Post Photo",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation to update photo caption
+  const updateCaptionMutation = useMutation({
+    mutationFn: async ({ id, caption }: { id: number, caption: string }) => {
+      const response = await fetch(`/api/gallery/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ caption }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update caption');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      toast({
+        title: "Caption Updated",
+        description: "Photo caption has been updated successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to Update Caption",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
+  const handleGenerateCaption = (photo: any) => {
+    setSelectedPhoto(photo);
+    setCaption(photo.caption || "");
+    setCaptionDialog(true);
+    setIsGeneratingCaption(true);
+    generateCaptionMutation.mutate(photo.id);
+  };
+
+  const handleSaveCaption = () => {
+    if (!selectedPhoto) return;
+    
+    updateCaptionMutation.mutate({
+      id: selectedPhoto.id,
+      caption: caption,
+    });
+  };
+
+  const handlePostPhoto = () => {
+    if (!selectedPhoto) return;
+    postPhotoMutation.mutate(selectedPhoto.id);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="overflow-hidden">
+            <Skeleton className="h-64 w-full" />
+            <CardContent className="p-4">
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6 bg-red-50 rounded-lg">
+        <p className="text-red-500">
+          Error loading gallery. Please try again later.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {photos.length === 0 ? (
+        <div className="col-span-3 p-6 bg-gray-50 rounded-lg text-center">
+          <Camera className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-500">No photos in gallery yet</p>
+        </div>
+      ) : (
+        <>
+          {photos.map((photo: any) => (
+            <Card key={photo.id} className="overflow-hidden">
+              <div className="relative h-64 bg-gray-100">
+                {photo.imageUrl ? (
+                  <img
+                    src={photo.imageUrl}
+                    alt={photo.caption || "Gallery image"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <Image className="h-16 w-16 text-gray-400" />
+                  </div>
+                )}
+                {photo.status === 'posted' && (
+                  <div className="absolute top-2 right-2 bg-black text-white text-xs px-2 py-1 rounded-full">
+                    Posted
+                  </div>
+                )}
+              </div>
+              <CardContent className="p-4">
+                <p className="text-sm line-clamp-2">
+                  {photo.caption || "No caption provided"}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  {new Date(photo.createdAt).toLocaleDateString()}
+                </p>
+              </CardContent>
+              <CardFooter className="p-4 pt-0 flex justify-between">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleGenerateCaption(photo)}
+                  className="border-black text-black hover:bg-gray-100"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Generate Caption
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedPhoto(photo);
+                    setCaption(photo.caption || "");
+                    setCaptionDialog(true);
+                  }}
+                  className="bg-black text-white hover:bg-gray-800"
+                  disabled={photo.status === 'posted'}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {photo.status === 'posted' ? 'Posted' : 'Post'}
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </>
+      )}
+
+      {/* Caption Dialog */}
+      <Dialog open={captionDialog} onOpenChange={setCaptionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Caption & Post</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            {selectedPhoto?.imageUrl && (
+              <div className="w-full h-48 rounded-md overflow-hidden">
+                <img 
+                  src={selectedPhoto.imageUrl} 
+                  alt="Selected" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="caption">Caption</Label>
+              <div className="relative">
+                <Input
+                  id="caption"
+                  value={caption}
+                  onChange={(e) => setCaption(e.target.value)}
+                  className="pr-20"
+                  disabled={isGeneratingCaption}
+                />
+                {isGeneratingCaption && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">
+                This caption will be used when posting to social media
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-between mt-4">
+            <Button 
+              variant="outline" 
+              onClick={handleSaveCaption}
+              disabled={isGeneratingCaption}
+              className="border-black text-black hover:bg-gray-100"
+            >
+              Save Caption
+            </Button>
+            <Button 
+              variant="default" 
+              onClick={handlePostPhoto}
+              disabled={isGeneratingCaption || !caption.trim()}
+              className="bg-black text-white hover:bg-gray-800"
+            >
+              Post to Social Media
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

@@ -36,7 +36,6 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { icon: "ri-shopping-cart-2-line", label: "Orders", path: "/orders" },
     { icon: "ri-calendar-line", label: "Bookings", path: "/bookings" },
     { icon: "ri-global-line", label: "Social Media", path: "/social" },
-    { icon: "ri-image-line", label: "Photo Gallery", path: "/gallery" },
     { 
       icon: "ri-store-3-line", 
       label: "Inventory", 
