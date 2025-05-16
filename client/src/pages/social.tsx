@@ -12,7 +12,8 @@ import {
   CameraIcon,
   ImageIcon,
   RefreshCw,
-  Send
+  Send,
+  Upload
 } from "lucide-react";
 import {
   Tabs,
