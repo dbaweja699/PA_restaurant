@@ -1148,6 +1148,17 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
     }
 
     const file = e.target.files[0];
+    
+    // Check file size before processing
+    if (file.size > 15000000) { // 15MB limit
+      toast({
+        title: 'File Too Large',
+        description: 'Please select an image smaller than 15MB.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     const reader = new FileReader();
     
     reader.onloadend = async () => {
