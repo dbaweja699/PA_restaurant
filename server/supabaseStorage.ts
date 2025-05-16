@@ -24,7 +24,7 @@ export class SupabaseStorage implements IStorage {
   async getPhotoGallery(): Promise<PhotoGallery[]> {
     try {
       const { data, error } = await supabase
-        .from('photo_gallery')
+        .from('photo_gallary')
         .select('*')
         .order('created_at', { ascending: false });
       
@@ -50,7 +50,7 @@ export class SupabaseStorage implements IStorage {
   async getPhotoById(id: number): Promise<PhotoGallery | undefined> {
     try {
       const { data, error } = await supabase
-        .from('photo_gallery')
+        .from('photo_gallary')
         .select('*')
         .eq('id', id)
         .single();
@@ -81,7 +81,7 @@ export class SupabaseStorage implements IStorage {
   async createPhoto(photo: InsertPhotoGallery): Promise<PhotoGallery> {
     try {
       const { data, error } = await supabase
-        .from('photo_gallery')
+        .from('photo_gallary')
         .insert([{
           caption: photo.caption,
           image_url: photo.imageUrl,

@@ -415,7 +415,7 @@ export const recipeItemsRelations = relations(recipeItems, ({ one }) => ({
 }));
 
 // Photo Gallery schema
-export const photoGallery = pgTable("photo_gallery", {
+export const photoGallery = pgTable("photo_gallary", {
   id: serial("id").primaryKey(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   caption: text("caption"),
