@@ -966,7 +966,7 @@ export default function Social() {
                 </DialogFooter>
               </div>
             ) : isGenerating ? (
-              // Loading state (for both initial generation and retries)
+              //              // Loading state (for both initial generation and retries)
               <div className="py-8 flex flex-col items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
                 <p className="text-center text-sm text-neutral-600">
@@ -1618,7 +1618,7 @@ function GalleryContent({
 
   const handlePostPhoto = () => {
     if (!selectedPhoto) return;
-    
+
     // First make the webhook request to trigger the posting workflow
     apiRequest("POST", "/api/proxy/pa_gallery", {
       id: selectedPhoto.id,
@@ -1627,7 +1627,7 @@ function GalleryContent({
     .then(() => {
       // After successful webhook call, update the UI using the mutation
       postPhotoMutation.mutate(selectedPhoto.id);
-      
+
       toast({
         title: "Post request sent",
         description: "Your photo is being processed for social media posting",
@@ -1709,43 +1709,58 @@ function GalleryContent({
                   {new Date(photo.createdAt).toLocaleDateString()}
                 </p>
               </CardContent>
-              <CardFooter className="p-4 pt-0 flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedPhoto(photo);
-                    setCaption(photo.caption || "");
-                    setCaptionDialog(true);
-                  }}
-                  className="border-black text-black hover:bg-gray-100"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleGenerateCaption(photo)}
-                  className="border-black text-black hover:bg-gray-100"
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Generate Caption
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedPhoto(photo);
-                    setCaption(photo.caption || "");
-                    setCaptionDialog(true);
-                  }}
-                  className="bg-black text-white hover:bg-gray-800"
-                  disabled={photo.status === "posted"}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {photo.status === "posted" ? "Posted" : "Post"}
-                </Button>
+              <CardFooter className="p-4 pt-0 flex-col">
+                <div className="flex justify-between items-center w-full mb-2">
+                  <Badge 
+                    className={
+                      photo.status === "posted" 
+                        ? "bg-[#e6f0e9] text-[#2A4833]" 
+                        : photo.status === "pending" 
+                          ? "bg-gray-200 text-gray-800"
+                          : "bg-gray-500 text-white"
+                    }
+                  >
+                    Status: {photo.status ? photo.status.charAt(0).toUpperCase() + photo.status.slice(1) : 'Pending'}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedPhoto(photo);
+                      setCaption(photo.caption || "");
+                      setCaptionDialog(true);
+                    }}
+                    className="border-black text-black hover:bg-gray-100"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleGenerateCaption(photo)}
+                    className="border-black text-black hover:bg-gray-100"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Generate
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedPhoto(photo);
+                      setCaption(photo.caption || "");
+                      setCaptionDialog(true);
+                    }}
+                    className="bg-black text-white hover:bg-gray-800"
+                    disabled={photo.status === "posted"}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {photo.status === "posted" ? "Posted" : "Post"}
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           ))}
