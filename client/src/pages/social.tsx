@@ -1357,29 +1357,31 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
   // Mutation to update photo caption
   const updateCaptionMutation = useMutation({
     mutationFn: async ({ id, caption }: { id: number, caption: string }) => {
-      const response = await fetch(`/api/gallery/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ caption }),
+      // Use apiRequest instead of direct fetch for consistency
+      const response = await apiRequest('PATCH', `/api/gallery/${id}`, {
+        caption: caption
       });
+      
       if (!response.ok) {
-        throw new Error('Failed to update caption');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to update caption');
       }
+      
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+      setCaptionDialog(false); // Close dialog on success
       toast({
         title: "Caption Updated",
         description: "Photo caption has been updated successfully",
       });
     },
     onError: (error: any) => {
+      console.error('Error updating caption:', error);
       toast({
         title: "Failed to Update Caption",
-        description: error.message,
+        description: error.message || 'There was a problem updating the caption',
         variant: "destructive",
       });
     }
@@ -1520,7 +1522,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
 
       {/* Caption Dialog */}
       <Dialog open={captionDialog} onOpenChange={setCaptionDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Edit Caption & Post</DialogTitle>
           </DialogHeader>
@@ -1539,15 +1541,16 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
             <div className="space-y-2">
               <Label htmlFor="caption">Caption</Label>
               <div className="relative">
-                <Input
+                <Textarea
                   id="caption"
                   value={caption}
                   onChange={(e) => setCaption(e.target.value)}
-                  className="pr-20"
+                  className="min-h-[120px] resize-vertical"
                   disabled={isGeneratingCaption}
+                  placeholder="Enter caption for your image"
                 />
                 {isGeneratingCaption && (
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  <div className="absolute top-3 right-3">
                     <RefreshCw className="h-4 w-4 animate-spin" />
                   </div>
                 )}
