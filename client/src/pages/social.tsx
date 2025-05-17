@@ -1502,17 +1502,19 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
 
        {/* Full Screen Image Modal */}
        <Dialog open={!!fullScreenImage} onOpenChange={() => setFullScreenImage(null)}>
-        <DialogContent className="sm:max-w-[90%] max-w-[100%]">
-          <DialogHeader>
-            <DialogTitle>Full Screen Image</DialogTitle>
+        <DialogContent className="sm:max-w-[85%] max-w-[95%] h-auto max-h-[90vh] p-3 overflow-hidden">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-base">Full Screen Image</DialogTitle>
           </DialogHeader>
-          {fullScreenImage && (
-            <img
-              src={fullScreenImage}
-              alt="Full Screen"
-              className="w-full object-contain"
-            />
-          )}
+          <div className="relative w-full flex items-center justify-center overflow-hidden">
+            {fullScreenImage && (
+              <img
+                src={fullScreenImage}
+                alt="Full Screen"
+                className="max-w-full max-h-[calc(80vh-3rem)] object-contain rounded-md"
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
