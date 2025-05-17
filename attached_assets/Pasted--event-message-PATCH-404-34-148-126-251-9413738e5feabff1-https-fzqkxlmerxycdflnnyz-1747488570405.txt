@@ -1,0 +1,181 @@
+{
+  "event_message": "PATCH | 404 | 34.148.126.251 | 9413738e5feabff1 | https://fzqkxlmerxycdflnnyzl.supabase.co/rest/v1/photo_gallery?id=eq.3&select=* | node",
+  "id": "21fd21fa-8ced-433e-b7c8-ad7215ffa295",
+  "metadata": [
+    {
+      "load_balancer_experimental_routing": null,
+      "load_balancer_geo_aware_info": [],
+      "load_balancer_redirect_identifier": null,
+      "logflare_worker": [
+        {
+          "worker_id": "PBRG3T"
+        }
+      ],
+      "request": [
+        {
+          "cf": [
+            {
+              "asOrganization": "Google Cloud",
+              "asn": 396982,
+              "botManagement": [
+                {
+                  "corporateProxy": false,
+                  "detectionIds": [],
+                  "ja3Hash": null,
+                  "jsDetection": [
+                    {
+                      "passed": false
+                    }
+                  ],
+                  "score": 99,
+                  "staticResource": false,
+                  "verifiedBot": false
+                }
+              ],
+              "city": "North Charleston",
+              "clientAcceptEncoding": "br, gzip, deflate",
+              "clientTcpRtt": 10,
+              "clientTrustScore": null,
+              "colo": "ATL",
+              "continent": "NA",
+              "country": "US",
+              "edgeRequestKeepAliveStatus": 1,
+              "httpProtocol": "HTTP/1.1",
+              "isEUCountry": null,
+              "latitude": "32.86080",
+              "longitude": "-79.97460",
+              "metroCode": "519",
+              "postalCode": "29415",
+              "region": "South Carolina",
+              "regionCode": "SC",
+              "requestPriority": null,
+              "timezone": "America/New_York",
+              "tlsCipher": "AEAD-AES256-GCM-SHA384",
+              "tlsClientAuth": [
+                {
+                  "certPresented": "0",
+                  "certRevoked": "0",
+                  "certVerified": "NONE"
+                }
+              ],
+              "tlsClientExtensionsSha1": "Y7DIC8A6G0/aXviZ8ie/xDbJb7g=",
+              "tlsClientHelloLength": "390",
+              "tlsClientRandom": "PeHTGAum9dyo5tIs8fsp/7/VIAb+tUq20AMuKwjITYM=",
+              "tlsExportedAuthenticator": [
+                {
+                  "clientFinished": "2941a58a66f1580b7a990be5145466ef992bf607b4ab986de92142216be047dda6e252276213d92b65c0258ecdaf8d1f",
+                  "clientHandshake": "cdc7fd2cd962d933d3b2d41c54519dd7635f9f035db176ee6f7ea4e1503ee3c5f4cfbb83f2b2c0be67d91507a0511e73",
+                  "serverFinished": "4c2b4620a230777508754b8edcc5cd8c74934caa453b615c0a23526ff3a6f547bb7b9087ac71ce6ca86606ad12d60292",
+                  "serverHandshake": "2e6ae8e5f6ce253bdf1ffaf7d1e7a117d893da54e751f8eb3b5780d20c0605055b42368de746d16618fde5a0d461da00"
+                }
+              ],
+              "tlsVersion": "TLSv1.3",
+              "verifiedBotCategory": null
+            }
+          ],
+          "headers": [
+            {
+              "accept": "application/vnd.pgrst.object+json",
+              "cf_cache_status": null,
+              "cf_connecting_ip": "34.148.126.251",
+              "cf_ipcountry": "US",
+              "cf_ray": "9413738e5feabff1",
+              "content_length": "127",
+              "content_location": null,
+              "content_range": null,
+              "content_type": "application/json",
+              "date": null,
+              "host": "fzqkxlmerxycdflnnyzl.supabase.co",
+              "prefer": "return=representation",
+              "range": null,
+              "referer": null,
+              "sb_gateway_mode": null,
+              "sb_gateway_version": null,
+              "user_agent": "node",
+              "x_client_info": "postgrest-js/0.0.0-automated",
+              "x_forwarded_host": null,
+              "x_forwarded_proto": "https",
+              "x_forwarded_user_agent": null,
+              "x_kong_proxy_latency": null,
+              "x_kong_upstream_latency": null,
+              "x_real_ip": "34.148.126.251"
+            }
+          ],
+          "host": "fzqkxlmerxycdflnnyzl.supabase.co",
+          "method": "PATCH",
+          "path": "/rest/v1/photo_gallery",
+          "port": null,
+          "protocol": "https:",
+          "sb": [
+            {
+              "apikey": [],
+              "auth_user": null,
+              "jwt": [
+                {
+                  "apikey": [
+                    {
+                      "invalid": null,
+                      "payload": [
+                        {
+                          "algorithm": "HS256",
+                          "expires_at": 2062784956,
+                          "issuer": "supabase",
+                          "role": "service_role",
+                          "signature_prefix": "Raw8aY",
+                          "subject": null
+                        }
+                      ]
+                    }
+                  ],
+                  "authorization": [
+                    {
+                      "invalid": null,
+                      "payload": [
+                        {
+                          "algorithm": "HS256",
+                          "expires_at": 2062784956,
+                          "issuer": "supabase",
+                          "key_id": null,
+                          "role": "service_role",
+                          "session_id": null,
+                          "signature_prefix": "Raw8aY",
+                          "subject": null
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "search": "?id=eq.3&select=*",
+          "url": "https://fzqkxlmerxycdflnnyzl.supabase.co/rest/v1/photo_gallery?id=eq.3&select=*"
+        }
+      ],
+      "response": [
+        {
+          "headers": [
+            {
+              "cf_cache_status": "DYNAMIC",
+              "cf_ray": "9413738e7732bff1-ATL",
+              "content_length": null,
+              "content_location": null,
+              "content_range": null,
+              "content_type": "application/json; charset=utf-8",
+              "date": "Sat, 17 May 2025 13:27:17 GMT",
+              "sb_gateway_mode": null,
+              "sb_gateway_version": "1",
+              "transfer_encoding": "chunked",
+              "x_kong_proxy_latency": null,
+              "x_kong_upstream_latency": null,
+              "x_sb_error_code": null
+            }
+          ],
+          "origin_time": 216,
+          "status_code": 404
+        }
+      ]
+    }
+  ],
+  "timestamp": 1747488437720000
+}
