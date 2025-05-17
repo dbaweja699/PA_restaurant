@@ -75,11 +75,22 @@ export function registerPhotoGalleryRoutes(app: any) {
         });
       }
 
+      // First check if the photo exists before attempting to update
+      const existingPhoto = await storage.getPhotoById(id);
+      if (!existingPhoto) {
+        console.error(`Photo with ID ${id} not found for update`);
+        return res.status(404).json({ error: 'Photo not found' });
+      }
+      
+      console.log(`Found photo for update:`, existingPhoto);
+      
+      // Now proceed with the update
       const updatedPhoto = await storage.updatePhoto(id, validation.data);
       console.log(`Update result for photo ${id}:`, updatedPhoto);
       
       if (!updatedPhoto) {
-        return res.status(404).json({ error: 'Photo not found' });
+        console.error(`Update failed for photo ${id} even though it exists`);
+        return res.status(500).json({ error: 'Failed to update photo' });
       }
       
       res.json(updatedPhoto);

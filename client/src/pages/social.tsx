@@ -1413,6 +1413,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
     console.log("Saving caption for photo:", selectedPhoto);
     
     // Make sure we're using the correct ID field from the photo object
+    // The API expects the database ID, not any other property
     const photoId = selectedPhoto.id;
     
     if (!photoId || isNaN(Number(photoId))) {
@@ -1424,10 +1425,54 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
       return;
     }
     
-    updateCaptionMutation.mutate({
-      id: Number(photoId),
-      caption: caption,
-    });
+    // Let's add a success handler directly in the function
+    try {
+      // Direct fetch instead of using the mutation to prevent double-parsing issues
+      fetch(`/api/gallery/${photoId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ caption: caption }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}: Failed to update caption`);
+        }
+        return response.text(); // Use text() instead of json() to prevent double parsing
+      })
+      .then(() => {
+        // Manually update the UI
+        setSelectedPhoto(prev => prev ? {...prev, caption: caption} : null);
+        
+        // Show success toast
+        toast({
+          title: "Caption Updated",
+          description: "Photo caption has been updated successfully",
+        });
+        
+        // Refresh gallery data
+        queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
+        
+        // Close dialog
+        setCaptionDialog(false);
+      })
+      .catch(error => {
+        console.error("Error updating caption:", error);
+        toast({
+          title: "Failed to Update Caption",
+          description: error.message || "An error occurred while updating the caption",
+          variant: "destructive",
+        });
+      });
+    } catch (err) {
+      console.error("Error in caption update:", err);
+      toast({
+        title: "Failed to Update Caption",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePostPhoto = () => {
