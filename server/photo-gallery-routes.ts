@@ -58,6 +58,8 @@ export function registerPhotoGalleryRoutes(app: any) {
   app.patch('/api/gallery/:id', async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Received PATCH request for photo ID: ${id}`, req.body);
+      
       if (isNaN(id)) {
         return res.status(400).json({ error: 'Invalid ID format' });
       }
@@ -66,6 +68,7 @@ export function registerPhotoGalleryRoutes(app: any) {
       const updateSchema = insertPhotoGallerySchema.partial();
       const validation = updateSchema.safeParse(req.body);
       if (!validation.success) {
+        console.error('Validation error:', validation.error.format());
         return res.status(400).json({ 
           error: 'Invalid update data', 
           details: validation.error.format() 
@@ -73,6 +76,8 @@ export function registerPhotoGalleryRoutes(app: any) {
       }
 
       const updatedPhoto = await storage.updatePhoto(id, validation.data);
+      console.log(`Update result for photo ${id}:`, updatedPhoto);
+      
       if (!updatedPhoto) {
         return res.status(404).json({ error: 'Photo not found' });
       }
@@ -80,7 +85,7 @@ export function registerPhotoGalleryRoutes(app: any) {
       res.json(updatedPhoto);
     } catch (error: any) {
       console.error(`Error updating photo ${req.params.id}:`, error);
-      res.status(500).json({ error: 'Failed to update photo' });
+      res.status(500).json({ error: 'Failed to update photo', message: error.message });
     }
   });
 

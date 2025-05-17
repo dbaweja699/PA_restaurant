@@ -1357,17 +1357,28 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
   // Mutation to update photo caption
   const updateCaptionMutation = useMutation({
     mutationFn: async ({ id, caption }: { id: number, caption: string }) => {
-      // Use apiRequest instead of direct fetch for consistency
-      const response = await apiRequest('PATCH', `/api/gallery/${id}`, {
-        caption: caption
-      });
+      // Log the request for debugging
+      console.log(`Updating caption for photo ${id} with: ${caption}`);
       
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to update caption');
+      try {
+        // Use apiRequest instead of direct fetch for consistency
+        const response = await apiRequest('PATCH', `/api/gallery/${id}`, {
+          caption: caption
+        });
+        
+        // Instead of trying to read the body twice, handle the response differently
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+          throw new Error(errorData.error || `Server returned ${response.status}: Failed to update caption`);
+        }
+        
+        // For successful responses, parse once
+        const data = await response.json().catch(() => ({ success: true }));
+        return data;
+      } catch (err) {
+        console.error(`Error updating photo with id ${id}:`, err);
+        throw err;
       }
-      
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/gallery'] });
@@ -1397,9 +1408,24 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
 
   const handleSaveCaption = () => {
     if (!selectedPhoto) return;
-
+    
+    // Log the selected photo for debugging
+    console.log("Saving caption for photo:", selectedPhoto);
+    
+    // Make sure we're using the correct ID field from the photo object
+    const photoId = selectedPhoto.id;
+    
+    if (!photoId || isNaN(Number(photoId))) {
+      toast({
+        title: "Invalid Photo ID",
+        description: "Could not identify the photo. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     updateCaptionMutation.mutate({
-      id: selectedPhoto.id,
+      id: Number(photoId),
       caption: caption,
     });
   };
