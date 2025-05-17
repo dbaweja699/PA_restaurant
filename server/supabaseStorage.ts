@@ -117,7 +117,7 @@ export class SupabaseStorage implements IStorage {
       if (photo.status !== undefined) updateData.status = photo.status;
       
       const { data, error } = await supabase
-        .from('photo_gallery')
+        .from('photo_gallary')
         .update(updateData)
         .eq('id', id)
         .select()
