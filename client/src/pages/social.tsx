@@ -1618,7 +1618,29 @@ function GalleryContent({
 
   const handlePostPhoto = () => {
     if (!selectedPhoto) return;
-    postPhotoMutation.mutate(selectedPhoto.id);
+    
+    // First make the webhook request to trigger the posting workflow
+    apiRequest("POST", "/api/proxy/pa_gallery", {
+      id: selectedPhoto.id,
+      status: "post"
+    })
+    .then(() => {
+      // After successful webhook call, update the UI using the mutation
+      postPhotoMutation.mutate(selectedPhoto.id);
+      
+      toast({
+        title: "Post request sent",
+        description: "Your photo is being processed for social media posting",
+      });
+    })
+    .catch(error => {
+      console.error("Error posting to social media:", error);
+      toast({
+        title: "Error posting to social media",
+        description: "There was a problem sending your post request",
+        variant: "destructive",
+      });
+    });
   };
 
   if (isLoading) {
