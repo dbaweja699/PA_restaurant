@@ -1543,7 +1543,20 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
                   {new Date(photo.createdAt).toLocaleDateString()}
                 </p>
               </CardContent>
-              <CardFooter className="p-4 pt-0 flex justify-between">
+              <CardFooter className="p-4 pt-0 flex flex-wrap gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedPhoto(photo);
+                    setCaption(photo.caption || "");
+                    setCaptionDialog(true);
+                  }}
+                  className="border-black text-black hover:bg-gray-100"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -1551,7 +1564,7 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
                   className="border-black text-black hover:bg-gray-100"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Generate Caption
+                  Generate
                 </Button>
                 <Button 
                   variant="default" 
@@ -1600,17 +1613,29 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
 
           <div className="space-y-4 py-2">
             {selectedPhoto?.imageUrl && (
-              <div className="w-full h-48 rounded-md overflow-hidden">
+              <div className="w-full h-64 rounded-md overflow-hidden bg-gray-100">
                 <img 
                   src={selectedPhoto.imageUrl} 
                   alt="Selected" 
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="caption">Caption</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="caption">Caption</Label>
+                {!isGeneratingCaption && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleGenerateCaption(selectedPhoto)}
+                    className="h-8 text-xs"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" /> Generate
+                  </Button>
+                )}
+              </div>
               <div className="relative">
                 <Textarea
                   id="caption"
@@ -1633,14 +1658,23 @@ function GalleryContent({ fileInputRef }: { fileInputRef: React.RefObject<HTMLIn
           </div>
 
           <div className="flex justify-between mt-4">
-            <Button 
-              variant="outline" 
-              onClick={handleSaveCaption}
-              disabled={isGeneratingCaption}
-              className="border-black text-black hover:bg-gray-100"
-            >
-              Save Caption
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setCaptionDialog(false)}
+                disabled={isGeneratingCaption}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={handleSaveCaption}
+                disabled={isGeneratingCaption}
+                className="border-black text-black hover:bg-gray-100"
+              >
+                Save Caption
+              </Button>
+            </div>
             <Button 
               variant="default" 
               onClick={handlePostPhoto}
