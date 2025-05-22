@@ -68,7 +68,8 @@ export default function FunctionBookings() {
   // Filter bookings by selected date
   const filteredBookings = selectedDate
     ? bookings.filter((booking) => {
-        const bookingDate = parseISO(booking.event_date);
+        if (!booking.event_date) return false;
+        const bookingDate = new Date(booking.event_date);
         return isSameDay(bookingDate, selectedDate);
       })
     : bookings;
@@ -220,37 +221,39 @@ export default function FunctionBookings() {
                       {filteredBookings.map((booking) => (
                         <TableRow key={booking.id}>
                           <TableCell>
-                            {booking.event_date ? format(parseISO(booking.event_date), "MMM d, yyyy") : "No date"}
+                            {booking.event_date 
+                              ? format(new Date(booking.event_date), "MMM d, yyyy") 
+                              : "No date"}
                           </TableCell>
                           <TableCell>
-                            <div>{booking.name}</div>
-                            <div className="text-xs text-neutral-500">{booking.phone}</div>
+                            <div>{booking.name || "No name"}</div>
+                            <div className="text-xs text-neutral-500">{booking.phone || "No phone"}</div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="capitalize">
-                              {booking.event_type}
+                              {booking.event_type || "Unspecified"}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center">
                               <Users className="h-3 w-3 mr-1" />
-                              {booking.people}
+                              {booking.people || "N/A"}
                             </div>
                           </TableCell>
-                          <TableCell>{booking.rooms_hired}</TableCell>
+                          <TableCell>{booking.rooms_hired || "Not specified"}</TableCell>
                           <TableCell>
                             <div className="text-xs space-y-1">
                               <div className="flex items-center">
                                 <span className="font-medium mr-2">Setup:</span>
-                                {booking.setup_time}
+                                {booking.setup_time || "N/A"}
                               </div>
                               <div className="flex items-center">
                                 <span className="font-medium mr-2">Start:</span>
-                                {booking.start_time}
+                                {booking.start_time || "N/A"}
                               </div>
                               <div className="flex items-center">
                                 <span className="font-medium mr-2">End:</span>
-                                {booking.finish_time}
+                                {booking.finish_time || "N/A"}
                               </div>
                             </div>
                           </TableCell>
@@ -297,7 +300,11 @@ export default function FunctionBookings() {
                       <CalendarIcon className="h-4 w-4 mr-2 mt-0.5 text-neutral-500" />
                       <div>
                         <div className="font-medium">Date</div>
-                        <div>{selectedBooking.event_date ? format(parseISO(selectedBooking.event_date), "EEEE, MMMM d, yyyy") : "No date specified"}</div>
+                        <div>
+                          {selectedBooking.event_date 
+                            ? format(new Date(selectedBooking.event_date), "EEEE, MMMM d, yyyy") 
+                            : "No date specified"}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-start">
@@ -314,7 +321,11 @@ export default function FunctionBookings() {
                       <Users className="h-4 w-4 mr-2 mt-0.5 text-neutral-500" />
                       <div>
                         <div className="font-medium">Party Size</div>
-                        <div>{selectedBooking.people} people</div>
+                        <div>
+                          {selectedBooking.people 
+                            ? `${selectedBooking.people} ${selectedBooking.people > 1 ? 'people' : 'person'}`
+                            : "Not specified"}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -372,6 +383,23 @@ export default function FunctionBookings() {
                       
                       <div className="font-medium">Account Number:</div>
                       <div>{selectedBooking.account_number || "Not provided"}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border rounded-md p-3">
+                  <h3 className="text-sm font-semibold mb-2">Booking Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="font-medium">Created At:</div>
+                      <div>
+                        {selectedBooking.created_at 
+                          ? format(new Date(selectedBooking.created_at), "MMM d, yyyy h:mm a") 
+                          : "Not available"}
+                      </div>
+                      
+                      <div className="font-medium">Booking ID:</div>
+                      <div>{selectedBooking.id || "Not available"}</div>
                     </div>
                   </div>
                 </div>
