@@ -249,19 +249,7 @@ export default function FunctionBookings() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => {
-                                alert(
-                                  `Additional Details for ${booking.name}:\n` +
-                                  `Email: ${booking.email}\n` +
-                                  `Food Serving Time: ${booking.food_serving_time}\n` +
-                                  `Subsidised Drinks: ${booking.subsidised_drinks}\n` +
-                                  `Cake on Table: ${booking.cake_on_table}\n` +
-                                  `Present on Table: ${booking.present_on_table}\n` +
-                                  `Account Name: ${booking.account_name}\n` +
-                                  `BSB: ${booking.bsb}\n` +
-                                  `Account Number: ${booking.account_number}`
-                                );
-                              }}
+                              onClick={() => setSelectedBooking(booking)}
                             >
                               <Info className="h-4 w-4" />
                             </Button>
@@ -276,6 +264,117 @@ export default function FunctionBookings() {
           </Card>
         </div>
       </div>
+
+      {/* Booking Details Dialog */}
+      {selectedBooking && (
+        <Dialog
+          open={!!selectedBooking}
+          onOpenChange={(open) => !open && setSelectedBooking(null)}
+        >
+          <DialogContent className="sm:max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Function Booking Details</DialogTitle>
+              <DialogDescription>
+                Event information for {selectedBooking.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="border rounded-md p-3">
+                  <h3 className="text-sm font-semibold mb-2">Event Details</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-start">
+                      <CalendarIcon className="h-4 w-4 mr-2 mt-0.5 text-neutral-500" />
+                      <div>
+                        <div className="font-medium">Date</div>
+                        <div>{selectedBooking.event_date ? format(parseISO(selectedBooking.event_date), "EEEE, MMMM d, yyyy") : "No date specified"}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <Clock className="h-4 w-4 mr-2 mt-0.5 text-neutral-500" />
+                      <div>
+                        <div className="font-medium">Times</div>
+                        <div>Setup: {selectedBooking.setup_time || "Not specified"}</div>
+                        <div>Start: {selectedBooking.start_time || "Not specified"}</div>
+                        <div>Finish: {selectedBooking.finish_time || "Not specified"}</div>
+                        <div>Food Serving: {selectedBooking.food_serving_time || "Not specified"}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start">
+                      <Users className="h-4 w-4 mr-2 mt-0.5 text-neutral-500" />
+                      <div>
+                        <div className="font-medium">Party Size</div>
+                        <div>{selectedBooking.people} people</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-md p-3">
+                  <h3 className="text-sm font-semibold mb-2">Event Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="font-medium">Event Type:</div>
+                      <div className="capitalize">{selectedBooking.event_type || "Not specified"}</div>
+                      
+                      <div className="font-medium">Room Hired:</div>
+                      <div>{selectedBooking.rooms_hired || "Not specified"}</div>
+                      
+                      <div className="font-medium">Subsidised Drinks:</div>
+                      <div>{selectedBooking.subsidised_drinks || "Not specified"}</div>
+                      
+                      <div className="font-medium">Cake on Table:</div>
+                      <div>{selectedBooking.cake_on_table || "Not specified"}</div>
+                      
+                      <div className="font-medium">Present on Table:</div>
+                      <div>{selectedBooking.present_on_table || "Not specified"}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="border rounded-md p-3">
+                  <h3 className="text-sm font-semibold mb-2">Contact Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="font-medium">Name:</div>
+                      <div>{selectedBooking.name || "Not provided"}</div>
+                      
+                      <div className="font-medium">Phone:</div>
+                      <div>{selectedBooking.phone || "Not provided"}</div>
+                      
+                      <div className="font-medium">Email:</div>
+                      <div>{selectedBooking.email || "Not provided"}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border rounded-md p-3">
+                  <h3 className="text-sm font-semibold mb-2">Payment Details</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-1">
+                      <div className="font-medium">Account Name:</div>
+                      <div>{selectedBooking.account_name || "Not provided"}</div>
+                      
+                      <div className="font-medium">BSB:</div>
+                      <div>{selectedBooking.bsb || "Not provided"}</div>
+                      
+                      <div className="font-medium">Account Number:</div>
+                      <div>{selectedBooking.account_number || "Not provided"}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button onClick={() => setSelectedBooking(null)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
