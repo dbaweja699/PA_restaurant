@@ -15,6 +15,7 @@ import Reviews from "@/pages/reviews";
 import Orders from "@/pages/orders";
 import Bookings from "@/pages/bookings";
 import Social from "./pages/social";
+import ServiceRequest from "@/pages/service-request";
 import Gallery from "./pages/gallery";
 import Settings from "./pages/settings";
 import FunctionBookings from "./pages/function-bookings";
