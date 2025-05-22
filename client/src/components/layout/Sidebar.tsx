@@ -37,6 +37,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
     { icon: "ri-calendar-line", label: "Bookings", path: "/bookings" },
     { icon: "ri-calendar-event-line", label: "Function Bookings", path: "/function-bookings" },
     { icon: "ri-global-line", label: "Social Media", path: "/social" },
+    { icon: "ri-tools-line", label: "Service Request", path: "/service-request" },
     {
       icon: "ri-store-3-line",
       label: "Inventory",

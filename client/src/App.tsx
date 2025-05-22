@@ -41,6 +41,7 @@ function AppRouter() {
       <Route path="/gallery" component={Gallery} />
       {/* <Route path="/recipes" component={Recipes} /> */}
       <Route path="/function-bookings" component={FunctionBookings} />
+      <Route path="/service-request" component={ServiceRequest} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
