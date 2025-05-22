@@ -14,12 +14,11 @@ import Chats from "@/pages/chats";
 import Reviews from "@/pages/reviews";
 import Orders from "@/pages/orders";
 import Bookings from "@/pages/bookings";
-import Social from "@/pages/social";
-import Gallery from "@/pages/gallery";
-import Inventory from "@/pages/inventory";
-import Recipes from "@/pages/recipes";
-import Settings from "@/pages/settings";
-import NotFound from "@/pages/not-found";
+import Social from "./pages/social";
+import Gallery from "./pages/gallery";
+import Settings from "./pages/settings";
+import FunctionBookings from "./pages/function-bookings";
+import NotFound from "./pages/not-found";
 
 // Auth pages
 import SignIn from "@/pages/auth/SignIn";
@@ -39,8 +38,8 @@ function AppRouter() {
       <Route path="/bookings" component={Bookings} />
       <Route path="/social" component={Social} />
       <Route path="/gallery" component={Gallery} />
-      <Route path="/inventory" component={Inventory} />
       <Route path="/recipes" component={Recipes} />
+      <Route path="/function-bookings" component={FunctionBookings} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
     </Switch>
