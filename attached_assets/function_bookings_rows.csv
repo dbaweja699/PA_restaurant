@@ -1,0 +1,2 @@
+id,name,phone,email,event_date,setup_time,start_time,finish_time,event_type,people,rooms_hired,food_serving_time,subsidised_drinks,cake_on_table,present_on_table,account_name,bsb,account_number,created_at
+1,Kshitij Kumrawat,8602622549,test@gmail.com,2025-05-29 18:30:00+00,01:45,02:15,03:45,birthday,10,Dining Area,02:30,No,Yes,Yes,test,sdhajhdjkahd,38472987428974,2025-05-22 18:06:13.975651+00
