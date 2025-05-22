@@ -38,7 +38,7 @@ function AppRouter() {
       <Route path="/bookings" component={Bookings} />
       <Route path="/social" component={Social} />
       <Route path="/gallery" component={Gallery} />
-      <Route path="/recipes" component={Recipes} />
+      {/* <Route path="/recipes" component={Recipes} /> */}
       <Route path="/function-bookings" component={FunctionBookings} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />
