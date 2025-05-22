@@ -1,214 +1,152 @@
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Phone,
-  MessageSquare,
-  CalendarDays,
-  ClipboardList,
-  Star,
-  CircleUserRound,
-  UsersRound,
-  Settings,
-  ChevronDown,
-  ChevronUp,
-  PackageOpen,
-  UtensilsCrossed,
-  GlassWater,
-} from "lucide-react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import logoImg from "@/assets/prince-albert-logo.png";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 
-export function Sidebar() {
+// Define the user interface to match the actual API response
+interface UserResponse {
+  id: number;
+  username: string;
+  password: string;
+  full_name: string;
+  role: string;
+  avatar_url: string;
+}
+
+type SidebarProps = {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+};
+
+export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [location, setLocation] = useLocation();
-  const [additionalOpen, setAdditionalOpen] = useState(false);
+  const { data: user } = useQuery<UserResponse>({ 
+    queryKey: ['/api/user'],
+  });
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const navigate = (path: string) => {
-    setLocation(path);
+  const navigationItems = [
+    { icon: "ri-dashboard-line", label: "Dashboard", path: "/" },
+    { icon: "ri-phone-line", label: "Call Management", path: "/calls" },
+    { icon: "ri-message-3-line", label: "Chat Interactions", path: "/chats" },
+    { icon: "ri-star-line", label: "Reviews", path: "/reviews" },
+    { icon: "ri-shopping-cart-2-line", label: "Orders", path: "/orders" },
+    { icon: "ri-calendar-line", label: "Bookings", path: "/bookings" },
+    { icon: "ri-global-line", label: "Social Media", path: "/social" },
+    { 
+      icon: "ri-store-3-line", 
+      label: "Inventory", 
+      path: "/inventory" 
+    },
+    { 
+      icon: "ri-file-list-3-line", 
+      label: "Recipes", 
+      path: "/recipes" 
+    },
+    { icon: "ri-settings-line", label: "Settings", path: "/settings" },
+  ];
+
+  const handleCloseSidebar = () => {
+    setIsOpen(false);
   };
 
-  const isActive = (path: string) => {
-    // Special case for root path
-    if (path === "/dashboard" && location === "/") {
-      return true;
-    }
-    return location === path;
-  };
+  // Base classes for the sidebar - matching the Prince Albert Hotel Gawler colors
+  const sidebarClasses = cn(
+    "bg-gradient-to-r from-black to-[#1a1a1a] text-white w-72 flex flex-col",
+    isOpen ? "fixed inset-y-0 left-0 z-50" : "hidden md:flex md:flex-shrink-0"
+  );
 
   return (
-    <div className="h-full py-8 flex flex-col overflow-hidden min-w-[250px]">
-      <div className="px-6 mb-8">
-        <h2 className="text-lg font-medium text-white tracking-wide md:text-2xl">
-          Restaurant<span className="font-bold ml-1">AI</span>
-        </h2>
-        <p className="text-gray-500 text-[13px] -mt-1">AI-powered assistant</p>
-      </div>
-
-      <div className="flex flex-col space-y-1 px-2 flex-1 overflow-auto">
-        <Button
-          onClick={() => navigate("/dashboard")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/dashboard") || isActive("/")
-              ? "bg-accent/60 text-white"
-              : ""
-          )}
-        >
-          <LayoutDashboard className="h-5 w-5 mr-3" />
-          Dashboard
-        </Button>
-
-        <Button
-          onClick={() => navigate("/calls")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/calls") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <Phone className="h-5 w-5 mr-3" />
-          Calls
-        </Button>
-
-        <Button
-          onClick={() => navigate("/chats")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/chats") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <MessageSquare className="h-5 w-5 mr-3" />
-          Chats
-        </Button>
-
-        <Button
-          onClick={() => navigate("/bookings")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/bookings") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <CalendarDays className="h-5 w-5 mr-3" />
-          Bookings
-        </Button>
-
-        <Button
-          onClick={() => navigate("/function-bookings")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/function-bookings") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <GlassWater className="h-5 w-5 mr-3" />
-          Functions
-        </Button>
-
-        <Button
-          onClick={() => navigate("/orders")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/orders") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <ClipboardList className="h-5 w-5 mr-3" />
-          Orders
-        </Button>
-
-        <Button
-          onClick={() => navigate("/reviews")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/reviews") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <Star className="h-5 w-5 mr-3" />
-          Reviews
-        </Button>
-
-        <Button
-          onClick={() => navigate("/inventory")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/inventory") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <PackageOpen className="h-5 w-5 mr-3" />
-          Inventory
-        </Button>
-
-        <Button
-          onClick={() => navigate("/recipes")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/recipes") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <UtensilsCrossed className="h-5 w-5 mr-3" />
-          Recipes
-        </Button>
-
-        <Button
-          onClick={() => navigate("/social")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/social") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <UsersRound className="h-5 w-5 mr-3" />
-          Social
-        </Button>
-
-        <Button
-          onClick={() => navigate("/gallery")}
-          variant="ghost"
-          className={cn(
-            "justify-start p-2 h-10 text-muted-foreground hover:text-white rounded-md hover:bg-accent transition-all",
-            isActive("/gallery") ? "bg-accent/60 text-white" : ""
-          )}
-        >
-          <CircleUserRound className="h-5 w-5 mr-3" />
-          Gallery
-        </Button>
-
-        <div className="pt-4">
-          <Button
-            variant="ghost"
-            className="justify-start w-full p-2 h-9 text-sm text-muted-foreground hover:text-white rounded-md hover:bg-accent/50 transition-all"
-            onClick={() => setAdditionalOpen(!additionalOpen)}
-          >
-            {additionalOpen ? (
-              <ChevronUp className="h-4 w-4 mr-2" />
-            ) : (
-              <ChevronDown className="h-4 w-4 mr-2" />
-            )}
-            Additional
-          </Button>
-          {additionalOpen && (
-            <div className="ml-4 mt-1 flex flex-col space-y-1">
-              <Button
-                onClick={() => navigate("/settings")}
-                variant="ghost"
-                className={cn(
-                  "justify-start p-2 h-9 text-sm text-muted-foreground hover:text-white rounded-md hover:bg-accent/50 transition-all",
-                  isActive("/settings") ? "bg-accent/40 text-white" : ""
-                )}
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-            </div>
-          )}
+    <div className={sidebarClasses}>
+      <div className="flex items-center justify-center h-auto py-6 px-0">
+        <div className="flex flex-col items-center w-full">
+          <div className="bg-black rounded-lg p-4 mb-3 w-[90%]">
+            <img src={logoImg} alt="Prince Albert Hotel Gawler Logo" className="w-full max-w-full h-auto" />
+          </div>
+          <h1 className="text-lg font-bold mt-1 text-center px-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent tracking-tight">
+            Prince Albert Hotel AI
+          </h1>
         </div>
       </div>
+
+      <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto">
+        <nav className="flex-1 px-2 space-y-1">
+          {navigationItems.map((item) => {
+            const isActive = location === item.path;
+            const isDisabled = item.label === "Inventory" || item.label === "Recipes";
+            
+            const itemClasses = cn(
+              "flex items-center px-2 py-3 text-sm font-medium rounded-md transition-colors",
+              isDisabled && "opacity-50 cursor-not-allowed pointer-events-none",
+              isActive 
+                ? "bg-white/20"
+                : "hover:bg-white/10"
+            );
+
+            return (
+              <Link 
+                key={item.path} 
+                href={item.path} 
+                className={itemClasses}
+                onClick={handleCloseSidebar}
+                title={isDisabled ? "Coming soon" : ""}
+              >
+                <i className={`${item.icon} text-lg mr-3`}></i>
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+
+      {user && (
+        <div className="border-t border-white/20">
+          <div className="flex items-center p-4">
+            <div className="flex-shrink-0">
+              <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                {user.avatar_url && !user.avatar_url.includes("images.app.goo.gl") ? (
+                  <img 
+                    className="h-10 w-10 rounded-full" 
+                    src={user.avatar_url} 
+                    alt={user.full_name || "User"}
+                  />
+                ) : (
+                  <span className="text-xl">{user.full_name && user.full_name.charAt(0) || "U"}</span>
+                )}
+              </div>
+            </div>
+            <div className="ml-3 flex-grow">
+              <p className="text-sm font-medium">{user.full_name || "User"}</p>
+              <p className="text-xs text-gray-300">{user.username}</p>
+            </div>
+            <button 
+              onClick={() => {
+                // Clear token
+                localStorage.removeItem('auth_token');
+
+                // Use queryClient to clear all cached data
+                queryClient.clear();
+
+                // Notify user
+                toast({
+                  title: "Logged out successfully",
+                  description: "You have been logged out of your account",
+                });
+
+                // Use setLocation instead of window.location for smoother transition
+                setLocation('/auth');
+              }}
+              className="text-sm text-gray-300 hover:text-white p-1 rounded-full"
+              title="Logout"
+            >
+              <i className="ri-logout-box-line text-lg"></i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
