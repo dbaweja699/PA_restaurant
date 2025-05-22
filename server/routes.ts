@@ -935,8 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(`${apiPrefix}/social`, async (req, res) => {
     try {
       const validatedData = insertSocialMediaSchema.parse(req.body);
-      const social =```python
-await storage.createSocialMedia(validatedData);
+      const social = await storage.createSocialMedia(validatedData);
       res.status(201).json(social);
     } catch (error) {
       res.status(400).json({ error: "Invalid social media data" });
@@ -1053,20 +1052,19 @@ await storage.createSocialMedia(validatedData);
       res.status(500).json({ error: 'Failed to process gallery upload request' });
     }
   });
-
+  
   // Service Request Proxy Endpoint
   app.post(`${apiPrefix}/proxy/service-request`, async (req, res) => {
     try {
       console.log("Proxying service request to n8n webhook:", req.body);
-
+      
       if (!process.env.N8N_WEBHOOK_URL) {
         console.error("N8N_WEBHOOK_URL environment variable is not defined");
         return res.status(500).json({ error: "Webhook URL is not configured" });
       }
-
-      // Use an existing endpoint that's known to work (adjust based on what's available in your n8n instance)
-      const n8nWebhookUrl = `${process.env.N8N_WEBHOOK_URL}/PA_content_flow`;
-
+      
+      const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL + "request_service";
+      
       const response = await fetch(n8nWebhookUrl, {
         method: "POST",
         headers: {
@@ -1074,7 +1072,7 @@ await storage.createSocialMedia(validatedData);
         },
         body: JSON.stringify(req.body),
       });
-
+      
       if (!response.ok) {
         console.error(
           "Error from service request webhook:",
@@ -1085,7 +1083,7 @@ await storage.createSocialMedia(validatedData);
           error: `Webhook responded with status ${response.status}`,
         });
       }
-
+      
       const data = await response.json();
       console.log("Service request webhook response:", data);
       res.json(data);
@@ -1094,7 +1092,7 @@ await storage.createSocialMedia(validatedData);
       res.status(500).json({ error: "Failed to connect to webhook service" });
     }
   });
-
+  
   // Function Bookings API Endpoints
   app.get(`${apiPrefix}/function-bookings`, async (req, res) => {
     try {
@@ -1102,19 +1100,19 @@ await storage.createSocialMedia(validatedData);
         .from('function_bookings')
         .select('*')
         .order('event_date', { ascending: true });
-
+      
       if (error) {
         console.error('Error fetching function bookings:', error);
         return res.status(500).json({ error: 'Failed to fetch function bookings' });
       }
-
+      
       res.json(data || []);
     } catch (error) {
       console.error('Error fetching function bookings:', error);
       res.status(500).json({ error: 'Error fetching function bookings' });
     }
   });
-
+  
   app.get(`${apiPrefix}/function-bookings/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1123,19 +1121,19 @@ await storage.createSocialMedia(validatedData);
         .select('*')
         .eq('id', id)
         .single();
-
+      
       if (error) {
         console.error('Error fetching function booking:', error);
         return res.status(404).json({ error: 'Function booking not found' });
       }
-
+      
       res.json(data);
     } catch (error) {
       console.error('Error fetching function booking:', error);
       res.status(500).json({ error: 'Error fetching function booking' });
     }
   });
-
+  
   app.post(`${apiPrefix}/function-bookings`, async (req, res) => {
     try {
       const { data, error } = await supabase
@@ -1143,19 +1141,19 @@ await storage.createSocialMedia(validatedData);
         .insert([req.body])
         .select()
         .single();
-
+      
       if (error) {
         console.error('Error creating function booking:', error);
         return res.status(400).json({ error: 'Failed to create function booking' });
       }
-
+      
       res.status(201).json(data);
     } catch (error) {
       console.error('Error creating function booking:', error);
       res.status(500).json({ error: 'Error creating function booking' });
     }
   });
-
+  
   app.patch(`${apiPrefix}/function-bookings/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1165,12 +1163,12 @@ await storage.createSocialMedia(validatedData);
         .eq('id', id)
         .select()
         .single();
-
+      
       if (error) {
         console.error('Error updating function booking:', error);
         return res.status(400).json({ error: 'Failed to update function booking' });
       }
-
+      
       res.json(data);
     } catch (error) {
       console.error('Error updating function booking:', error);
