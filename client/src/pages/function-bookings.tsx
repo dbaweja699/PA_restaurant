@@ -20,16 +20,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { CalendarIcon, Users, Clock, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 interface FunctionBooking {
   id: number;
@@ -55,7 +56,8 @@ interface FunctionBooking {
 
 export default function FunctionBookings() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedBooking, setSelectedBooking] = useState<FunctionBooking | null>(null);
+  const [selectedBooking, setSelectedBooking] =
+    useState<FunctionBooking | null>(null);
 
   const {
     data: bookings = [],
@@ -152,19 +154,20 @@ export default function FunctionBookings() {
                   nav: "space-x-1 flex items-center",
                   nav_button: cn(
                     "h-7 w-7 bg-transparent p-0 hover:bg-neutral-100 rounded-full transition-colors",
-                    "inline-flex items-center justify-center"
+                    "inline-flex items-center justify-center",
                   ),
                   table: "w-full border-collapse space-y-1",
                   head_row: "grid grid-cols-7 w-full",
-                  head_cell: "text-neutral-500 text-center text-[0.8rem] font-normal",
+                  head_cell:
+                    "text-neutral-500 text-center text-[0.8rem] font-normal",
                   row: "grid grid-cols-7 w-full mt-2",
                   cell: cn(
                     "text-center p-0 relative focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-neutral-100",
-                    "first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
+                    "first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
                   ),
                   day: cn(
                     "h-9 w-full p-0 mx-auto flex items-center justify-center font-normal aria-selected:opacity-100",
-                    "hover:bg-neutral-100 rounded-md focus:bg-neutral-100 focus:outline-none"
+                    "hover:bg-neutral-100 rounded-md focus:bg-neutral-100 focus:outline-none",
                   ),
                   day_selected:
                     "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
@@ -175,8 +178,8 @@ export default function FunctionBookings() {
                 }}
               />
               <div className="mt-6">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={() => setSelectedDate(undefined)}
                 >
@@ -217,14 +220,18 @@ export default function FunctionBookings() {
                   : "All Function Bookings"}
               </CardTitle>
               <CardDescription>
-                {filteredBookings.length} function{filteredBookings.length !== 1 ? "s" : ""}{" "}
+                {filteredBookings.length} function
+                {filteredBookings.length !== 1 ? "s" : ""}{" "}
                 {selectedDate ? "on this day" : ""}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {filteredBookings.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-neutral-500">No function bookings {selectedDate ? "for this date." : "found."}</p>
+                  <p className="text-neutral-500">
+                    No function bookings{" "}
+                    {selectedDate ? "for this date." : "found."}
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -244,13 +251,18 @@ export default function FunctionBookings() {
                       {filteredBookings.map((booking) => (
                         <TableRow key={booking.id}>
                           <TableCell>
-                            {booking.event_date 
-                              ? format(parseISO(booking.event_date), "MMM d, yyyy") 
+                            {booking.event_date
+                              ? format(
+                                  parseISO(booking.event_date),
+                                  "MMM d, yyyy",
+                                )
                               : "No date"}
                           </TableCell>
                           <TableCell>
                             <div>{booking.name || "No name"}</div>
-                            <div className="text-xs text-neutral-500">{booking.phone || "No phone"}</div>
+                            <div className="text-xs text-neutral-500">
+                              {booking.phone || "No phone"}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="capitalize">
@@ -263,7 +275,9 @@ export default function FunctionBookings() {
                               {booking.people || "N/A"}
                             </div>
                           </TableCell>
-                          <TableCell>{booking.rooms_hired || "Not specified"}</TableCell>
+                          <TableCell>
+                            {booking.rooms_hired || "Not specified"}
+                          </TableCell>
                           <TableCell>
                             <div className="text-xs space-y-1">
                               <div className="flex items-center">
@@ -281,8 +295,8 @@ export default function FunctionBookings() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               size="sm"
                               onClick={() => setSelectedBooking(booking)}
                             >
@@ -324,8 +338,11 @@ export default function FunctionBookings() {
                       <div>
                         <div className="font-medium">Date</div>
                         <div>
-                          {selectedBooking.event_date 
-                            ? format(parseISO(selectedBooking.event_date), "EEEE, MMMM d, yyyy") 
+                          {selectedBooking.event_date
+                            ? format(
+                                parseISO(selectedBooking.event_date),
+                                "EEEE, MMMM d, yyyy",
+                              )
                             : "No date specified"}
                         </div>
                       </div>
@@ -334,10 +351,20 @@ export default function FunctionBookings() {
                       <Clock className="h-4 w-4 mr-2 mt-0.5 text-neutral-500" />
                       <div>
                         <div className="font-medium">Times</div>
-                        <div>Setup: {selectedBooking.setup_time || "Not specified"}</div>
-                        <div>Start: {selectedBooking.start_time || "Not specified"}</div>
-                        <div>Finish: {selectedBooking.finish_time || "Not specified"}</div>
-                        <div>Food Serving: {selectedBooking.food_serving_time || "Not specified"}</div>
+                        <div>
+                          Setup: {selectedBooking.setup_time || "Not specified"}
+                        </div>
+                        <div>
+                          Start: {selectedBooking.start_time || "Not specified"}
+                        </div>
+                        <div>
+                          Finish:{" "}
+                          {selectedBooking.finish_time || "Not specified"}
+                        </div>
+                        <div>
+                          Food Serving:{" "}
+                          {selectedBooking.food_serving_time || "Not specified"}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-start">
@@ -345,8 +372,8 @@ export default function FunctionBookings() {
                       <div>
                         <div className="font-medium">Party Size</div>
                         <div>
-                          {typeof selectedBooking.people === 'number'
-                            ? `${selectedBooking.people} ${selectedBooking.people !== 1 ? 'people' : 'person'}`
+                          {typeof selectedBooking.people === "number"
+                            ? `${selectedBooking.people} ${selectedBooking.people !== 1 ? "people" : "person"}`
                             : "Not specified"}
                         </div>
                       </div>
@@ -355,23 +382,35 @@ export default function FunctionBookings() {
                 </div>
 
                 <div className="border rounded-md p-3">
-                  <h3 className="text-sm font-semibold mb-2">Event Information</h3>
+                  <h3 className="text-sm font-semibold mb-2">
+                    Event Information
+                  </h3>
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-1">
                       <div className="font-medium">Event Type:</div>
-                      <div className="capitalize">{selectedBooking.event_type || "Not specified"}</div>
-                      
+                      <div className="capitalize">
+                        {selectedBooking.event_type || "Not specified"}
+                      </div>
+
                       <div className="font-medium">Room Hired:</div>
-                      <div>{selectedBooking.rooms_hired || "Not specified"}</div>
-                      
+                      <div>
+                        {selectedBooking.rooms_hired || "Not specified"}
+                      </div>
+
                       <div className="font-medium">Subsidised Drinks:</div>
-                      <div>{selectedBooking.subsidised_drinks || "Not specified"}</div>
-                      
+                      <div>
+                        {selectedBooking.subsidised_drinks || "Not specified"}
+                      </div>
+
                       <div className="font-medium">Cake on Table:</div>
-                      <div>{selectedBooking.cake_on_table || "Not specified"}</div>
-                      
+                      <div>
+                        {selectedBooking.cake_on_table || "Not specified"}
+                      </div>
+
                       <div className="font-medium">Present on Table:</div>
-                      <div>{selectedBooking.present_on_table || "Not specified"}</div>
+                      <div>
+                        {selectedBooking.present_on_table || "Not specified"}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -379,48 +418,67 @@ export default function FunctionBookings() {
 
               <div className="space-y-4">
                 <div className="border rounded-md p-3">
-                  <h3 className="text-sm font-semibold mb-2">Contact Information</h3>
+                  <h3 className="text-sm font-semibold mb-2">
+                    Contact Information
+                  </h3>
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-1">
                       <div className="font-medium">Name:</div>
                       <div>{selectedBooking.name || "Not provided"}</div>
-                      
+
                       <div className="font-medium">Phone:</div>
-                      <div className="break-all">{selectedBooking.phone || "Not provided"}</div>
-                      
+                      <div className="break-all">
+                        {selectedBooking.phone || "Not provided"}
+                      </div>
+
                       <div className="font-medium">Email:</div>
-                      <div className="break-all">{selectedBooking.email || "Not provided"}</div>
+                      <div className="break-all">
+                        {selectedBooking.email || "Not provided"}
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="border rounded-md p-3">
-                  <h3 className="text-sm font-semibold mb-2">Payment Details</h3>
+                  <h3 className="text-sm font-semibold mb-2">
+                    Payment Details
+                  </h3>
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-1">
                       <div className="font-medium">Account Name:</div>
-                      <div>{selectedBooking.account_name || "Not provided"}</div>
-                      
+                      <div>
+                        {selectedBooking.account_name || "Not provided"}
+                      </div>
+
                       <div className="font-medium">BSB:</div>
-                      <div className="break-all">{selectedBooking.bsb || "Not provided"}</div>
-                      
+                      <div className="break-all">
+                        {selectedBooking.bsb || "Not provided"}
+                      </div>
+
                       <div className="font-medium">Account Number:</div>
-                      <div className="break-all">{selectedBooking.account_number || "Not provided"}</div>
+                      <div className="break-all">
+                        {selectedBooking.account_number || "Not provided"}
+                      </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="border rounded-md p-3">
-                  <h3 className="text-sm font-semibold mb-2">Booking Information</h3>
+                  <h3 className="text-sm font-semibold mb-2">
+                    Booking Information
+                  </h3>
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-2 gap-1">
                       <div className="font-medium">Created At:</div>
                       <div>
-                        {selectedBooking.created_at 
-                          ? format(parseISO(selectedBooking.created_at), "MMM d, yyyy h:mm a") 
+                        {selectedBooking.created_at
+                          ? format(
+                              parseISO(selectedBooking.created_at),
+                              "MMM d, yyyy h:mm a",
+                            )
                           : "Not available"}
                       </div>
-                      
+
                       <div className="font-medium">Booking ID:</div>
                       <div>{selectedBooking.id || "Not available"}</div>
                     </div>
@@ -428,7 +486,7 @@ export default function FunctionBookings() {
                 </div>
               </div>
             </div>
-            
+
             <DialogFooter>
               <Button onClick={() => setSelectedBooking(null)}>Close</Button>
             </DialogFooter>
