@@ -75,9 +75,6 @@ export default function ServiceRequest() {
   const onSubmit = async (data: ServiceRequestFormValues) => {
     setIsSubmitting(true);
     try {
-      // Get the N8N webhook URL from environment variables
-      const webhookUrl = import.meta.env.VITE_N8N_WEBHOOK_URL + "request_service";
-      
       // Format the data for better readability when received by n8n
       const formattedData = {
         ...data,
@@ -85,7 +82,8 @@ export default function ServiceRequest() {
         submittedAt: new Date().toISOString(),
       };
       
-      const response = await fetch(webhookUrl, {
+      // Use server-side API endpoint which will forward to n8n
+      const response = await fetch('/api/proxy/service-request', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
