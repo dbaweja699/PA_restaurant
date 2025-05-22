@@ -63,16 +63,39 @@ export default function FunctionBookings() {
     refetch,
   } = useQuery<FunctionBooking[]>({
     queryKey: ["/api/function-bookings"],
+    refetchInterval: 30000, // Poll every 30 seconds for new data
   });
+
+  // Refetch data when component mounts
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  useEffect(() => {
+    if (bookings && bookings.length > 0) {
+      console.log("Function bookings data received:", bookings);
+    }
+  }, [bookings]);
 
   // Filter bookings by selected date
   const filteredBookings = selectedDate
     ? bookings.filter((booking) => {
         if (!booking.event_date) return false;
-        const bookingDate = new Date(booking.event_date);
+        const bookingDate = parseISO(booking.event_date);
         return isSameDay(bookingDate, selectedDate);
       })
     : bookings;
+
+  // Function to safely parse ISO date strings
+  const safeParse = (dateString: string | null | undefined) => {
+    if (!dateString) return null;
+    try {
+      return parseISO(dateString);
+    } catch (e) {
+      console.error("Failed to parse date:", dateString, e);
+      return null;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -222,7 +245,7 @@ export default function FunctionBookings() {
                         <TableRow key={booking.id}>
                           <TableCell>
                             {booking.event_date 
-                              ? format(new Date(booking.event_date), "MMM d, yyyy") 
+                              ? format(parseISO(booking.event_date), "MMM d, yyyy") 
                               : "No date"}
                           </TableCell>
                           <TableCell>
@@ -302,7 +325,7 @@ export default function FunctionBookings() {
                         <div className="font-medium">Date</div>
                         <div>
                           {selectedBooking.event_date 
-                            ? format(new Date(selectedBooking.event_date), "EEEE, MMMM d, yyyy") 
+                            ? format(parseISO(selectedBooking.event_date), "EEEE, MMMM d, yyyy") 
                             : "No date specified"}
                         </div>
                       </div>
@@ -394,7 +417,7 @@ export default function FunctionBookings() {
                       <div className="font-medium">Created At:</div>
                       <div>
                         {selectedBooking.created_at 
-                          ? format(new Date(selectedBooking.created_at), "MMM d, yyyy h:mm a") 
+                          ? format(parseISO(selectedBooking.created_at), "MMM d, yyyy h:mm a") 
                           : "Not available"}
                       </div>
                       
