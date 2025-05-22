@@ -287,7 +287,7 @@ export default function FunctionBookings() {
             <DialogHeader>
               <DialogTitle>Function Booking Details</DialogTitle>
               <DialogDescription>
-                Event information for {selectedBooking.name}
+                Event information for {selectedBooking.name || "Unknown"}
               </DialogDescription>
             </DialogHeader>
 
@@ -322,8 +322,8 @@ export default function FunctionBookings() {
                       <div>
                         <div className="font-medium">Party Size</div>
                         <div>
-                          {selectedBooking.people 
-                            ? `${selectedBooking.people} ${selectedBooking.people > 1 ? 'people' : 'person'}`
+                          {typeof selectedBooking.people === 'number'
+                            ? `${selectedBooking.people} ${selectedBooking.people !== 1 ? 'people' : 'person'}`
                             : "Not specified"}
                         </div>
                       </div>
@@ -363,10 +363,10 @@ export default function FunctionBookings() {
                       <div>{selectedBooking.name || "Not provided"}</div>
                       
                       <div className="font-medium">Phone:</div>
-                      <div>{selectedBooking.phone || "Not provided"}</div>
+                      <div className="break-all">{selectedBooking.phone || "Not provided"}</div>
                       
                       <div className="font-medium">Email:</div>
-                      <div>{selectedBooking.email || "Not provided"}</div>
+                      <div className="break-all">{selectedBooking.email || "Not provided"}</div>
                     </div>
                   </div>
                 </div>
@@ -379,10 +379,10 @@ export default function FunctionBookings() {
                       <div>{selectedBooking.account_name || "Not provided"}</div>
                       
                       <div className="font-medium">BSB:</div>
-                      <div>{selectedBooking.bsb || "Not provided"}</div>
+                      <div className="break-all">{selectedBooking.bsb || "Not provided"}</div>
                       
                       <div className="font-medium">Account Number:</div>
-                      <div>{selectedBooking.account_number || "Not provided"}</div>
+                      <div className="break-all">{selectedBooking.account_number || "Not provided"}</div>
                     </div>
                   </div>
                 </div>
