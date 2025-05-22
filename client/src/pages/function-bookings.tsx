@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -212,7 +211,7 @@ export default function FunctionBookings() {
                       {filteredBookings.map((booking) => (
                         <TableRow key={booking.id}>
                           <TableCell>
-                            {format(parseISO(booking.event_date), "MMM d, yyyy")}
+                            {booking.event_date ? format(parseISO(booking.event_date), "MMM d, yyyy") : "No date"}
                           </TableCell>
                           <TableCell>
                             <div>{booking.name}</div>
