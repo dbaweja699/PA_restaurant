@@ -20,6 +20,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { CalendarIcon, Users, Clock, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +55,7 @@ interface FunctionBooking {
 
 export default function FunctionBookings() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedBooking, setSelectedBooking] = useState<FunctionBooking | null>(null);
 
   const {
     data: bookings = [],
