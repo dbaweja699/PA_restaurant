@@ -37,21 +37,21 @@ interface FunctionBooking {
   name: string;
   phone: string;
   email: string;
-  event_date: string;
-  setup_time: string;
-  start_time: string;
-  finish_time: string;
-  event_type: string;
+  eventDate: string;
+  setupTime: string;
+  startTime: string;
+  finishTime: string;
+  eventType: string;
   people: number;
-  rooms_hired: string;
-  food_serving_time: string;
-  subsidised_drinks: string;
-  cake_on_table: string;
-  present_on_table: string;
-  account_name: string;
+  roomsHired: string;
+  foodServingTime: string;
+  subsidisedDrinks: string;
+  cakeOnTable: string;
+  presentOnTable: string;
+  accountName: string;
   bsb: string;
-  account_number: string;
-  created_at: string;
+  accountNumber: string;
+  createdAt: string;
 }
 
 export default function FunctionBookings() {
@@ -82,8 +82,8 @@ export default function FunctionBookings() {
   // Filter bookings by selected date
   const filteredBookings = selectedDate
     ? bookings.filter((booking) => {
-        if (!booking.event_date) return false;
-        const bookingDate = parseISO(booking.event_date);
+        if (!booking.eventDate) return false;
+        const bookingDate = parseISO(booking.eventDate);
         return isSameDay(bookingDate, selectedDate);
       })
     : bookings;
@@ -251,9 +251,9 @@ export default function FunctionBookings() {
                       {filteredBookings.map((booking) => (
                         <TableRow key={booking.id}>
                           <TableCell>
-                            {booking.event_date
+                            {booking.eventDate
                               ? format(
-                                  parseISO(booking.event_date),
+                                  parseISO(booking.eventDate),
                                   "MMM d, yyyy",
                                 )
                               : "No date"}
@@ -266,7 +266,7 @@ export default function FunctionBookings() {
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="capitalize">
-                              {booking.event_type || "Unspecified"}
+                              {booking.eventType || "Unspecified"}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -276,21 +276,21 @@ export default function FunctionBookings() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            {booking.rooms_hired || "Not specified"}
+                            {booking.roomsHired || "Not specified"}
                           </TableCell>
                           <TableCell>
                             <div className="text-xs space-y-1">
                               <div className="flex items-center">
                                 <span className="font-medium mr-2">Setup:</span>
-                                {booking.setup_time || "N/A"}
+                                {booking.setupTime || "N/A"}
                               </div>
                               <div className="flex items-center">
                                 <span className="font-medium mr-2">Start:</span>
-                                {booking.start_time || "N/A"}
+                                {booking.startTime || "N/A"}
                               </div>
                               <div className="flex items-center">
                                 <span className="font-medium mr-2">End:</span>
-                                {booking.finish_time || "N/A"}
+                                {booking.finishTime || "N/A"}
                               </div>
                             </div>
                           </TableCell>
@@ -338,9 +338,9 @@ export default function FunctionBookings() {
                       <div>
                         <div className="font-medium">Date</div>
                         <div>
-                          {selectedBooking.event_date
+                          {selectedBooking.eventDate
                             ? format(
-                                parseISO(selectedBooking.event_date),
+                                parseISO(selectedBooking.eventDate),
                                 "EEEE, MMMM d, yyyy",
                               )
                             : "No date specified"}
@@ -352,18 +352,18 @@ export default function FunctionBookings() {
                       <div>
                         <div className="font-medium">Times</div>
                         <div>
-                          Setup: {selectedBooking.setup_time || "Not specified"}
+                          Setup: {selectedBooking.setupTime || "Not specified"}
                         </div>
                         <div>
-                          Start: {selectedBooking.start_time || "Not specified"}
+                          Start: {selectedBooking.startTime || "Not specified"}
                         </div>
                         <div>
                           Finish:{" "}
-                          {selectedBooking.finish_time || "Not specified"}
+                          {selectedBooking.finishTime || "Not specified"}
                         </div>
                         <div>
                           Food Serving:{" "}
-                          {selectedBooking.food_serving_time || "Not specified"}
+                          {selectedBooking.foodServingTime || "Not specified"}
                         </div>
                       </div>
                     </div>
@@ -389,27 +389,27 @@ export default function FunctionBookings() {
                     <div className="grid grid-cols-2 gap-1">
                       <div className="font-medium">Event Type:</div>
                       <div className="capitalize">
-                        {selectedBooking.event_type || "Not specified"}
+                        {selectedBooking.eventType || "Not specified"}
                       </div>
 
                       <div className="font-medium">Room Hired:</div>
                       <div>
-                        {selectedBooking.rooms_hired || "Not specified"}
+                        {selectedBooking.roomsHired || "Not specified"}
                       </div>
 
                       <div className="font-medium">Subsidised Drinks:</div>
                       <div>
-                        {selectedBooking.subsidised_drinks || "Not specified"}
+                        {selectedBooking.subsidisedDrinks || "Not specified"}
                       </div>
 
                       <div className="font-medium">Cake on Table:</div>
                       <div>
-                        {selectedBooking.cake_on_table || "Not specified"}
+                        {selectedBooking.cakeOnTable || "Not specified"}
                       </div>
 
                       <div className="font-medium">Present on Table:</div>
                       <div>
-                        {selectedBooking.present_on_table || "Not specified"}
+                        {selectedBooking.presentOnTable || "Not specified"}
                       </div>
                     </div>
                   </div>
@@ -447,7 +447,7 @@ export default function FunctionBookings() {
                     <div className="grid grid-cols-2 gap-1">
                       <div className="font-medium">Account Name:</div>
                       <div>
-                        {selectedBooking.account_name || "Not provided"}
+                        {selectedBooking.accountName || "Not provided"}
                       </div>
 
                       <div className="font-medium">BSB:</div>
@@ -457,7 +457,7 @@ export default function FunctionBookings() {
 
                       <div className="font-medium">Account Number:</div>
                       <div className="break-all">
-                        {selectedBooking.account_number || "Not provided"}
+                        {selectedBooking.accountNumber || "Not provided"}
                       </div>
                     </div>
                   </div>
@@ -471,9 +471,9 @@ export default function FunctionBookings() {
                     <div className="grid grid-cols-2 gap-1">
                       <div className="font-medium">Created At:</div>
                       <div>
-                        {selectedBooking.created_at
+                        {selectedBooking.createdAt
                           ? format(
-                              parseISO(selectedBooking.created_at),
+                              parseISO(selectedBooking.createdAt),
                               "MMM d, yyyy h:mm a",
                             )
                           : "Not available"}
