@@ -44,9 +44,11 @@ app.use((req, res, next) => {
   next();
 });
 
+// Error handler moved above static file serving
+
 (async () => {
   const execPromise = promisify(exec);
-  
+
   // Run database migration first
   try {
     console.log('Running database migration...');
@@ -55,7 +57,7 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error('Database migration failed:', error);
   }
-  
+
   // Connect to Supabase database
   try {
     await initDatabase();
@@ -63,7 +65,7 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error('Supabase database connection failed:', error);
   }
-  
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
