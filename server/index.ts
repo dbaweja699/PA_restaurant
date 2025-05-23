@@ -4,6 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import initDatabase from "./initDatabase"; // Import the database initialization function
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import fs from 'fs';
+import path from 'path';
 
 // Global handler for unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
@@ -83,6 +85,18 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
+    // Check if the client/dist directory exists
+    const distPath = path.join(process.cwd(), "client/dist");
+    if (!fs.existsSync(distPath)) {
+      console.log("Building client for production...");
+      try {
+        // Build the client first
+        await execPromise("npm run build");
+        console.log("Client build completed");
+      } catch (error) {
+        console.error("Client build failed:", error);
+      }
+    }
     serveStatic(app);
   }
 
