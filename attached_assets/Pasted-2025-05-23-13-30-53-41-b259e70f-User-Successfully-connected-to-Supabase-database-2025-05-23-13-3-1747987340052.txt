@@ -1,0 +1,64 @@
+2025-05-23 13:30:53.41
+b259e70f
+User
+Successfully connected to Supabase database
+2025-05-23 13:30:53.41
+b259e70f
+User
+Supabase database connection established
+2025-05-23 13:30:53.47
+b259e70f
+User
+8:00:53 AM [express] serving on port 5000
+2025-05-23 13:30:54.76
+b259e70f
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 13:31:34.46
+b259e70f
+User
+8:01:34 AM [express] GET /api/notifications 200 in 723ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:31:34.47
+b259e70f
+User
+8:01:34 AM [express] GET /api/notifications/unread 304 in 729ms :: [{"id":104,"type":"chatbot","mess…
+2025-05-23 13:31:37.38
+b259e70f
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 13:31:42.15
+b259e70f
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 13:31:44.56
+b259e70f
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 13:31:47.80
+b259e70f
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 13:31:50.11
+b259e70f
+User
+8:01:50 AM [express] GET /api/notifications 304 in 286ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:31:51.77
+b259e70f
+User
+8:01:51 AM [express] GET /api/notifications/unread 200 in 655ms :: [{"id":104,"type":"chatbot","mess…
+2025-05-23 13:31:55.52
+b259e70f
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 13:31:58.92
+b259e70f
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 13:32:00.81
+b259e70f
+User
+8:02:00 AM [express] GET /api/notifications/unread 304 in 693ms :: [{"id":104,"type":"chatbot","mess…
+2025-05-23 13:32:06.22
+b259e70f
+User
+8:02:06 AM [express] GET /api/notifications 304 in 307ms :: [{"id":105,"type":"chatbot","message":"N…
