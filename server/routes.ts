@@ -995,20 +995,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Proxy a request to the n8n webhook for social media interactions
-  app.post("/api/proxy/socialmedia", async (req: Request, res: Response) => {
+  app.post('/api/proxy/socialmedia', async (req: Request, res: Response) => {
     try {
       // Get the webhook URL from environment variables
       const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
 
       if (!n8nWebhookUrl) {
-        return res.status(500).json({ error: "Webhook URL not configured" });
+        return res.status(500).json({ error: 'Webhook URL not configured' });
       }
 
       // Forward the request to n8n
       const n8nResponse = await fetch(n8nWebhookUrl, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(req.body),
       });
@@ -1017,19 +1017,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = await n8nResponse.json();
       res.status(n8nResponse.status).json(data);
     } catch (error) {
-      console.error("Error proxying to n8n webhook:", error);
-      res.status(500).json({ error: "Failed to process webhook request" });
+      console.error('Error proxying to n8n webhook:', error);
+      res.status(500).json({ error: 'Failed to process webhook request' });
     }
   });
 
   // Proxy a request to the n8n webhook for gallery image uploads
-  app.post("/api/proxy/pa_gallery", async (req: Request, res: Response) => {
+  app.post('/api/proxy/pa_gallery', async (req: Request, res: Response) => {
     try {
       // Get the webhook URL from environment variables
       const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL;
 
       if (!n8nWebhookUrl) {
-        return res.status(500).json({ error: "Webhook URL not configured" });
+        return res.status(500).json({ error: 'Webhook URL not configured' });
       }
 
       // Build the full webhook URL with the /pa_gallery endpoint
@@ -1037,9 +1037,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Forward the request to n8n
       const n8nResponse = await fetch(galleryWebhookUrl, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(req.body),
       });
@@ -1048,139 +1048,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = await n8nResponse.json();
       res.status(n8nResponse.status).json(data);
     } catch (error) {
-      console.error("Error proxying to n8n gallery webhook:", error);
-      res
-        .status(500)
-        .json({ error: "Failed to process gallery upload request" });
+      console.error('Error proxying to n8n gallery webhook:', error);
+      res.status(500).json({ error: 'Failed to process gallery upload request' });
     }
   });
-
-  // Service Request Proxy Endpoint
-  app.post(`${apiPrefix}/proxy/service-request`, async (req, res) => {
-    try {
-      console.log("Proxying service request to n8n webhook:", req.body);
-
-      if (!process.env.N8N_WEBHOOK_URL) {
-        console.error("N8N_WEBHOOK_URL environment variable is not defined");
-        return res.status(500).json({ error: "Webhook URL is not configured" });
-      }
-
-      const n8nWebhookUrl = `${process.env.N8N_WEBHOOK_URL}/request_service`;
-
-      const response = await fetch(n8nWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(req.body),
-      });
-
-      if (!response.ok) {
-        console.error(
-          "Error from service request webhook:",
-          response.status,
-          response.statusText,
-        );
-        return res.status(response.status).json({
-          error: `Webhook responded with status ${response.status}`,
-        });
-      }
-
-      const data = await response.json();
-      console.log("Service request webhook response:", data);
-      res.json(data);
-    } catch (error) {
-      console.error("Error proxying to service request webhook:", error);
-      res.status(500).json({ error: "Failed to connect to webhook service" });
-    }
-  });
-
+  
   // Function Bookings API Endpoints
   app.get(`${apiPrefix}/function-bookings`, async (req, res) => {
     try {
       const { data, error } = await supabase
-        .from("function_bookings")
-        .select("*")
-        .order("event_date", { ascending: true });
-
+        .from('function_bookings')
+        .select('*')
+        .order('event_date', { ascending: true });
+      
       if (error) {
-        console.error("Error fetching function bookings:", error);
-        return res
-          .status(500)
-          .json({ error: "Failed to fetch function bookings" });
+        console.error('Error fetching function bookings:', error);
+        return res.status(500).json({ error: 'Failed to fetch function bookings' });
       }
-
+      
       res.json(data || []);
     } catch (error) {
-      console.error("Error fetching function bookings:", error);
-      res.status(500).json({ error: "Error fetching function bookings" });
+      console.error('Error fetching function bookings:', error);
+      res.status(500).json({ error: 'Error fetching function bookings' });
     }
   });
-
+  
   app.get(`${apiPrefix}/function-bookings/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { data, error } = await supabase
-        .from("function_bookings")
-        .select("*")
-        .eq("id", id)
+        .from('function_bookings')
+        .select('*')
+        .eq('id', id)
         .single();
-
+      
       if (error) {
-        console.error("Error fetching function booking:", error);
-        return res.status(404).json({ error: "Function booking not found" });
+        console.error('Error fetching function booking:', error);
+        return res.status(404).json({ error: 'Function booking not found' });
       }
-
+      
       res.json(data);
     } catch (error) {
-      console.error("Error fetching function booking:", error);
-      res.status(500).json({ error: "Error fetching function booking" });
+      console.error('Error fetching function booking:', error);
+      res.status(500).json({ error: 'Error fetching function booking' });
     }
   });
-
+  
   app.post(`${apiPrefix}/function-bookings`, async (req, res) => {
     try {
       const { data, error } = await supabase
-        .from("function_bookings")
+        .from('function_bookings')
         .insert([req.body])
         .select()
         .single();
-
+      
       if (error) {
-        console.error("Error creating function booking:", error);
-        return res
-          .status(400)
-          .json({ error: "Failed to create function booking" });
+        console.error('Error creating function booking:', error);
+        return res.status(400).json({ error: 'Failed to create function booking' });
       }
-
+      
       res.status(201).json(data);
     } catch (error) {
-      console.error("Error creating function booking:", error);
-      res.status(500).json({ error: "Error creating function booking" });
+      console.error('Error creating function booking:', error);
+      res.status(500).json({ error: 'Error creating function booking' });
     }
   });
-
+  
   app.patch(`${apiPrefix}/function-bookings/:id`, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { data, error } = await supabase
-        .from("function_bookings")
+        .from('function_bookings')
         .update(req.body)
-        .eq("id", id)
+        .eq('id', id)
         .select()
         .single();
-
+      
       if (error) {
-        console.error("Error updating function booking:", error);
-        return res
-          .status(400)
-          .json({ error: "Failed to update function booking" });
+        console.error('Error updating function booking:', error);
+        return res.status(400).json({ error: 'Failed to update function booking' });
       }
-
+      
       res.json(data);
     } catch (error) {
-      console.error("Error updating function booking:", error);
-      res.status(500).json({ error: "Error updating function booking" });
+      console.error('Error updating function booking:', error);
+      res.status(500).json({ error: 'Error updating function booking' });
     }
   });
 

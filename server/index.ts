@@ -4,8 +4,6 @@ import { setupVite, serveStatic, log } from "./vite";
 import initDatabase from "./initDatabase"; // Import the database initialization function
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import fs from 'fs';
-import path from 'path';
 
 // Global handler for unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
@@ -46,11 +44,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Error handler moved above static file serving
-
 (async () => {
   const execPromise = promisify(exec);
-
+  
   // Run database migration first
   try {
     console.log('Running database migration...');
@@ -59,7 +55,7 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error('Database migration failed:', error);
   }
-
+  
   // Connect to Supabase database
   try {
     await initDatabase();
@@ -67,7 +63,7 @@ app.use((req, res, next) => {
   } catch (error) {
     console.error('Supabase database connection failed:', error);
   }
-
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -85,77 +81,13 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // For production, use the vite.ts serveStatic function
-    // But also check for the public directory and serve it directly
-    console.log("Running in production mode");
-    
-    // Serve public files if they exist
-    const publicPath = path.resolve(process.cwd(), "public");
-    if (fs.existsSync(publicPath)) {
-      app.use(express.static(publicPath));
-    }
-    
-    // Check for environment variable to skip client build
-    if (process.env.SKIP_CLIENT_BUILD !== 'true') {
-      console.log("Client build is needed for production deployment");
-      
-      // Create a simple HTML fallback for routes that don't match the API
-      app.get('*', (req, res) => {
-        if (!req.path.startsWith('/api/')) {
-          res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Restaurant AI Management Platform</title>
-              <style>
-                body {
-                  font-family: sans-serif;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  height: 100vh;
-                  margin: 0;
-                  background-color: #f5f5f5;
-                }
-                .container {
-                  text-align: center;
-                  padding: 20px;
-                  border-radius: 8px;
-                  background-color: white;
-                  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                  max-width: 500px;
-                }
-                h1 {
-                  color: #333;
-                }
-                p {
-                  color: #666;
-                  line-height: 1.6;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <h1>Restaurant AI Management Platform</h1>
-                <p>The application is currently running in production mode.</p>
-                <p>API endpoints are available at /api/* paths.</p>
-                <p>For optimal experience, please use the development environment.</p>
-              </div>
-            </body>
-            </html>
-          `);
-        }
-      });
-    } else {
-      // Use the default serveStatic function
-      serveStatic(app);
-    }
+    serveStatic(app);
   }
 
-  // Use process.env.PORT for deployment or fallback to 5000 for development
-  const port = process.env.PORT || 5000;
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   server.listen({
     port,
     host: "0.0.0.0",
