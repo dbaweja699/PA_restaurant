@@ -70,7 +70,6 @@ jobs:
             # Run the new container
             docker run -d --name pa_hotel_ai_assistant-container \
               -p 80:5000 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
               -e SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
               -e SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
