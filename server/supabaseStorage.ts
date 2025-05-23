@@ -697,9 +697,19 @@ export class SupabaseStorage implements IStorage {
   }
 
   async createPerformanceMetrics(insertMetrics: InsertPerformanceMetrics): Promise<PerformanceMetrics> {
+    // Convert camelCase property names to snake_case for database
+    const dbMetrics: Record<string, any> = {
+      customer_satisfaction: insertMetrics.customerSatisfaction,
+      response_time: insertMetrics.responseTime,
+      issue_resolution: insertMetrics.issueResolution,
+      handoff_rate: insertMetrics.handoffRate,
+      overall_efficiency: insertMetrics.overallEfficiency,
+      date: insertMetrics.date
+    };
+    
     const { data, error } = await supabase
       .from('performance_metrics')
-      .insert(insertMetrics)
+      .insert(dbMetrics)
       .select()
       .single();
     
@@ -711,15 +721,25 @@ export class SupabaseStorage implements IStorage {
     try {
       // Get the latest metrics first
       const latestMetrics = await this.getLatestPerformanceMetrics();
+      
+      // Convert camelCase property names to snake_case for database
+      const dbMetrics: Record<string, any> = {};
+      if (metrics.customerSatisfaction !== undefined) dbMetrics.customer_satisfaction = metrics.customerSatisfaction;
+      if (metrics.responseTime !== undefined) dbMetrics.response_time = metrics.responseTime;
+      if (metrics.issueResolution !== undefined) dbMetrics.issue_resolution = metrics.issueResolution;
+      if (metrics.handoffRate !== undefined) dbMetrics.handoff_rate = metrics.handoffRate;
+      if (metrics.overallEfficiency !== undefined) dbMetrics.overall_efficiency = metrics.overallEfficiency;
+      if (metrics.date !== undefined) dbMetrics.date = metrics.date;
+      
       if (!latestMetrics) {
         // If no metrics exist, create new ones
         return await this.createPerformanceMetrics(metrics as InsertPerformanceMetrics);
       }
       
-      // Update the existing metrics
+      // Update the existing metrics with snake_case column names
       const { data, error } = await supabase
         .from('performance_metrics')
-        .update(metrics)
+        .update(dbMetrics)
         .eq('id', latestMetrics.id)
         .select()
         .single();
@@ -1261,30 +1281,35 @@ export class SupabaseStorage implements IStorage {
 
   async getLowStockItems(): Promise<Inventory[]> {
     try {
+      // First get all inventory items
       const { data, error } = await supabase
         .from('inventory')
         .select('*')
-        .filter('current_qty', 'lt', supabase.raw('ideal_qty'))
         .order('item_name');
       
       if (error) {
-        console.error('Error fetching low stock items:', error);
+        console.error('Error fetching inventory items:', error);
         return [];
       }
       
-      return data.map(item => ({
-        id: item.id,
-        itemName: item.item_name,
-        unitOfMeasurement: item.unit_of_measurement,
-        boxOrPackageQty: item.box_or_package_qty,
-        unitPrice: item.unit_price,
-        totalPrice: item.total_price,
-        idealQty: item.ideal_qty,
-        currentQty: item.current_qty,
-        shelfLifeDays: item.shelf_life_days,
-        lastUpdated: new Date(item.last_updated),
-        category: item.category
-      }));
+      // Filter items where current_qty < ideal_qty in JavaScript
+      const lowStockItems = data
+        .filter(item => item.current_qty < item.ideal_qty)
+        .map(item => ({
+          id: item.id,
+          itemName: item.item_name,
+          unitOfMeasurement: item.unit_of_measurement,
+          boxOrPackageQty: item.box_or_package_qty,
+          unitPrice: item.unit_price,
+          totalPrice: item.total_price,
+          idealQty: item.ideal_qty,
+          currentQty: item.current_qty,
+          shelfLifeDays: item.shelf_life_days,
+          lastUpdated: new Date(item.last_updated),
+          category: item.category
+        }));
+      
+      return lowStockItems;
     } catch (error) {
       console.error('Error in getLowStockItems:', error);
       return [];
