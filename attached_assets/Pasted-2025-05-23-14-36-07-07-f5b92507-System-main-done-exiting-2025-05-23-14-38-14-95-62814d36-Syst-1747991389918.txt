@@ -1,0 +1,120 @@
+2025-05-23 14:36:07.07
+f5b92507
+System
+main done, exiting
+2025-05-23 14:38:14.95
+62814d36
+System
+starting up user application
+2025-05-23 14:38:15.18
+62814d36
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-05-23 14:38:17.06
+62814d36
+User
+> rest-express@1.0.0 start
+2025-05-23 14:38:17.06
+62814d36
+User
+> NODE_ENV=production node dist/index.js
+2025-05-23 14:38:18.84
+62814d36
+User
+Testing Supabase connection...
+2025-05-23 14:38:18.87
+62814d36
+User
+Running database migration...
+2025-05-23 14:38:19.67
+62814d36
+User
+Successfully connected to Supabase database
+2025-05-23 14:38:20.32
+62814d36
+User
+Successfully connected to bookings table
+2025-05-23 14:38:21.41
+62814d36
+User
+Database migration completed
+2025-05-23 14:38:21.41
+62814d36
+User
+Connecting to Supabase database...
+2025-05-23 14:38:22.07
+62814d36
+User
+Successfully connected to Supabase database
+2025-05-23 14:38:22.07
+62814d36
+User
+Supabase database connection established
+2025-05-23 14:38:22.08
+62814d36
+User
+Building client for production...
+2025-05-23 14:38:37.91
+62814d36
+User
+Client build completed
+2025-05-23 14:38:37.94
+62814d36
+User
+9:08:37 AM [express] serving on port 5000
+2025-05-23 14:38:39.66
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:38:47.51
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:38:56.52
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:02.90
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:08.36
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:08.82
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:12.20
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:12.21
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:13.39
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:13.43
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:14.40
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:16.93
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:39:24.27
+62814d36
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+
+Wrap
+
+Colors

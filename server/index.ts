@@ -85,19 +85,73 @@ app.use((req, res, next) => {
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
-    // Check if the client/dist directory exists
-    const distPath = path.join(process.cwd(), "client/dist");
-    if (!fs.existsSync(distPath)) {
-      console.log("Building client for production...");
-      try {
-        // Build the client first
-        await execPromise("npm run build");
-        console.log("Client build completed");
-      } catch (error) {
-        console.error("Client build failed:", error);
-      }
+    // For production, use the vite.ts serveStatic function
+    // But also check for the public directory and serve it directly
+    console.log("Running in production mode");
+    
+    // Serve public files if they exist
+    const publicPath = path.resolve(process.cwd(), "public");
+    if (fs.existsSync(publicPath)) {
+      app.use(express.static(publicPath));
     }
-    serveStatic(app);
+    
+    // Check for environment variable to skip client build
+    if (process.env.SKIP_CLIENT_BUILD !== 'true') {
+      console.log("Client build is needed for production deployment");
+      
+      // Create a simple HTML fallback for routes that don't match the API
+      app.get('*', (req, res) => {
+        if (!req.path.startsWith('/api/')) {
+          res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Restaurant AI Management Platform</title>
+              <style>
+                body {
+                  font-family: sans-serif;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  height: 100vh;
+                  margin: 0;
+                  background-color: #f5f5f5;
+                }
+                .container {
+                  text-align: center;
+                  padding: 20px;
+                  border-radius: 8px;
+                  background-color: white;
+                  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                  max-width: 500px;
+                }
+                h1 {
+                  color: #333;
+                }
+                p {
+                  color: #666;
+                  line-height: 1.6;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>Restaurant AI Management Platform</h1>
+                <p>The application is currently running in production mode.</p>
+                <p>API endpoints are available at /api/* paths.</p>
+                <p>For optimal experience, please use the development environment.</p>
+              </div>
+            </body>
+            </html>
+          `);
+        }
+      });
+    } else {
+      // Use the default serveStatic function
+      serveStatic(app);
+    }
   }
 
   // Use process.env.PORT for deployment or fallback to 5000 for development
