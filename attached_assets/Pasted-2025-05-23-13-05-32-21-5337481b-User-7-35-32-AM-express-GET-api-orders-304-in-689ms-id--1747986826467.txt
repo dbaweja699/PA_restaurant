@@ -1,0 +1,136 @@
+2025-05-23 13:05:32.21
+5337481b
+User
+7:35:32 AM [express] GET /api/orders 304 in 689ms :: [{"id":167,"customer_name":"Deepanshu Baweja","…
+2025-05-23 13:05:32.22
+5337481b
+User
+7:35:32 AM [express] GET /api/dashboard/activity 200 in 695ms :: []
+2025-05-23 13:05:34.22
+5337481b
+User
+7:35:34 AM [express] GET /api/dashboard/stats 200 in 2696ms :: {"id":10,"date":"2025-05-23T07:35:34.…
+2025-05-23 13:05:35.00
+5337481b
+User
+Error fetching performance metrics: JSON object requested, multiple (or no) rows returned
+2025-05-23 13:05:35.50
+5337481b
+User
+Exception in updatePerformanceMetrics: {
+2025-05-23 13:05:35.50
+5337481b
+User
+code: 'PGRST204',
+2025-05-23 13:05:35.50
+5337481b
+User
+details: null,
+2025-05-23 13:05:35.50
+5337481b
+User
+hint: null,
+2025-05-23 13:05:35.50
+5337481b
+User
+message: "Could not find the 'customerSatisfaction' column of 'performance_metrics' in the schema cache"
+2025-05-23 13:05:35.50
+5337481b
+User
+}
+2025-05-23 13:05:44.36
+5337481b
+User
+7:35:44 AM [express] GET /api/notifications/unread 200 in 694ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:05:47.34
+5337481b
+User
+7:35:47 AM [express] GET /api/notifications 304 in 650ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:05:53.38
+5337481b
+User
+7:35:53 AM [express] GET /api/notifications/unread 304 in 679ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:06:02.40
+5337481b
+User
+7:36:02 AM [express] GET /api/notifications/unread 304 in 686ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:06:03.32
+5337481b
+User
+7:36:03 AM [express] GET /api/notifications 304 in 655ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:06:11.39
+5337481b
+User
+7:36:11 AM [express] GET /api/notifications/unread 304 in 679ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:06:20.42
+5337481b
+User
+7:36:20 AM [express] GET /api/notifications/unread 304 in 703ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:06:25.98
+5337481b
+User
+7:36:25 AM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+2025-05-23 13:06:29.67
+5337481b
+User
+7:36:29 AM [express] GET /api/notifications/unread 304 in 677ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:06:34.67
+5337481b
+User
+7:36:34 AM [express] GET /api/notifications 200 in 683ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:06:35.19
+5337481b
+User
+7:36:35 AM [express] GET /api/user 401 in 0ms :: {"error":"Not authenticated"}
+2025-05-23 13:06:38.65
+5337481b
+User
+7:36:38 AM [express] GET /api/notifications/unread 304 in 651ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:06:47.24
+5337481b
+User
+7:36:47 AM [express] GET /api/notifications/unread 304 in 274ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:06:50.24
+5337481b
+User
+7:36:50 AM [express] GET /api/notifications 304 in 240ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:06:50.51
+5337481b
+User
+7:36:50 AM [express] GET /api/user 401 in 0ms :: {"error":"Not authenticated"}
+2025-05-23 13:06:55.86
+5337481b
+User
+7:36:55 AM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+2025-05-23 13:06:55.98
+5337481b
+User
+7:36:55 AM [express] GET /api/notifications/unread 304 in 290ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:07:05.03
+5337481b
+User
+7:37:05 AM [express] GET /api/notifications/unread 304 in 727ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:07:06.52
+5337481b
+User
+7:37:06 AM [express] GET /api/notifications 304 in 648ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:07:14.03
+5337481b
+User
+7:37:14 AM [express] GET /api/notifications/unread 304 in 677ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:07:22.13
+5337481b
+User
+7:37:22 AM [express] GET /api/notifications 304 in 270ms :: [{"id":105,"type":"chatbot","message":"N…
+2025-05-23 13:07:22.60
+5337481b
+User
+7:37:22 AM [express] GET /api/notifications/unread 304 in 248ms :: [{"id":105,"type":"chatbot","mess…
+2025-05-23 13:07:27.27
+5337481b
+User
+7:37:27 AM [express] GET /api/user 401 in 1ms :: {"error":"Not authenticated"}
+2025-05-23 13:07:39.94
+5337481b
+User
+7:37:39 AM [express] GET /api
