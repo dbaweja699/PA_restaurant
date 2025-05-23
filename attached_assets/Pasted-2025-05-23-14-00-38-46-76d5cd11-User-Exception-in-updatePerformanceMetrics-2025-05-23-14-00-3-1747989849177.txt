@@ -1,0 +1,104 @@
+2025-05-23 14:00:38.46
+76d5cd11
+User
+Exception in updatePerformanceMetrics: {
+2025-05-23 14:00:38.46
+76d5cd11
+User
+code: 'PGRST204',
+2025-05-23 14:00:38.46
+76d5cd11
+User
+details: null,
+2025-05-23 14:00:38.46
+76d5cd11
+User
+hint: null,
+2025-05-23 14:00:38.46
+76d5cd11
+User
+message: "Could not find the 'customerSatisfaction' column of 'performance_metrics' in the schema cache"
+2025-05-23 14:00:38.46
+76d5cd11
+User
+}
+2025-05-23 14:12:46.66
+14ee4349
+System
+starting up user application
+2025-05-23 14:12:46.88
+14ee4349
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-05-23 14:12:49.14
+14ee4349
+User
+> rest-express@1.0.0 start
+2025-05-23 14:12:49.14
+14ee4349
+User
+> NODE_ENV=production node dist/index.js
+2025-05-23 14:12:50.67
+14ee4349
+User
+Testing Supabase connection...
+2025-05-23 14:12:50.70
+14ee4349
+User
+Running database migration...
+2025-05-23 14:12:51.05
+14ee4349
+User
+Successfully connected to Supabase database
+2025-05-23 14:12:51.69
+14ee4349
+User
+Successfully connected to bookings table
+2025-05-23 14:12:53.26
+14ee4349
+User
+Database migration completed
+2025-05-23 14:12:53.26
+14ee4349
+User
+Connecting to Supabase database...
+2025-05-23 14:12:53.91
+14ee4349
+User
+Successfully connected to Supabase database
+2025-05-23 14:12:53.91
+14ee4349
+User
+Supabase database connection established
+2025-05-23 14:12:53.97
+14ee4349
+User
+8:42:53 AM [express] serving on port 5000
+2025-05-23 14:12:55.46
+14ee4349
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:13:03.89
+14ee4349
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:13:07.23
+14ee4349
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:13:14.16
+14ee4349
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:13:17.40
+14ee4349
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+2025-05-23 14:13:21.30
+14ee4349
+User
+Error: ENOENT: no such file or directory, stat '/home/runner/workspace/client/dist/index.html'
+
+Wrap
+
+Colors
