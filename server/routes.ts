@@ -1053,6 +1053,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Service Request Proxy Endpoint
+  app.post(`${apiPrefix}/proxy/service-request`, async (req, res) => {
+    try {
+      console.log("Proxying service request to n8n webhook:", req.body);
+      
+      if (!process.env.N8N_WEBHOOK_URL) {
+        console.error("N8N_WEBHOOK_URL environment variable is not defined");
+        return res.status(500).json({ error: "Webhook URL is not configured" });
+      }
+      
+      const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL + "request_service";
+      
+      const response = await fetch(n8nWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(req.body),
+      });
+      
+      if (!response.ok) {
+        console.error(
+          "Error from service request webhook:",
+          response.status,
+          response.statusText
+        );
+        return res.status(response.status).json({
+          error: `Webhook responded with status ${response.status}`,
+        });
+      }
+      
+      const data = await response.json();
+      console.log("Service request webhook response:", data);
+      res.json(data);
+    } catch (error) {
+      console.error("Error proxying to service request webhook:", error);
+      res.status(500).json({ error: "Failed to connect to webhook service" });
+    }
+  });
+  
   // Function Bookings API Endpoints
   app.get(`${apiPrefix}/function-bookings`, async (req, res) => {
     try {
