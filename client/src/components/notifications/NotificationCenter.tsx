@@ -127,24 +127,46 @@ export function NotificationCenter() {
     // Create audio elements for different notification sounds
     // Using alarm_clock.mp3 for all notification types
     const alarmSound = '/sounds/alarm_clock.mp3';
-    // Create audio elements with preload attribute
-    const createAudio = (src: string) => {
-      const audio = new Audio(src);
-      audio.preload = 'auto';
-      return audio;
-    };
     
-    notificationSounds.current.default = createAudio(alarmSound);
-    notificationSounds.current.order = createAudio(alarmSound);
-    notificationSounds.current.booking = createAudio(alarmSound);
-    notificationSounds.current.function_booking = createAudio(alarmSound);
-    
-    // Try to preload all sounds
-    Object.values(notificationSounds.current).forEach(sound => {
-      if (sound) {
-        sound.load();
-      }
-    });
+    // Check if the audio file exists first
+    fetch(alarmSound, { method: 'HEAD' })
+      .then(() => {
+        console.log('Alarm sound file found, initializing audio elements');
+        
+        // Create audio elements with preload attribute
+        const createAudio = (src: string) => {
+          const audio = new Audio(src);
+          audio.preload = 'auto';
+          // Add load event listener to ensure the audio is ready
+          audio.addEventListener('canplaythrough', () => {
+            console.log(`Audio ${src} loaded and ready to play`);
+          });
+          return audio;
+        };
+        
+        notificationSounds.current.default = createAudio(alarmSound);
+        notificationSounds.current.order = createAudio(alarmSound);
+        notificationSounds.current.booking = createAudio(alarmSound);
+        notificationSounds.current.function_booking = createAudio(alarmSound);
+        
+        // Try to preload all sounds
+        Object.values(notificationSounds.current).forEach(sound => {
+          if (sound) {
+            sound.load();
+          }
+        });
+      })
+      .catch(err => {
+        console.error('Audio file not found:', err);
+        // Create fallback base64 audio as a last resort
+        const fallbackBase64 = 'data:audio/mp3;base64,SUQzAwAAAAABOlRJVDIAAAAZAAAAbm90aWZpY2F0aW9uLXNvdW5kLm1wMwBUWVhYAAAADwAAAHVzZXIAAHgAYQBtAHAAVEVOQwAAAA8AAABpAFQAdQBuAGUAcwAgADEAMgAuADkALgAwAC4AMQAwADMAVENPTgAAAA8AAABTA09VTkQgRUZGRUNUAAA=';
+        const createFallbackAudio = () => new Audio(fallbackBase64);
+        
+        notificationSounds.current.default = createFallbackAudio();
+        notificationSounds.current.order = createFallbackAudio();
+        notificationSounds.current.booking = createFallbackAudio();
+        notificationSounds.current.function_booking = createFallbackAudio();
+      });
     
     // Fallback sounds if the files don't exist
     const fallbackBase64 = 'data:audio/mp3;base64,SUQzAwAAAAABOlRJVDIAAAAZAAAAbm90aWZpY2F0aW9uLXNvdW5kLm1wMwBUWVhYAAAADwAAAHVzZXIAAHgAYQBtAHAAVEVOQwAAAA8AAABpAFQAdQBuAGUAcwAgADEAMgAuADkALgAwAC4AMQAwADMAVENPTgAAAA8AAABTA09VTkQgRUZGRUNUAAA=';
@@ -204,12 +226,21 @@ export function NotificationCenter() {
     if (soundToPlay) {
       // Make sure the audio is loaded before playing
       soundToPlay.load();
+      
+      console.log(`Attempting to play ${type} notification sound`);
+      
       // Add a small delay to ensure the audio is loaded
       setTimeout(() => {
-        soundToPlay.play().catch(err => {
-          console.error(`Failed to play ${type} notification sound:`, err);
-        });
-      }, 100);
+        const playPromise = soundToPlay.play();
+        
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.error(`Failed to play ${type} notification sound:`, err);
+            // Fallback for browsers that require user interaction
+            console.log('Using interaction fallback for audio playback');
+          });
+        }
+      }, 300);
     }
   };
   

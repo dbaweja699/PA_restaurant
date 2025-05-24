@@ -23,36 +23,52 @@ export function AlertNotification({
   autoClose = false,
   autoCloseTime = 5000
 }: AlertNotificationProps) {
-  const [audio] = useState(new Audio('/sounds/alarm_clock.mp3'));
+  const [audio] = useState(() => {
+    const audioElement = new Audio('/sounds/alarm_clock.mp3');
+    // Set preload attribute to ensure the audio file is loaded before attempting to play
+    audioElement.preload = 'auto';
+    return audioElement;
+  });
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     // Play the sound when the notification appears
     const playSound = () => {
       try {
-        // Reset the audio to ensure it plays from the start
-        audio.pause();
-        audio.currentTime = 0;
-        
-        // Configure audio
-        audio.volume = 1.0;
-        audio.loop = type === 'order'; // Loop only for orders that require acceptance
-        
-        // Play with a small delay to ensure DOM is ready
-        setTimeout(() => {
-          const playPromise = audio.play();
-          
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
-              console.error(`Failed to play alert notification sound:`, err);
-              // Try again with user interaction requirement workaround
-              document.addEventListener('click', function playOnClick() {
-                audio.play();
-                document.removeEventListener('click', playOnClick);
-              }, { once: true });
-            });
-          }
-        }, 200);
+        // Check if the audio file exists first
+        fetch('/sounds/alarm_clock.mp3', { method: 'HEAD' })
+          .then(() => {
+            // Reset the audio to ensure it plays from the start
+            audio.pause();
+            audio.currentTime = 0;
+            
+            // Configure audio
+            audio.volume = 1.0;
+            audio.loop = type === 'order'; // Loop only for orders that require acceptance
+            
+            // Ensure audio is loaded before attempting to play
+            audio.load();
+            
+            // Play with a small delay to ensure DOM is ready
+            setTimeout(() => {
+              console.log('Attempting to play notification sound');
+              const playPromise = audio.play();
+              
+              if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                  console.error(`Failed to play alert notification sound:`, err);
+                  // Try again with user interaction requirement workaround
+                  document.addEventListener('click', function playOnClick() {
+                    audio.play().catch(e => console.warn('Still unable to play audio:', e));
+                    document.removeEventListener('click', playOnClick);
+                  }, { once: true });
+                });
+              }
+            }, 300);
+          })
+          .catch(err => {
+            console.error('Audio file not found:', err);
+          });
         
         console.log(`Playing alert sound for ${type} notification`);
       } catch (err) {
