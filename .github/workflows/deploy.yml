@@ -61,8 +61,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            DOMAIN=princealbergrawler.dblytics.com
-            EMAIL=your-email@example.com  # Change this to a real email
+            DOMAIN=princealbertgrawler.dblytics.com
+            EMAIL= kshitijk146@gmail.com # Change this to a real email
       
             # Update system and install NGINX + Certbot
             sudo apt-get update
