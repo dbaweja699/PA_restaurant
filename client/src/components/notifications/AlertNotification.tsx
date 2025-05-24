@@ -36,8 +36,28 @@ export function AlertNotification({
   // Order ID text for display
   const orderIdText = type === 'order' && details.orderId ? ` #${details.orderId}` : '';
 
+  // Check if we've already seen this notification
+  const [notificationAlreadySeen, setNotificationAlreadySeen] = useState<boolean>(() => {
+    try {
+      const seenNotifications = localStorage.getItem('processedNotificationIds');
+      if (seenNotifications && details.id) {
+        const ids = JSON.parse(seenNotifications);
+        return ids.includes(details.id);
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  });
+
   // Play alert notification sound when component mounts
   useEffect(() => {
+    // Skip playing sound if we've already seen this notification
+    if (notificationAlreadySeen) {
+      console.log("Notification already seen, skipping sound playback");
+      return;
+    }
+    
     // Try to play the notification sound
     try {
       const soundPath = '/sounds/alarm_clock.mp3';
