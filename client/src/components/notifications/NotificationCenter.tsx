@@ -114,22 +114,41 @@ export function NotificationCenter() {
   const notificationSound = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   
+  // Audio sounds for different notification types
+  const notificationSounds = useRef<Record<string, HTMLAudioElement | null>>({
+    default: null,
+    order: null,
+    booking: null,
+  });
+  
   useEffect(() => {
-    // Create audio element for notification sound
-    notificationSound.current = new Audio('/notification-sound.mp3');
+    // Create audio elements for different notification sounds
+    notificationSounds.current.default = new Audio('/notification-sound.mp3');
+    notificationSounds.current.order = new Audio('/sounds/order-notification.mp3');
+    notificationSounds.current.booking = new Audio('/sounds/booking-notification.mp3');
     
-    // Fallback to a base64 encoded sound if the file doesn't exist
-    notificationSound.current.onerror = () => {
-      const fallbackSound = new Audio(
-        'data:audio/mp3;base64,SUQzAwAAAAABOlRJVDIAAAAZAAAAbm90aWZpY2F0aW9uLXNvdW5kLm1wMwBUWVhYAAAADwAAAHVzZXIAAHgAYQBtAHAAVEVOQwAAAA8AAABpAFQAdQBuAGUAcwAgADEAMgAuADkALgAwAC4AMQAwADMAVENPTgAAAA8AAABTA09VTkQgRUZGRUNUAAA='
-      );
-      notificationSound.current = fallbackSound;
-    };
+    // Fallback sounds if the files don't exist
+    const fallbackBase64 = 'data:audio/mp3;base64,SUQzAwAAAAABOlRJVDIAAAAZAAAAbm90aWZpY2F0aW9uLXNvdW5kLm1wMwBUWVhYAAAADwAAAHVzZXIAAHgAYQBtAHAAVEVOQwAAAA8AAABpAFQAdQBuAGUAcwAgADEAMgAuADkALgAwAC4AMQAwADMAVENPTgAAAA8AAABTA09VTkQgRUZGRUNUAAA=';
+    
+    // Set error handlers for all sounds
+    Object.keys(notificationSounds.current).forEach(key => {
+      const sound = notificationSounds.current[key];
+      if (sound) {
+        sound.onerror = () => {
+          notificationSounds.current[key] = new Audio(fallbackBase64);
+        };
+      }
+    });
+    
+    // Reference for easy access in other methods
+    notificationSound.current = notificationSounds.current.default;
     
     return () => {
-      if (notificationSound.current) {
-        notificationSound.current = null;
-      }
+      // Clean up all audio elements
+      Object.keys(notificationSounds.current).forEach(key => {
+        notificationSounds.current[key] = null;
+      });
+      notificationSound.current = null;
     };
   }, []);
   
@@ -147,23 +166,51 @@ export function NotificationCenter() {
     refetchInterval: 8000, // Refetch more frequently - every 8 seconds
   });
   
+  // Function to play the appropriate notification sound
+  const playNotificationSound = (type: string) => {
+    if (!soundEnabled) return;
+    
+    // Select the appropriate sound based on notification type
+    let soundToPlay = notificationSounds.current.default;
+    
+    if (type === 'order' && notificationSounds.current.order) {
+      soundToPlay = notificationSounds.current.order;
+    } else if (type === 'booking' && notificationSounds.current.booking) {
+      soundToPlay = notificationSounds.current.booking;
+    }
+    
+    // Play the selected sound
+    if (soundToPlay) {
+      soundToPlay.play().catch(err => {
+        console.error(`Failed to play ${type} notification sound:`, err);
+      });
+    }
+  };
+  
   // Check for new notifications and play sound
   useEffect(() => {
     const currentCount = unreadNotifications.length;
     
     // Check if we have new notifications since last check
     if (currentCount > lastNotificationCount && lastNotificationCount > 0) {
+      // Get the newest notification
+      const newestNotification = unreadNotifications.length > 0 ? unreadNotifications[0] : null;
+      
       // Show toast for new notification
       toast({
-        title: "New Notification",
+        title: newestNotification ? 
+          `New ${newestNotification.type.charAt(0).toUpperCase() + newestNotification.type.slice(1)}` : 
+          "New Notification",
         description: currentCount === lastNotificationCount + 1
           ? unreadNotifications[0].message
           : `You have ${currentCount - lastNotificationCount} new notifications`,
         variant: "default",
       });
       
-      // Play sound if enabled
-      if (soundEnabled && notificationSound.current) {
+      // Play appropriate sound based on notification type
+      if (newestNotification) {
+        playNotificationSound(newestNotification.type);
+      } else if (soundEnabled && notificationSound.current) {
         notificationSound.current.play().catch(err => {
           console.error("Failed to play notification sound:", err);
         });

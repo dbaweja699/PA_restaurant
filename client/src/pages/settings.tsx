@@ -387,6 +387,22 @@ export default function Settings() {
                   
                   <div className="flex items-center justify-between">
                     <div>
+                      <h4 className="font-medium">Order Sound Alerts</h4>
+                      <p className="text-sm text-neutral-500">Play distinct sound for new orders</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-medium">Booking Sound Alerts</h4>
+                      <p className="text-sm text-neutral-500">Play distinct sound for new bookings</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
                       <h4 className="font-medium">New Orders</h4>
                       <p className="text-sm text-neutral-500">Alert when new orders are placed</p>
                     </div>
