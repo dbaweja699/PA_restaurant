@@ -239,6 +239,51 @@ export function AlertNotification({
     };
   }, [autoClose, autoCloseTime, onClose]);
 
+  // Function to play a beep pattern similar to the alarm sound
+  const playCustomAlarmBeep = () => {
+    console.log("Playing custom alarm beep pattern");
+    try {
+      // Create audio context
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 0.5; // Set volume to 50%
+      gainNode.connect(audioContext.destination);
+
+      // Create a pattern of beeps that mimics our alarm_clock.mp3
+      const beepPattern = [
+        { frequency: 880, duration: 200, gap: 100 },
+        { frequency: 880, duration: 200, gap: 100 },
+        { frequency: 1046, duration: 300, gap: 0 }
+      ];
+
+      // Play the pattern
+      let startTime = audioContext.currentTime;
+
+      beepPattern.forEach(beep => {
+        // Create oscillator for this beep
+        const oscillator = audioContext.createOscillator();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = beep.frequency;
+
+        // Connect to gain node
+        oscillator.connect(gainNode);
+
+        // Schedule start and stop times
+        oscillator.start(startTime);
+        oscillator.stop(startTime + beep.duration / 1000);
+
+        // Update the start time for the next beep
+        startTime += (beep.duration + beep.gap) / 1000;
+      });
+
+      console.log("Alarm beep pattern scheduled successfully");
+      return true;
+    } catch (err) {
+      console.error("Failed to play custom alarm beep:", err);
+      return false;
+    }
+  };
+
   // Attempt to play sound again when the alert becomes visible
   useEffect(() => {
     // This second effect helps ensure the sound plays even if browser needs user interaction first
