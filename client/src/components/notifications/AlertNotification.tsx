@@ -40,36 +40,63 @@ export function AlertNotification({
   useEffect(() => {
     // Try to play the notification sound
     try {
-      const soundPath = '/sounds/alarm_clock.mp3';
-
-      // Create and configure audio element immediately
-      audioRef.current = new Audio(soundPath);
-      audioRef.current.volume = 1.0;
-      audioRef.current.preload = 'auto';
-
-      // Add event listener for when audio is ready to play
-      audioRef.current.addEventListener('canplaythrough', () => {
-        console.log("Alert sound loaded and ready to play");
-        // Play audio after a small delay to ensure browser is ready
-        setTimeout(() => {
+      // Create an audio element directly in the component for better browser support
+      const audioElement = document.createElement('audio');
+      audioElement.src = '/sounds/alarm_clock.mp3';
+      audioElement.id = 'alert-notification-sound';
+      audioElement.volume = 1.0;
+      audioElement.preload = 'auto';
+      document.body.appendChild(audioElement);
+      
+      // Store reference for cleanup
+      audioRef.current = audioElement;
+      
+      console.log("Alert sound element created");
+      
+      // Force immediate play attempt after a small delay
+      setTimeout(() => {
+        console.log("Attempting to play notification sound now");
+        
+        // Play the sound with user interaction context
+        const playSound = () => {
           if (audioRef.current) {
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(err => {
-                console.error("Failed to play alert notification sound:", err);
-                // Try playing on user interaction as fallback
-                document.addEventListener('click', function playOnInteraction() {
-                  if (audioRef.current) audioRef.current.play();
-                  document.removeEventListener('click', playOnInteraction);
-                }, { once: true });
+            // Play it twice to ensure it works (browser quirk workaround)
+            const promise = audioRef.current.play();
+            
+            if (promise !== undefined) {
+              promise.then(() => {
+                console.log("Alert sound playing successfully");
+              }).catch(err => {
+                console.error("Failed to play alert sound:", err);
+                
+                // Create and play a very short beep as fallback
+                try {
+                  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                  const oscillator = audioContext.createOscillator();
+                  oscillator.type = 'sine';
+                  oscillator.frequency.value = 800;
+                  oscillator.connect(audioContext.destination);
+                  oscillator.start();
+                  setTimeout(() => oscillator.stop(), 200);
+                  console.log("Played fallback beep sound");
+                } catch (err) {
+                  console.error("Even fallback sound failed:", err);
+                }
               });
             }
           }
-        }, 100);
-      });
-
-      // Load the audio
-      audioRef.current.load();
+        };
+        
+        // Try to play immediately
+        playSound();
+        
+        // Also add a click handler to ensure it works on first user interaction
+        document.addEventListener('click', function playOnFirstClick() {
+          playSound();
+          document.removeEventListener('click', playOnFirstClick);
+        }, { once: true });
+        
+      }, 300);
     } catch (err) {
       console.error("Error setting up alert notification sound:", err);
     }
@@ -86,6 +113,10 @@ export function AlertNotification({
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
+        // Remove the element from DOM if it was added
+        if (audioRef.current.parentNode) {
+          audioRef.current.parentNode.removeChild(audioRef.current);
+        }
         audioRef.current = null;
       }
       if (timeout) {
@@ -93,6 +124,21 @@ export function AlertNotification({
       }
     };
   }, [autoClose, autoCloseTime, onClose]);
+  
+  // Attempt to play sound again when the alert becomes visible
+  useEffect(() => {
+    // This second effect helps ensure the sound plays even if browser needs user interaction first
+    const playAfterDelay = setTimeout(() => {
+      if (audioRef.current) {
+        console.log("Second attempt to play notification sound");
+        audioRef.current.play().catch(err => {
+          console.log("Second play attempt failed:", err);
+        });
+      }
+    }, 800);
+    
+    return () => clearTimeout(playAfterDelay);
+  }, []);
 
   // Handle Accept action (for orders)
   const handleAccept = async () => {
