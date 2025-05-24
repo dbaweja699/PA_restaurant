@@ -127,9 +127,8 @@ export function AlertNotification({
     try {
       if (type === 'order' && details.id) {
         // Update order status to processing
-        await apiRequest(`/api/orders/${details.id}/status`, {
-          method: 'PATCH',
-          data: { status: 'processing' }
+        await apiRequest(`/api/orders/${details.id}/status`, 'PATCH', { 
+          status: 'processing' 
         });
         
         // Invalidate queries to refresh data
@@ -137,9 +136,7 @@ export function AlertNotification({
         
         // Mark notification as read
         if (details.notificationId) {
-          await apiRequest(`/api/notifications/${details.notificationId}/read`, {
-            method: 'PATCH'
-          });
+          await apiRequest(`/api/notifications/${details.notificationId}/read`, 'PATCH');
           queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
           queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
         }
@@ -181,9 +178,7 @@ export function AlertNotification({
     // Mark notification as read if it has an ID
     if (details.notificationId) {
       try {
-        await apiRequest(`/api/notifications/${details.notificationId}/read`, {
-          method: 'PATCH'
-        });
+        await apiRequest(`/api/notifications/${details.notificationId}/read`, 'PATCH');
         queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
         queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
       } catch (error) {
