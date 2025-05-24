@@ -130,10 +130,12 @@ export function NotificationCenter() {
   const [open, setOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
 
-  // Use localStorage to prevent notification persistence across sessions
+  // Clear notification state on component mount
   useEffect(() => {
     // Clear any previous notification state on component mount
-    localStorage.removeItem("currentNotification");
+    localStorage.removeItem('currentNotification');
+    // Force hide any alerts that might be showing
+    setShowAlertNotification(false);
   }, []);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastNotificationCount, setLastNotificationCount] = useState(0);
