@@ -42,26 +42,36 @@ export function AlertNotification({
     try {
       const soundPath = '/sounds/alarm_clock.mp3';
 
-      // Check if the file exists
-      fetch(soundPath, { method: 'HEAD' })
-        .then(() => {
-          audioRef.current = new Audio(soundPath);
-          audioRef.current.volume = 1.0;
+      // Create and configure audio element immediately
+      audioRef.current = new Audio(soundPath);
+      audioRef.current.volume = 1.0;
+      audioRef.current.preload = 'auto';
 
-          // Play the audio
-          const playPromise = audioRef.current.play();
-
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
-              console.error("Failed to play alert notification sound:", err);
-            });
+      // Add event listener for when audio is ready to play
+      audioRef.current.addEventListener('canplaythrough', () => {
+        console.log("Alert sound loaded and ready to play");
+        // Play audio after a small delay to ensure browser is ready
+        setTimeout(() => {
+          if (audioRef.current) {
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(err => {
+                console.error("Failed to play alert notification sound:", err);
+                // Try playing on user interaction as fallback
+                document.addEventListener('click', function playOnInteraction() {
+                  if (audioRef.current) audioRef.current.play();
+                  document.removeEventListener('click', playOnInteraction);
+                }, { once: true });
+              });
+            }
           }
-        })
-        .catch(err => {
-          console.error("Alert sound file not found:", err);
-        });
+        }, 100);
+      });
+
+      // Load the audio
+      audioRef.current.load();
     } catch (err) {
-      console.error("Error playing alert notification sound:", err);
+      console.error("Error setting up alert notification sound:", err);
     }
 
     // Auto-close the notification after the specified time if autoClose is true
@@ -105,11 +115,20 @@ export function AlertNotification({
         // Invalidate orders query to refresh the data
         queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
 
+        // Show success toast
         toast({
           title: "Order Status Updated",
           description: `Order #${details.orderId} is now processing`,
           variant: "default",
         });
+        
+        // Call the original onAccept callback if provided
+        if (onAccept) {
+          onAccept();
+        }
+        
+        // Close the notification after successful update
+        onClose();
       } catch (error) {
         console.error('Error updating order status:', error);
         toast({
@@ -117,17 +136,16 @@ export function AlertNotification({
           description: error instanceof Error ? error.message : 'Unknown error occurred',
           variant: "destructive",
         });
-      } finally {
         setIsProcessing(false);
       }
+    } else {
+      // If not an order or no orderId, just close
+      if (onAccept) {
+        onAccept();
+      }
+      onClose();
+      setIsProcessing(false);
     }
-
-    // Call the original onAccept callback
-    if (onAccept) {
-      onAccept();
-    }
-
-    onClose();
   };
 
   // Handle close action
