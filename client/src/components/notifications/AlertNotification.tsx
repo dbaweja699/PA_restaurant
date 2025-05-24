@@ -149,6 +149,7 @@ export function AlertNotification({
 
   const handleAccept = () => {
     if (type === 'order' && details?.orderId) {
+      console.log("Accepting order and updating status to processing:", details.orderId);
       // Update order status to "processing"
       updateOrderStatusMutation.mutate(details.orderId);
     } else if (onAccept) {
