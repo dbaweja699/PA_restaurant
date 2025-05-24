@@ -92,6 +92,16 @@ jobs:
                     proxy_pass http://localhost:5000;
                     add_header Access-Control-Allow-Origin "*";
                     add_header Cross-Origin-Resource-Policy "cross-origin";
+                    add_header Content-Type "audio/mpeg";
+                    expires 1d;
+                }
+                
+                # API sound endpoint with proper CORS headers
+                location /api/sound/ {
+                    proxy_pass http://localhost:5000;
+                    add_header Access-Control-Allow-Origin "*";
+                    add_header Cross-Origin-Resource-Policy "cross-origin";
+                    add_header Content-Type "audio/mpeg";
                     expires 1d;
                 }
                 
@@ -100,8 +110,8 @@ jobs:
                     proxy_pass http://localhost:5000;
                     add_header Service-Worker-Allowed "/";
                     add_header Cache-Control "no-cache";
-                    add_header Cross-Origin-Embedder-Policy "require-corp";
-                    add_header Cross-Origin-Opener-Policy "same-origin";
+                    add_header Cross-Origin-Embedder-Policy "unsafe-none";
+                    add_header Cross-Origin-Opener-Policy "unsafe-none";
                 }
                 
                 # Web app manifest with proper content type
@@ -122,7 +132,7 @@ jobs:
             sudo certbot --nginx --non-interactive --agree-tos --email $EMAIL -d $DOMAIN
             
             # Add security headers for PWA support to the HTTPS config
-            sudo sed -i '/ssl_prefer_server_ciphers/a \\n    # Security headers for PWA and audio playback\n    add_header Content-Security-Policy "default-src \x27self\x27; script-src \x27self\x27 \x27unsafe-inline\x27 \x27unsafe-eval\x27; connect-src \x27self\x27; img-src \x27self\x27 data: blob:; style-src \x27self\x27 \x27unsafe-inline\x27; media-src \x27self\x27 blob:; object-src \x27none\x27; frame-ancestors \x27self\x27; worker-src \x27self\x27 blob:;";\n    add_header X-Content-Type-Options "nosniff";\n    add_header X-Frame-Options "DENY";\n    add_header X-XSS-Protection "1; mode=block";' /etc/nginx/sites-available/$DOMAIN
+            sudo sed -i '/ssl_prefer_server_ciphers/a \\n    # Security headers for PWA and audio playback\n    add_header Content-Security-Policy "default-src \x27self\x27; script-src \x27self\x27 \x27unsafe-inline\x27 \x27unsafe-eval\x27; connect-src \x27self\x27 https://$DOMAIN wss://$DOMAIN; img-src \x27self\x27 data: blob:; style-src \x27self\x27 \x27unsafe-inline\x27; media-src \x27self\x27 blob: https://$DOMAIN; object-src \x27none\x27; frame-ancestors \x27self\x27; worker-src \x27self\x27 blob:;";\n    add_header X-Content-Type-Options "nosniff";\n    add_header Cross-Origin-Embedder-Policy "unsafe-none";\n    add_header Cross-Origin-Opener-Policy "unsafe-none";\n    add_header Cross-Origin-Resource-Policy "cross-origin";\n    add_header X-Frame-Options "SAMEORIGIN";\n    add_header X-XSS-Protection "1; mode=block";\n    add_header Permissions-Policy "autoplay=*";\n    add_header Feature-Policy "autoplay *";' /etc/nginx/sites-available/$DOMAIN
 
             # Reload nginx to apply the changes
             sudo nginx -t && sudo systemctl reload nginx

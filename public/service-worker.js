@@ -14,6 +14,7 @@ const urlsToCache = [
 // Audio files to cache with high priority
 const audioFilesToCache = [
   '/sounds/alarm_clock.mp3',
+  '/api/sound/alarm_clock.mp3',
   '/sounds/order-notification.mp3',
   '/sounds/booking-notification.mp3'
 ];
