@@ -1407,10 +1407,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? parseInt(req.query.userId as string)
         : undefined;
       const unreadNotifications = await storage.getUnreadNotifications(userId);
+      console.log(`Sending ${unreadNotifications.length} unread notifications to client`);
       res.json(unreadNotifications);
     } catch (error) {
       console.error("Error fetching unread notifications:", error);
       res.status(500).json({ error: "Error fetching unread notifications" });
+    }
+  });
+  
+  // Test endpoint to create a notification for debugging
+  app.post(`${apiPrefix}/debug/notification`, async (req, res) => {
+    try {
+      const { type = 'order' } = req.body;
+      
+      console.log(`Creating test ${type} notification for debugging`);
+      
+      let notification;
+      if (type === 'order') {
+        notification = await storage.createNotification({
+          type: 'order',
+          message: 'Test order notification',
+          details: {
+            orderId: 999,
+            customerName: 'Test Customer',
+            total: '$10.00',
+            items: [{ name: 'Test Item', price: '$10.00', quantity: 1 }],
+            status: 'new'
+          },
+          isRead: false,
+          userId: null
+        });
+      } else if (type === 'booking') {
+        notification = await storage.createNotification({
+          type: 'booking',
+          message: 'Test booking notification',
+          details: {
+            bookingId: 999,
+            customerName: 'Test Customer',
+            bookingTime: new Date().toISOString(),
+            partySize: 2
+          },
+          isRead: false,
+          userId: null
+        });
+      } else if (type === 'function_booking') {
+        notification = await storage.createNotification({
+          type: 'function_booking',
+          message: 'Test function booking notification',
+          details: {
+            bookingId: 999,
+            customerName: 'Test Customer',
+            bookingTime: new Date().toISOString(),
+            partySize: 10,
+            occasion: 'Test Event'
+          },
+          isRead: false,
+          userId: null
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: 'Test notification created', 
+        notification 
+      });
+    } catch (error) {
+      console.error("Error creating test notification:", error);
+      res.status(500).json({ 
+        error: "Error creating test notification",
+        details: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 

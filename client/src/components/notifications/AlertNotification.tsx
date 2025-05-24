@@ -90,55 +90,108 @@ export function AlertNotification({
       };
 
       const basePath = getBasePath();
-      const soundPath = `${basePath}/sounds/alarm_clock.mp3`;
-      console.log(`Loading sound from: ${soundPath}`);
+      
+      // Try first with our API endpoint which has proper headers
+      const apiSoundPath = `${basePath}/api/sound/alarm_clock.mp3`;
+      // Fallback to direct path if API fails
+      const directSoundPath = `${basePath}/sounds/alarm_clock.mp3`;
+      
+      console.log(`Attempting to load sound from API: ${apiSoundPath}`);
+      console.log(`Fallback sound path: ${directSoundPath}`);
 
-      // Create and configure audio element immediately
-      audioRef.current = new Audio(soundPath);
-      audioRef.current.volume = 1.0;
-      audioRef.current.preload = 'auto';
-      
-      // Add error handler for debugging production issues
-      audioRef.current.onerror = (e) => {
-        console.error('Audio error:', e);
-        console.error('Audio error code:', audioRef.current?.error?.code);
-        console.error('Audio error message:', audioRef.current?.error?.message);
-      };
-      
-      // For orders, we'll loop the sound until it's accepted or dismissed
-      if (type === 'order') {
-        // Loop continuously for orders until accepted or dismissed
-        // Using a clean implementation that works across browsers
-        const handleAudioEnded = () => {
-          if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            // Try to play again
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-              playPromise.catch(err => {
-                console.error("Failed to replay notification sound:", err);
-              });
-            }
+      // Function to try multiple sound sources
+      const tryMultipleSoundSources = (sources: string[]) => {
+        if (!sources.length) {
+          console.error("All sound sources failed");
+          return;
+        }
+        
+        const currentSource = sources[0];
+        const remainingSources = sources.slice(1);
+        
+        console.log(`Trying to play sound from: ${currentSource}`);
+        
+        // Create a new audio element for this attempt
+        const audio = new Audio(currentSource);
+        audio.volume = 1.0;
+        audio.preload = 'auto';
+        
+        // Add error handler to try next source
+        audio.onerror = (e) => {
+          console.error(`Audio error for ${currentSource}:`, e);
+          console.error('Audio error code:', audio.error?.code);
+          console.error('Audio error message:', audio.error?.message);
+          
+          // Try next source
+          if (remainingSources.length) {
+            console.log(`Trying next sound source...`);
+            tryMultipleSoundSources(remainingSources);
           }
         };
         
-        // Add the event listener for continuous play
-        audioRef.current.addEventListener('ended', handleAudioEnded);
-        
-        // Save the handler for cleanup
-        audioIntervalRef.current = window.setInterval(() => {
-          // If sound stopped for any reason, try to restart it
-          if (audioRef.current && audioRef.current.paused) {
-            audioRef.current.play().catch(err => {
-              console.error("Failed to restart notification sound:", err);
+        // Try to play this source
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              console.log(`Successfully playing sound from: ${currentSource}`);
+              audioRef.current = audio;
+            })
+            .catch(err => {
+              console.error(`Error playing from ${currentSource}:`, err);
+              
+              // Try next source
+              if (remainingSources.length) {
+                console.log(`Trying next sound source due to play error...`);
+                tryMultipleSoundSources(remainingSources);
+              }
             });
+        }
+      };
+      
+      // Create a list of sound sources to try
+      const soundSources = [
+        apiSoundPath,
+        directSoundPath,
+        `${window.location.origin}/api/sound/alarm_clock.mp3`,
+        `${window.location.origin}/sounds/alarm_clock.mp3`,
+        `/api/sound/alarm_clock.mp3`,
+        `/sounds/alarm_clock.mp3`,
+      ];
+      
+      // For production only, add additional paths to try
+      if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('replit')) {
+        soundSources.push(
+          `https://${window.location.hostname}/api/sound/alarm_clock.mp3`,
+          `https://${window.location.hostname}/sounds/alarm_clock.mp3`
+        );
+      }
+      
+      // Start trying sound sources
+      tryMultipleSoundSources(soundSources);
+      
+      // For orders, we'll set up looping once we have a working audio element
+      if (type === 'order') {
+        // Set up an interval to check if audio is playing and set up looping
+        audioIntervalRef.current = window.setInterval(() => {
+          if (audioRef.current) {
+            // Set up looping for the audio
+            audioRef.current.loop = true;
+            
+            // If sound stopped for any reason, try to restart it
+            if (audioRef.current.paused) {
+              audioRef.current.play().catch(err => {
+                console.error("Failed to restart notification sound:", err);
+              });
+            }
           }
-        }, 2000); // Check every 2 seconds
+        }, 1000); // Check every second
       }
       
       // Also show a system notification if permission is granted
       if ('Notification' in window && Notification.permission === "granted") {
-        let icon = '/icons/icon-192x192.png';
+        let basePath = getBasePath();
+        let icon = `${basePath}/icons/icon-192x192.png`;
         let typeText = type === 'order' ? 'Order' : type === 'booking' ? 'Booking' : 'Function Booking';
         
         try {
@@ -161,8 +214,6 @@ export function AlertNotification({
       
       // Play the sound - multiple strategies for cross-browser compatibility
       const playSound = () => {
-        if (!audioRef.current) return;
-        
         console.log("Attempting to play notification sound");
         
         // Check if running in standalone mode (PWA installed)
@@ -177,7 +228,10 @@ export function AlertNotification({
               const audioContext = new AudioContext();
               console.log("Using AudioContext for PWA sound playback");
               
-              fetch(soundPath)
+              // Use one of our sound sources
+              const soundUrl = apiSoundPath;
+              
+              fetch(soundUrl)
                 .then(response => response.arrayBuffer())
                 .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
                 .then(audioBuffer => {
@@ -198,8 +252,8 @@ export function AlertNotification({
                   (window as any).currentAudioSource = source;
                 })
                 .catch(audioContextErr => {
-                  console.error("AudioContext sound playback failed, falling back to HTML Audio:", audioContextErr);
-                  tryHTMLAudioPlayback();
+                  console.error("AudioContext sound playback failed:", audioContextErr);
+                  // The tryMultipleSoundSources function is already handling this
                 });
               
               return; // Exit if we're using AudioContext
@@ -208,9 +262,6 @@ export function AlertNotification({
             console.error("Failed to initialize AudioContext:", err);
           }
         }
-        
-        // Fallback to regular HTML Audio API
-        tryHTMLAudioPlayback();
         
         function tryHTMLAudioPlayback() {
           // Create a function to try multiple audio sources
