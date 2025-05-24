@@ -8,6 +8,7 @@ import { Protected } from "@/components/layout/Protected";
 import { AIChatbot } from "@/components/chat/AIChatbot";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ServiceWorkerHandler } from "@/components/pwa/ServiceWorkerHandler";
+import SoundPreloader from "@/components/notifications/SoundPreloader";
 
 // Dashboard pages
 import Dashboard from "@/pages/dashboard";
@@ -88,6 +89,8 @@ function App() {
       <InstallPrompt />
       {/* Service Worker handler for audio notifications */}
       <ServiceWorkerHandler />
+      {/* Preload sound files for notifications */}
+      <SoundPreloader />
     </QueryClientProvider>
   );
 }
