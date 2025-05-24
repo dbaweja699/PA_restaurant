@@ -62,7 +62,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             DOMAIN=princealbertgrawler.dblytics.com
-            EMAIL="kshitijk146@gmail.com"
+            EMAIL="kshitijk146@gmail.com" 
 
             # Kill lock if present
             sudo kill -9 $(lsof /var/lib/dpkg/lock-frontend -t) 2>/dev/null || true
