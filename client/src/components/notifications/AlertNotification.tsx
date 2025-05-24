@@ -596,8 +596,24 @@ export function AlertNotification({
     }
   };
 
+  // Use our SoundFallback component to provide a fallback for sound autoplay issues
+  const [soundFallbackEnabled, setSoundFallbackEnabled] = useState(true);
+  
+  // Disable sound fallback when audio successfully plays
+  useEffect(() => {
+    if (audioRef.current && !audioRef.current.paused) {
+      // Sound is playing successfully, disable fallback
+      setSoundFallbackEnabled(false);
+    }
+  }, [audioRef.current]);
+  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      {/* Sound fallback component that shows a clickable notification if autoplay fails */}
+      <SoundFallback 
+        notificationType={type} 
+        enabled={soundFallbackEnabled && !notificationAlreadySeen} 
+      />
       <Card className="w-full max-w-md p-6 shadow-lg animate-in fade-in zoom-in duration-300">
         <div className="absolute top-2 right-2">
           <Button 
