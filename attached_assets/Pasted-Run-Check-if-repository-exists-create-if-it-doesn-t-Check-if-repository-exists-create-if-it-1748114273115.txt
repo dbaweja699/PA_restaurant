@@ -1,0 +1,348 @@
+Run # Check if repository exists, create if it doesn't
+  # Check if repository exists, create if it doesn't
+  aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region us-east-2 || aws ecr create-repository --repository-name $ECR_REPOSITORY --region us-east-2
+  
+  # Build and push the image
+  docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+  docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+  echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+  shell: /usr/bin/bash -e {0}
+  env:
+    AWS_DEFAULT_REGION: us-east-2
+    AWS_REGION: us-east-2
+    AWS_ACCESS_KEY_ID: ***
+    AWS_SECRET_ACCESS_KEY: ***
+    ECR_REGISTRY: 664418994345.dkr.ecr.us-east-2.amazonaws.com
+    ECR_REPOSITORY: pa_hotel_ai_assistant
+    IMAGE_TAG: latest
+{
+    "repositories": [
+        {
+            "repositoryArn": "arn:aws:ecr:us-east-2:664418994345:repository/pa_hotel_ai_assistant",
+            "registryId": "664418994345",
+            "repositoryName": "pa_hotel_ai_assistant",
+            "repositoryUri": "664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant",
+            "createdAt": "2025-05-23T13:11:34.501000+00:00",
+            "imageTagMutability": "MUTABLE",
+            "imageScanningConfiguration": {
+                "scanOnPush": false
+            },
+            "encryptionConfiguration": {
+                "encryptionType": "AES256"
+            }
+        }
+    ]
+}
+#0 building with "default" instance using docker driver
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 584B done
+#1 DONE 0.0s
+#2 [internal] load metadata for docker.io/library/node:20
+#2 ...
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+#2 [internal] load metadata for docker.io/library/node:20
+#2 DONE 0.9s
+#4 [internal] load .dockerignore
+#4 transferring context: 2B done
+#4 DONE 0.0s
+#5 [internal] load build context
+#5 transferring context: 5.60MB 0.1s done
+#5 DONE 0.1s
+#6 [1/7] FROM docker.io/library/node:20@sha256:7c4cd7c6935554b79c6fffb88e7bde3db0ce25b45d4c634d1fb0f1a6e7f5b782
+#6 resolve docker.io/library/node:20@sha256:7c4cd7c6935554b79c6fffb88e7bde3db0ce25b45d4c634d1fb0f1a6e7f5b782 done
+#6 sha256:37927ed901b1b2608b72796c6881bf645480268eca4ac9a37b9219e050bb4d84 0B / 24.02MB 0.1s
+#6 sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 0B / 64.40MB 0.1s
+#6 sha256:3e6b9d1a95114e19f12262a4e8a59ad1d1a10ca7b82108adcf0605a200294964 0B / 48.49MB 0.1s
+#6 sha256:6d07cbfef257913c1f95a9ae8c80d7be9d532df8bcfbaefe5b095104445ef7ad 2.49kB / 2.49kB done
+#6 sha256:225d64be69d5e005fb8677c55d0b7ea46b1d1afe98b28b145aef0d329fd66729 6.42kB / 6.42kB done
+#6 sha256:7c4cd7c6935554b79c6fffb88e7bde3db0ce25b45d4c634d1fb0f1a6e7f5b782 6.41kB / 6.41kB done
+#6 sha256:3e6b9d1a95114e19f12262a4e8a59ad1d1a10ca7b82108adcf0605a200294964 27.26MB / 48.49MB 0.3s
+#6 sha256:37927ed901b1b2608b72796c6881bf645480268eca4ac9a37b9219e050bb4d84 15.73MB / 24.02MB 0.4s
+#6 sha256:3e6b9d1a95114e19f12262a4e8a59ad1d1a10ca7b82108adcf0605a200294964 45.86MB / 48.49MB 0.4s
+#6 extracting sha256:3e6b9d1a95114e19f12262a4e8a59ad1d1a10ca7b82108adcf0605a200294964
+#6 sha256:37927ed901b1b2608b72796c6881bf645480268eca4ac9a37b9219e050bb4d84 24.02MB / 24.02MB 0.5s done
+#6 sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 19.92MB / 64.40MB 0.6s
+#6 sha256:3e6b9d1a95114e19f12262a4e8a59ad1d1a10ca7b82108adcf0605a200294964 48.49MB / 48.49MB 0.4s done
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 10.49MB / 211.36MB 0.6s
+#6 sha256:2995dfd1a19c2122791620e7b5cdabcf911e54bcc4ed1358a36bf4e93895f6c5 0B / 3.32kB 0.6s
+#6 sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 35.65MB / 64.40MB 0.7s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 25.17MB / 211.36MB 0.7s
+#6 sha256:2995dfd1a19c2122791620e7b5cdabcf911e54bcc4ed1358a36bf4e93895f6c5 3.32kB / 3.32kB 0.6s done
+#6 sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 0B / 48.63MB 0.7s
+#6 sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 47.19MB / 64.40MB 0.8s
+#6 sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 7.34MB / 48.63MB 0.8s
+#6 sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 58.72MB / 64.40MB 0.9s
+#6 sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 17.83MB / 48.63MB 0.9s
+#6 sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 64.40MB / 64.40MB 1.0s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 42.99MB / 211.36MB 1.0s
+#6 sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 34.60MB / 48.63MB 1.0s
+#6 sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 64.40MB / 64.40MB 1.0s done
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 55.57MB / 211.36MB 1.1s
+#6 sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 48.63MB / 48.63MB 1.1s
+#6 sha256:c657c59ebca66266d2e7c560e99090131867fc1ee1eba67a43765ddba49e163d 0B / 1.25MB 1.1s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 68.16MB / 211.36MB 1.2s
+#6 sha256:c657c59ebca66266d2e7c560e99090131867fc1ee1eba67a43765ddba49e163d 1.25MB / 1.25MB 1.2s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 104.86MB / 211.36MB 1.4s
+#6 sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 48.63MB / 48.63MB 1.2s done
+#6 sha256:c657c59ebca66266d2e7c560e99090131867fc1ee1eba67a43765ddba49e163d 1.25MB / 1.25MB 1.2s done
+#6 sha256:3fbcc227ac4b717b6faa06829f8381fcc888df989de0f866c75ac2033b569038 446B / 446B 1.3s done
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 122.68MB / 211.36MB 1.5s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 141.56MB / 211.36MB 1.6s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 177.21MB / 211.36MB 1.8s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 190.84MB / 211.36MB 2.1s
+#6 sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 206.57MB / 211.36MB 2.3s
+#6 extracting sha256:3e6b9d1a95114e19f12262a4e8a59ad1d1a10ca7b82108adcf0605a200294964 2.3s done
+#6 extracting sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0
+#6 extracting sha256:79b2f47ad4443652b9b5cc81a95ede249fd976310efdbee159f29638783778c0 2.3s done
+#6 extracting sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab
+#6 extracting sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 5.1s
+#6 extracting sha256:e23f099911d692f62b851cf49a1e93294288a115f5cd2d014180e4d3684d34ab 5.7s done
+#6 extracting sha256:2995dfd1a19c2122791620e7b5cdabcf911e54bcc4ed1358a36bf4e93895f6c5
+#6 extracting sha256:2995dfd1a19c2122791620e7b5cdabcf911e54bcc4ed1358a36bf4e93895f6c5 done
+#6 extracting sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 0.1s
+#6 extracting sha256:d8df3b059598a8606029f057c8a333d8c6ce52f1519fc522b802059feef5085c 1.9s done
+#6 extracting sha256:c657c59ebca66266d2e7c560e99090131867fc1ee1eba67a43765ddba49e163d
+#6 extracting sha256:c657c59ebca66266d2e7c560e99090131867fc1ee1eba67a43765ddba49e163d 0.0s done
+#6 extracting sha256:3fbcc227ac4b717b6faa06829f8381fcc888df989de0f866c75ac2033b569038 done
+#6 DONE 18.9s
+#7 [2/7] WORKDIR /app
+#7 DONE 0.0s
+#8 [3/7] COPY package*.json ./
+#8 DONE 0.0s
+#9 [4/7] RUN npm ci
+#9 4.895 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+#9 4.932 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+#9 10.64 
+#9 10.64 added 525 packages, and audited 526 packages in 10s
+#9 10.64 
+#9 10.64 68 packages are looking for funding
+#9 10.64   run `npm fund` for details
+#9 10.69 
+#9 10.69 7 vulnerabilities (5 moderate, 2 high)
+#9 10.69 
+#9 10.69 To address issues that do not require attention, run:
+#9 10.69   npm audit fix
+#9 10.69 
+#9 10.69 To address all issues (including breaking changes), run:
+#9 10.69   npm audit fix --force
+#9 10.69 
+#9 10.69 Run `npm audit` for details.
+#9 10.69 npm notice
+#9 10.69 npm notice New major version of npm available! 10.8.2 -> 11.4.1
+#9 10.69 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.4.1
+#9 10.69 npm notice To update run: npm install -g npm@11.4.1
+#9 10.69 npm notice
+#9 DONE 12.4s
+#10 [5/7] COPY . .
+#10 DONE 0.1s
+#11 [6/7] RUN mkdir -p /app/public/sounds &&     cp -f /app/public/notification-sound.mp3 /app/public/sounds/alarm_clock.mp3 || true
+#11 DONE 0.2s
+#12 [7/7] RUN npm run build
+#12 0.382 
+#12 0.382 > rest-express@1.0.0 build
+#12 0.382 > vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+#12 0.382 
+#12 0.722 vite v5.4.15 building for production...
+#12 0.819 transforming...
+#12 9.175 ✓ 3402 modules transformed.
+#12 9.919 rendering chunks...
+#12 9.934 computing gzip size...
+#12 9.965 ../dist/public/index.html                                  6.59 kB │ gzip:   2.02 kB
+#12 9.966 ../dist/public/assets/prince-albert-logo-D8WPf8fr.png     26.60 kB
+#12 9.966 ../dist/public/assets/logoo-CrxVsbI5.png                  90.42 kB
+#12 9.966 ../dist/public/assets/index-BT86T37j.css                  76.59 kB │ gzip:  13.33 kB
+#12 9.966 ../dist/public/assets/index-D2B3Ppwp.js                1,146.55 kB │ gzip: 326.57 kB
+#12 9.966 
+#12 9.966 (!) Some chunks are larger than 500 kB after minification. Consider:
+#12 9.966 - Using dynamic import() to code-split the application
+#12 9.966 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+#12 9.966 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+#12 9.966 ✓ built in 9.21s
+#12 10.05 
+#12 10.05   dist/index.js  147.1kb
+#12 10.05 
+#12 10.05 ⚡ Done in 14ms
+#12 DONE 10.1s
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 10.6s done
+#13 writing image sha256:320dc8b86eaec2fd43cd659481cb52f6e5629d5746c6cf69fbae729a7e4c56c2 done
+#13 naming to 664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest done
+#13 DONE 10.6s
+The push refers to repository [664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant]
+c12df7bda9fe: Preparing
+879e12792068: Preparing
+d0aae656b1b2: Preparing
+0aa64c8d02ef: Preparing
+0763334282c1: Preparing
+686033a58ff3: Preparing
+dc7556f2dcad: Preparing
+9088540a8c15: Preparing
+cce51f6dfb40: Preparing
+ca8abf1da2cd: Preparing
+ce84ba212e49: Preparing
+e4dc8cd9ecc8: Preparing
+6428cc293366: Preparing
+2f7436e79a0b: Preparing
+686033a58ff3: Waiting
+dc7556f2dcad: Waiting
+9088540a8c15: Waiting
+cce51f6dfb40: Waiting
+ca8abf1da2cd: Waiting
+ce84ba212e49: Waiting
+e4dc8cd9ecc8: Waiting
+6428cc293366: Waiting
+2f7436e79a0b: Waiting
+879e12792068: Pushed
+0763334282c1: Pushed
+c12df7bda9fe: Pushed
+dc7556f2dcad: Layer already exists
+d0aae656b1b2: Pushed
+9088540a8c15: Layer already exists
+cce51f6dfb40: Layer already exists
+ca8abf1da2cd: Layer already exists
+ce84ba212e49: Layer already exists
+e4dc8cd9ecc8: Layer already exists
+6428cc293366: Layer already exists
+686033a58ff3: Pushed
+2f7436e79a0b: Pushed
+0aa64c8d02ef: Pushed
+latest: digest: sha256:e940ae42a32bfbaaf022de9398b6b6cbb8b37109ca4d24ccc02b3d194fdfdf32 size: 3260
+27s
+Run appleboy/ssh-action@v0.1.10
+  
+/usr/bin/docker run --name ff79ffdb59ae431786dc3b0a624c5dbc_1df616 --label 859912 --workdir /github/workspace --rm -e "AWS_DEFAULT_REGION" -e "AWS_REGION" -e "AWS_ACCESS_KEY_ID" -e "AWS_SECRET_ACCESS_KEY" -e "INPUT_HOST" -e "INPUT_USERNAME" -e "INPUT_KEY" -e "INPUT_SCRIPT" -e "INPUT_PORT" -e "INPUT_PASSPHRASE" -e "INPUT_PASSWORD" -e "INPUT_SYNC" -e "INPUT_USE_INSECURE_CIPHER" -e "INPUT_CIPHER" -e "INPUT_TIMEOUT" -e "INPUT_COMMAND_TIMEOUT" -e "INPUT_KEY_PATH" -e "INPUT_FINGERPRINT" -e "INPUT_PROXY_HOST" -e "INPUT_PROXY_PORT" -e "INPUT_PROXY_USERNAME" -e "INPUT_PROXY_PASSWORD" -e "INPUT_PROXY_PASSPHRASE" -e "INPUT_PROXY_TIMEOUT" -e "INPUT_PROXY_KEY" -e "INPUT_PROXY_KEY_PATH" -e "INPUT_PROXY_FINGERPRINT" -e "INPUT_PROXY_CIPHER" -e "INPUT_PROXY_USE_INSECURE_CIPHER" -e "INPUT_SCRIPT_STOP" -e "INPUT_ENVS" -e "INPUT_ENVS_FORMAT" -e "INPUT_DEBUG" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -
+======CMD======
+DOMAIN=princealberthotel.dblytics.com
+EMAIL="kshitijk146@gmail.com" 
+# Kill lock if present
+sudo kill -9 $(lsof /var/lib/dpkg/lock-frontend -t) 2>/dev/null || true
+sudo rm -f /var/lib/dpkg/lock-frontend
+# Update system and install nginx + certbot
+sudo apt-get update
+sudo apt-get install -y nginx certbot python3-certbot-nginx
+# Create HTTP NGINX config for certbot
+sudo tee /etc/nginx/sites-available/$DOMAIN > /dev/null <<EOF
+server {
+    listen 80;
+    server_name $DOMAIN;
+    
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_cache_bypass \$http_upgrade;
+    }
+    
+    # Sound files location with proper CORS headers
+    location /sounds/ {
+        proxy_pass http://localhost:5000;
+        add_header Access-Control-Allow-Origin "*";
+        add_header Cross-Origin-Resource-Policy "cross-origin";
+        add_header Content-Type "audio/mpeg";
+        expires 1d;
+    }
+    
+    # API sound endpoint with proper CORS headers
+    location /api/sound/ {
+        proxy_pass http://localhost:5000;
+        add_header Access-Control-Allow-Origin "*";
+        add_header Cross-Origin-Resource-Policy "cross-origin";
+        add_header Content-Type "audio/mpeg";
+        expires 1d;
+    }
+    
+    # Service worker with proper cache headers
+    location = /service-worker.js {
+        proxy_pass http://localhost:5000;
+        add_header Service-Worker-Allowed "/";
+        add_header Cache-Control "no-cache";
+        add_header Cross-Origin-Embedder-Policy "unsafe-none";
+        add_header Cross-Origin-Opener-Policy "unsafe-none";
+    }
+    
+    # Web app manifest with proper content type
+    location = /manifest.json {
+        proxy_pass http://localhost:5000;
+        add_header Content-Type "application/manifest+json";
+        add_header Cache-Control "no-cache";
+    }
+}
+EOF
+# Enable site and reload NGINX
+sudo ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default || true
+sudo nginx -t && sudo systemctl reload nginx
+# Run certbot to install SSL certificate
+sudo certbot --nginx --non-interactive --agree-tos --email $EMAIL -d $DOMAIN
+# Add security headers for PWA support to the HTTPS config
+sudo sed -i '/ssl_prefer_server_ciphers/a \\n    # Security headers for PWA and audio playback\n    add_header Content-Security-Policy "default-src \x27self\x27; script-src \x27self\x27 \x27unsafe-inline\x27 \x27unsafe-eval\x27; connect-src \x27self\x27 https://$DOMAIN wss://$DOMAIN; img-src \x27self\x27 data: blob:; style-src \x27self\x27 \x27unsafe-inline\x27; media-src \x27self\x27 blob: https://$DOMAIN; object-src \x27none\x27; frame-ancestors \x27self\x27; worker-src \x27self\x27 blob:;";\n    add_header X-Content-Type-Options "nosniff";\n    add_header Cross-Origin-Embedder-Policy "unsafe-none";\n    add_header Cross-Origin-Opener-Policy "unsafe-none";\n    add_header Cross-Origin-Resource-Policy "cross-origin";\n    add_header X-Frame-Options "SAMEORIGIN";\n    add_header X-XSS-Protection "1; mode=block";\n    add_header Permissions-Policy "autoplay=*";\n    add_header Feature-Policy "autoplay *";' /etc/nginx/sites-available/$DOMAIN
+# Reload nginx to apply the changes
+sudo nginx -t && sudo systemctl reload nginx
+# Login to AWS ECR
+aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 664418994345.dkr.ecr.us-east-2.amazonaws.com
+# Stop and remove old container
+docker stop pa_hotel_ai_assistant-container || true
+docker rm pa_hotel_ai_assistant-container || true
+# Run container
+docker run -d --name pa_hotel_ai_assistant-container \
+-p 5000:5000 \
+-e DATABASE_URL=*** \
+-e SESSION_SECRET=*** \
+-e SUPABASE_URL=*** \
+-e SUPABASE_ANON_KEY=*** \
+-e SUPABASE_SERVICE_ROLE_KEY=*** \
+-e N8N_WEBHOOK_URL=*** \
+-e HOST=0.0.0.0 \
+--restart unless-stopped \
+  664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest
+======END======
+err: lsof: WARNING: can't stat() overlay file system /data/docker/overlay2/76a10f64754c1b6df078e608462b4a181171537cf54d0b36c7ffb0cb91725ac5/merged
+err:       Output information may be incomplete.
+err: lsof: WARNING: can't stat() nsfs file system /run/docker/netns/49fc99863383
+err:       Output information may be incomplete.
+err: lsof: WARNING: can't stat() overlay file system /data/docker/overlay2/f0decc3b6911edd4f73ccaa93ec4cfcb42b903ec2a81da66b16f2b53d0211e48/merged
+err:       Output information may be incomplete.
+err: lsof: WARNING: can't stat() nsfs file system /run/docker/netns/cd0170422be7
+err:       Output information may be incomplete.
+err: lsof: status error on -t: No such file or directory
+out: Hit:1 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble InRelease
+out: Hit:2 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates InRelease
+out: Hit:3 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports InRelease
+out: Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
+out: Reading package lists...
+out: Reading package lists...
+out: Building dependency tree...
+out: Reading state information...
+out: nginx is already the newest version (1.24.0-2ubuntu7.3).
+out: certbot is already the newest version (2.9.0-1).
+out: python3-certbot-nginx is already the newest version (2.9.0-1).
+out: 0 upgraded, 0 newly installed, 0 to remove and 116 not upgraded.
+err: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+err: nginx: configuration file /etc/nginx/nginx.conf test is successful
+err: Saving debug log to /var/log/letsencrypt/letsencrypt.log
+out: Certificate not yet due for renewal
+out: Deploying certificate
+out: Successfully deployed certificate for princealberthotel.dblytics.com to /etc/nginx/sites-enabled/princealberthotel.dblytics.com
+out: Congratulations! You have successfully enabled HTTPS on https://princealberthotel.dblytics.com
+out: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+out: If you like Certbot, please consider supporting our work by:
+out:  * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+out:  * Donating to EFF:                    https://eff.org/donate-le
+out: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+err: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+err: nginx: configuration file /etc/nginx/nginx.conf test is successful
+err: WARNING! Your password will be stored unencrypted in /home/ubuntu/.docker/config.json.
+err: Configure a credential helper to remove this warning. See
+err: https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+out: Login Succeeded
+out: pa_hotel_ai_assistant-container
+out: pa_hotel_ai_assistant-container
+out: 9e7419d832ea71f69c4feead7be786fefc61bd97a2d230b99dd08bc8733f5e2a
+==============================================
+✅ Successfully executed commands to all host.
+==============================================
+0s
