@@ -43,10 +43,13 @@ export function AlertNotification({
       }, autoCloseTime);
     }
 
+    // Force close when component unmounts
     return () => {
       if (timeout) {
         clearTimeout(timeout);
       }
+      // Ensure we call onClose when component unmounts to prevent persisting notifications
+      onClose();
     };
   }, [autoClose, autoCloseTime, onClose]);
 
@@ -142,7 +145,14 @@ export function AlertNotification({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      <Card className="w-full max-w-md p-6 shadow-lg animate-in fade-in zoom-in duration-300">
+      <Card className="w-full max-w-md p-6 shadow-lg animate-in fade-in zoom-in duration-300 relative">
+        <button 
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+          aria-label="Close"
+        >
+          ✕
+        </button>
         <div className="flex items-center mb-4">
           {getIcon()}
           <div className="ml-4 flex-1">
