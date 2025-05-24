@@ -1,12 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import { ShoppingBag, Calendar, X, Music, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ShoppingBag, Calendar, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { apiRequest } from '@/lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import SoundFallback from './SoundFallback';
 
 type AlertNotificationProps = {
   type: 'order' | 'booking' | 'function_booking';
@@ -30,11 +29,8 @@ export function AlertNotification({
   autoCloseTime = 7000,
 }: AlertNotificationProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const audioIntervalRef = useRef<number | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
 
   // Order ID text for display
   const orderIdText = type === 'order' && details.orderId ? ` #${details.orderId}` : '';
@@ -53,208 +49,39 @@ export function AlertNotification({
     }
   });
 
-  // Request notification permission
+  // Auto close the notification after a certain time if enabled
   useEffect(() => {
-    if (!hasRequestedPermission && 'Notification' in window) {
-      setHasRequestedPermission(true);
+    if (autoClose && !notificationAlreadySeen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, autoCloseTime);
       
-      if (Notification.permission !== "granted" && Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-          console.log(`Notification permission ${permission}`);
-          
-          // If permission granted and we have a service worker, register for push
-          if (permission === "granted" && 'serviceWorker' in navigator && 'PushManager' in window) {
-            console.log("Push notification supported and permission granted");
-          }
-        });
-      }
+      return () => clearTimeout(timer);
     }
-  }, [hasRequestedPermission]);
+  }, [autoClose, autoCloseTime, onClose, notificationAlreadySeen]);
 
-  // Play alert notification sound when component mounts
+  // Show a system notification if permission is granted
   useEffect(() => {
-    // Skip playing sound if we've already seen this notification
-    if (notificationAlreadySeen) {
-      console.log("Notification already seen, skipping sound playback");
-      return;
-    }
-    
-    // Try to play the notification sound
-    try {
-      // Make sure we use the proper base URL for production
-      const getBasePath = () => {
-        // Check if we're in a production domain
-        if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('replit')) {
-          return window.location.origin;
-        }
-        return '';
-      };
-
-      const basePath = getBasePath();
-      
-      // API endpoint with headers
-      const apiSoundPath = `${basePath}/api/sound/alarm_clock.mp3`;
-      // Fallback to direct path if API fails
-      const directSoundPath = `${basePath}/sounds/alarm_clock.mp3`;
-      // Additional production paths
-      const notificationSoundPath = `${basePath}/notification-sound.mp3`;
-      const apiNotificationPath = `${basePath}/api/notification-sound`;
-      
-      console.log(`Attempting to load sound from multiple sources`)
-
-      // Function to try multiple sound sources
-      const tryMultipleSoundSources = (sources: string[]) => {
-        if (!sources.length) {
-          console.error("All sound sources failed");
-          return;
-        }
-        
-        const currentSource = sources[0];
-        const remainingSources = sources.slice(1);
-        
-        console.log(`Trying to play sound from: ${currentSource}`);
-        
-        // Create a new audio element for this attempt
-        const audio = new Audio(currentSource);
-        audio.volume = 1.0;
-        audio.preload = 'auto';
-        
-        // Add error handler to try next source
-        audio.onerror = (e) => {
-          console.error(`Audio error for ${currentSource}:`, e);
-          console.error('Audio error code:', audio.error?.code);
-          console.error('Audio error message:', audio.error?.message);
-          
-          // Try next source
-          if (remainingSources.length) {
-            console.log(`Trying next sound source...`);
-            tryMultipleSoundSources(remainingSources);
-          }
-        };
-        
-        // Try to play this source
-        // Before attempting to play, wait for a bit for the audio to load
-        setTimeout(() => {
-          try {
-            console.log(`Ready to play from: ${currentSource}`);
-            
-            // Add a user interaction handler if autoplay is blocked
-            const handleUserInteraction = () => {
-              if (audioRef.current && audioRef.current.paused) {
-                audioRef.current.play().catch(err => {
-                  console.error("Failed to play after user interaction:", err);
-                });
-              }
-              
-              // Remove the event listeners after first interaction
-              ['click', 'touchstart', 'keydown'].forEach(eventType => {
-                document.removeEventListener(eventType, handleUserInteraction, { capture: true });
-              });
-            };
-            
-            // Add user interaction handlers to enable sound on first interaction
-            ['click', 'touchstart', 'keydown'].forEach(eventType => {
-              document.addEventListener(eventType, handleUserInteraction, { capture: true, once: true });
-            });
-            
-            // Try to play
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-              playPromise
-                .then(() => {
-                  console.log(`Successfully playing sound from: ${currentSource}`);
-                  audioRef.current = audio;
-                  
-                  // Flash browser title to get user's attention
-                  let originalTitle = document.title;
-                  let titleInterval = setInterval(() => {
-                    document.title = document.title === originalTitle ? 
-                      '🔔 New Order!' : originalTitle;
-                  }, 1000);
-                  
-                  // Clear interval after 30 seconds
-                  setTimeout(() => clearInterval(titleInterval), 30000);
-                })
-                .catch(err => {
-                  console.error(`Error playing from ${currentSource}:`, err);
-                  
-                  // Try next source
-                  if (remainingSources.length) {
-                    console.log(`Trying next sound source due to play error...`);
-                    tryMultipleSoundSources(remainingSources);
-                  }
-                });
-            }
-          } catch (e) {
-            console.error(`Exception playing sound from ${currentSource}:`, e);
-            
-            // Try next source
-            if (remainingSources.length) {
-              console.log(`Trying next sound source due to exception...`);
-              tryMultipleSoundSources(remainingSources);
-            }
-          }
-        }, 300);
-      };
-      
-      // Log the paths we're trying
-      console.log(`API sound path: ${apiSoundPath}`);
-      console.log(`Direct sound path: ${directSoundPath}`);
-      
-      // Create list of sound sources to try
-      const soundSources = [
-        apiSoundPath,
-        directSoundPath,
-        notificationSoundPath,
-        apiNotificationPath,
-        // Add other paths
-        '/sounds/alarm_clock.mp3',
-        '/api/sound/alarm_clock.mp3',
-        '/notification-sound.mp3',
-        '/api/notification-sound',
-        `${window.location.origin}/sounds/alarm_clock.mp3`,
-        `${window.location.origin}/api/sound/alarm_clock.mp3`,
-        'https://princealberthotel.dblytics.com/sounds/alarm_clock.mp3',
-        'https://princealberthotel.dblytics.com/api/sound/alarm_clock.mp3'
-      ];
-      
-      // Start trying sound sources
-      tryMultipleSoundSources(soundSources);
-      
-      // For orders, we'll set up looping once we have a working audio element
-      if (type === 'order') {
-        // Set up an interval to check if audio is playing and set up looping
-        audioIntervalRef.current = window.setInterval(() => {
-          if (audioRef.current) {
-            // Set up looping for the audio
-            audioRef.current.loop = true;
-            
-            // If sound stopped for any reason, try to restart it
-            if (audioRef.current.paused) {
-              audioRef.current.play().catch(err => {
-                console.error("Failed to restart notification sound:", err);
-              });
-            }
-          }
-        }, 1000); // Check every second
-      }
-      
-      // Add our fallback sound component
-      // This provides a visual indicator that users can click to enable sounds
-      // Works around autoplay restrictions in browsers
-      
-      // Also show a system notification if permission is granted
-      if ('Notification' in window && Notification.permission === "granted") {
-        let basePath = getBasePath();
-        let icon = `${basePath}/icons/icon-192x192.png`;
-        let typeText = type === 'order' ? 'Order' : type === 'booking' ? 'Booking' : 'Function Booking';
-        
+    if (!notificationAlreadySeen && 'Notification' in window) {
+      if (Notification.permission === "granted") {
         try {
+          // Get a base path for icons
+          const getBasePath = () => {
+            // Check if we're in a production domain
+            if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('replit')) {
+              return window.location.origin;
+            }
+            return '';
+          };
+          
+          let basePath = getBasePath();
+          let icon = `${basePath}/icons/icon-192x192.png`;
+          let typeText = type === 'order' ? 'Order' : type === 'booking' ? 'Booking' : 'Function Booking';
+          
           const notification = new Notification(`New ${typeText}: ${title}`, {
             body: message,
             icon: icon,
             tag: `restaurant-notification-${type}-${details.id || Date.now()}`,
-            // Set silent to false to let the browser play its own sound too
             silent: false
           });
           
@@ -262,325 +89,109 @@ export function AlertNotification({
             window.focus();
             notification.close();
           };
-        } catch (notificationErr) {
-          console.error("Error creating system notification:", notificationErr);
+        } catch (error) {
+          console.error("Error showing system notification:", error);
         }
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission();
       }
-      
-      // Play the sound - multiple strategies for cross-browser compatibility
-      const playSound = () => {
-        console.log("Attempting to play notification sound");
-        
-        // Check if running in standalone mode (PWA installed)
-        const isPwa = window.matchMedia('(display-mode: standalone)').matches;
-        console.log("Is running as PWA:", isPwa);
-        
-        // For PWA, try to create and use an AudioContext first (more reliable in PWAs)
-        if (isPwa) {
-          try {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-            if (AudioContext) {
-              const audioContext = new AudioContext();
-              console.log("Using AudioContext for PWA sound playback");
-              
-              // Use one of our sound sources
-              const soundUrl = apiSoundPath;
-              
-              fetch(soundUrl)
-                .then(response => response.arrayBuffer())
-                .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
-                .then(audioBuffer => {
-                  const source = audioContext.createBufferSource();
-                  source.buffer = audioBuffer;
-                  source.connect(audioContext.destination);
-                  
-                  // For orders, loop the sound
-                  if (type === 'order') {
-                    source.loop = true;
-                  }
-                  
-                  source.start(0);
-                  console.log("AudioContext sound started successfully");
-                  
-                  // Save the audio context for cleanup
-                  (window as any).currentAudioContext = audioContext;
-                  (window as any).currentAudioSource = source;
-                })
-                .catch(audioContextErr => {
-                  console.error("AudioContext sound playback failed:", audioContextErr);
-                  // The tryMultipleSoundSources function is already handling this
-                });
-              
-              return; // Exit if we're using AudioContext
-            }
-          } catch (err) {
-            console.error("Failed to initialize AudioContext:", err);
-          }
-        }
-        
-        function tryHTMLAudioPlayback() {
-          // Create a function to try multiple audio sources
-          const tryMultipleAudioSources = (sources: string[]) => {
-            if (!sources.length) {
-              console.error("All audio sources failed");
-              return;
-            }
-            
-            console.log("Trying audio sources:", sources);
-            const currentSource = sources[0];
-            const remainingSources = sources.slice(1);
-            
-            // Create a new audio element for this attempt
-            const audio = new Audio(currentSource);
-            audio.volume = 1.0;
-            audio.preload = 'auto';
-            
-            // For orders, we need looping
-            if (type === 'order') {
-              audio.loop = true;
-            }
-            
-            // Add error handler to try next source
-            audio.onerror = (e) => {
-              console.error(`Failed to play audio from ${currentSource}:`, e);
-              if (remainingSources.length) {
-                console.log("Trying next audio source...");
-                tryMultipleAudioSources(remainingSources);
-              } else {
-                showClickToEnableMessage();
-              }
-            };
-            
-            // Try to play this source
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-              playPromise.then(() => {
-                console.log(`Successfully playing audio from ${currentSource}`);
-                // Save the successful audio element
-                audioRef.current = audio;
-              }).catch(err => {
-                console.error(`Error playing from ${currentSource}:`, err);
-                if (remainingSources.length) {
-                  console.log("Trying next audio source due to play error...");
-                  tryMultipleAudioSources(remainingSources);
-                } else {
-                  showClickToEnableMessage();
-                }
-              });
-            }
-          };
-          
-          // Function to show a click-to-enable message as last resort
-          const showClickToEnableMessage = () => {
-            console.error("All audio sources failed, showing user gesture message");
-            
-            // Strategy 2: Create a user gesture requirement message
-            const message = document.createElement('div');
-            message.style.position = 'fixed';
-            message.style.bottom = '20px';
-            message.style.left = '50%';
-            message.style.transform = 'translateX(-50%)';
-            message.style.backgroundColor = '#f44336';
-            message.style.color = 'white';
-            message.style.padding = '10px 20px';
-            message.style.borderRadius = '4px';
-            message.style.zIndex = '9999';
-            message.textContent = 'Click here to enable sound notifications';
-            message.style.cursor = 'pointer';
-            
-            // Play sound on click
-            message.onclick = () => {
-              if (audioRef.current) {
-                audioRef.current.play().catch(e => console.error("Still couldn't play:", e));
-              } else {
-                // Try to create a new audio element
-                const audio = new Audio('/sounds/alarm_clock.mp3');
-                audio.volume = 1.0;
-                if (type === 'order') audio.loop = true;
-                audio.play().catch(e => console.error("Still couldn't play:", e));
-                audioRef.current = audio;
-              }
-              document.body.removeChild(message);
-            };
-            
-            document.body.appendChild(message);
-            
-            // Remove after 10 seconds if not clicked
-            setTimeout(() => {
-              if (document.body.contains(message)) {
-                document.body.removeChild(message);
-              }
-            }, 10000);
-            
-            // Also try to use system beep as a fallback
-            if ('Notification' in window) {
-              try {
-                new Notification("New notification", { silent: false });
-              } catch (e) {
-                console.error("Could not use system notification for sound:", e);
-              }
-            }
-          };
-          
-          // Get the hostname for production vs development environment
-          const hostname = window.location.hostname;
-          const isProduction = hostname !== 'localhost' && !hostname.includes('replit');
-          
-          // Create a list of audio sources to try
-          const soundFileName = 'alarm_clock.mp3';
-          const audioSources = [
-            // Original path from the component
-            audioRef.current?.src || '',
-            
-            // Common variations that might work
-            `/sounds/${soundFileName}`,
-            `${window.location.origin}/sounds/${soundFileName}`,
-          ];
-          
-          // Additional production-specific paths
-          if (isProduction) {
-            audioSources.push(
-              `https://${hostname}/sounds/${soundFileName}`,
-              `//${hostname}/sounds/${soundFileName}`,
-              `https://princealberthotel.dblytics.com/sounds/${soundFileName}`
-            );
-          }
-          
-          // Filter out empty sources
-          const validSources = audioSources.filter(src => src);
-          
-          // Try multiple audio sources
-          tryMultipleAudioSources(validSources);
-        }
-      };
-      
-      // Load the audio first
-      audioRef.current.addEventListener('canplaythrough', playSound, { once: true });
-      audioRef.current.load();
-      
-      // Fallback: If canplaythrough doesn't fire within 1 second, try to play anyway
-      const fallbackTimer = setTimeout(() => {
-        if (audioRef.current) {
-          console.log("Canplaythrough event didn't fire, trying fallback play");
-          playSound();
-        }
-      }, 1000);
-      
-      // Auto-close the notification after the specified time if autoClose is true
-      let closeTimeout: NodeJS.Timeout | null = null;
-      if (autoClose) {
-        closeTimeout = setTimeout(() => {
-          onClose();
-        }, autoCloseTime);
-      }
-
-      // Clean up
-      return () => {
-        if (fallbackTimer) clearTimeout(fallbackTimer);
-        
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current.removeEventListener('canplaythrough', playSound);
-          audioRef.current = null;
-        }
-        
-        if (audioIntervalRef.current) {
-          clearInterval(audioIntervalRef.current);
-          audioIntervalRef.current = null;
-        }
-        
-        if (closeTimeout) {
-          clearTimeout(closeTimeout);
-        }
-      };
-    } catch (err) {
-      console.error("Error setting up alert notification sound:", err);
     }
-  }, [type, autoClose, autoCloseTime, onClose, notificationAlreadySeen, title, message, details.id]);
+  }, [type, title, message, details.id, notificationAlreadySeen]);
 
-  // Handle Accept action (for orders)
-  const handleAccept = async () => {
-    setIsProcessing(true);
-
-    // Stop the sound
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-
-    // Only update order status if this is an order type and we have an orderId
-    if (type === 'order' && details.orderId) {
+  // Save notification ID as processed to localStorage
+  const markNotificationAsSeen = () => {
+    if (details.id) {
       try {
-        // Update the order status to "processing"
-        const response = await apiRequest(
-          'PATCH',
-          `/api/orders/${details.orderId}/status`,
-          { status: 'processing' }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to update order status');
-        }
-
-        // Invalidate orders query to refresh the data
-        queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
-
-        // Show success toast
-        toast({
-          title: "Order Status Updated",
-          description: `Order #${details.orderId} is now processing`,
-          variant: "default",
-        });
+        const seenNotifications = localStorage.getItem('processedNotificationIds');
+        let ids = seenNotifications ? JSON.parse(seenNotifications) : [];
         
-        // Call the original onAccept callback if provided
-        if (onAccept) {
-          onAccept();
+        if (!ids.includes(details.id)) {
+          ids.push(details.id);
+          localStorage.setItem('processedNotificationIds', JSON.stringify(ids));
         }
         
-        // Close the notification after successful update
-        onClose();
-      } catch (error) {
-        console.error('Error updating order status:', error);
-        toast({
-          title: "Failed to Update Order Status",
-          description: error instanceof Error ? error.message : 'Unknown error occurred',
-          variant: "destructive",
-        });
-        setIsProcessing(false);
+        setNotificationAlreadySeen(true);
+      } catch (e) {
+        console.error("Error marking notification as seen:", e);
       }
-    } else {
-      // If not an order or no orderId, just close
-      if (onAccept) {
-        onAccept();
-      }
-      onClose();
-      setIsProcessing(false);
     }
   };
 
-  // Handle close action
-  const handleClose = () => {
-    // Stop the sound
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+  // Handle accepting an order
+  const handleAccept = async () => {
+    if (isProcessing) return;
     
-    // If this is an order notification, update its status to "new"
-    if (type === 'order' && details.orderId) {
-      apiRequest(
-        'PATCH',
-        `/api/orders/${details.orderId}/status`,
-        { status: 'new' }
-      )
-      .then(() => {
+    setIsProcessing(true);
+    markNotificationAsSeen();
+    
+    try {
+      if (type === 'order' && details.id) {
+        // Update order status to processing
+        await apiRequest(`/api/orders/${details.id}/status`, {
+          method: 'PATCH',
+          data: { status: 'processing' }
+        });
+        
+        // Invalidate queries to refresh data
         queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
-      })
-      .catch(error => {
-        console.error('Error updating order status to "new":', error);
+        
+        // Mark notification as read
+        if (details.notificationId) {
+          await apiRequest(`/api/notifications/${details.notificationId}/read`, {
+            method: 'PATCH'
+          });
+          queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+        }
+      }
+      
+      // Call onAccept callback if provided
+      if (onAccept) {
+        onAccept();
+      }
+      
+      // Close the notification
+      onClose();
+      
+      // Show success toast
+      toast({
+        title: "Order accepted",
+        description: `Order ${details.orderId || ''} has been accepted and marked as processing.`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error accepting order:", error);
+      setIsProcessing(false);
+      
+      // Show error toast
+      toast({
+        title: "Error accepting order",
+        description: "There was a problem accepting the order. Please try again.",
+        variant: "destructive",
       });
     }
+  };
+
+  // Handle dismissing a notification without accepting
+  const handleDismiss = async () => {
+    if (isProcessing) return;
     
+    markNotificationAsSeen();
+    
+    // Mark notification as read if it has an ID
+    if (details.notificationId) {
+      try {
+        await apiRequest(`/api/notifications/${details.notificationId}/read`, {
+          method: 'PATCH'
+        });
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+      } catch (error) {
+        console.error("Error marking notification as read:", error);
+      }
+    }
+    
+    // Close the notification
     onClose();
   };
 
@@ -588,34 +199,18 @@ export function AlertNotification({
   const getIcon = () => {
     switch (type) {
       case 'order':
-        return <div className="bg-orange-500 p-3 rounded-full text-white"><ShoppingBag className="h-6 w-6" /></div>;
+        return <div className="bg-red-500 p-3 rounded-full text-white"><ShoppingBag className="h-6 w-6" /></div>;
       case 'booking':
-        return <div className="bg-green-500 p-3 rounded-full text-white"><Calendar className="h-6 w-6" /></div>;
+        return <div className="bg-blue-500 p-3 rounded-full text-white"><Calendar className="h-6 w-6" /></div>;
       case 'function_booking':
-        return <div className="bg-blue-500 p-3 rounded-full text-white"><Music className="h-6 w-6" /></div>;
+        return <div className="bg-green-500 p-3 rounded-full text-white"><Calendar className="h-6 w-6" /></div>;
       default:
         return <div className="bg-neutral-500 p-3 rounded-full text-white"><ShoppingBag className="h-6 w-6" /></div>;
     }
   };
 
-  // Use our SoundFallback component to provide a fallback for sound autoplay issues
-  const [soundFallbackEnabled, setSoundFallbackEnabled] = useState(true);
-  
-  // Disable sound fallback when audio successfully plays
-  useEffect(() => {
-    if (audioRef.current && !audioRef.current.paused) {
-      // Sound is playing successfully, disable fallback
-      setSoundFallbackEnabled(false);
-    }
-  }, [audioRef.current]);
-  
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-      {/* Sound fallback component that shows a clickable notification if autoplay fails */}
-      <SoundFallback 
-        notificationType={type} 
-        enabled={soundFallbackEnabled && !notificationAlreadySeen} 
-      />
       <Card className="w-full max-w-md p-6 shadow-lg animate-in fade-in zoom-in duration-300">
         <div className="absolute top-2 right-2">
           <Button 
@@ -696,7 +291,7 @@ export function AlertNotification({
           )}
           <Button 
             variant="outline" 
-            onClick={handleClose} 
+            onClick={handleDismiss}
             disabled={isProcessing}
           >
             {type === 'order' ? 'Dismiss' : 'Close'}
@@ -705,4 +300,13 @@ export function AlertNotification({
       </Card>
     </div>
   );
+  
+  // Helper function to close the notification
+  function handleClose() {
+    if (type === 'order') {
+      handleDismiss();
+    } else {
+      onClose();
+    }
+  }
 }
