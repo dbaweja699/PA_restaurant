@@ -54,22 +54,67 @@ jobs:
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       # SSH into the EC2 instance and run the Docker container
-      - name: SSH into EC2 and run Docker container
+      - name: SSH into EC2, configure NGINX with SSL, and run Docker container
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Login to ECR
+            # Update and install nginx
+            sudo apt-get update
+            sudo apt-get install -y nginx
+  
+            # Save SSL certificate and private key
+            echo "${{ secrets.SSL_CRT }}" | sudo tee /etc/ssl/certs/princealbergrawler.crt > /dev/null
+            echo "${{ secrets.SSL_KEY }}" | sudo tee /etc/ssl/private/princealbergrawler.key > /dev/null
+  
+            # Create nginx config for HTTPS
+            sudo tee /etc/nginx/sites-available/princealbergrawler.dblytics.com > /dev/null <<EOF
+            server {
+                listen 80;
+                server_name princealbergrawler.dblytics.com;
+                return 301 https://\$host\$request_uri;
+            }
+  
+            server {
+                listen 443 ssl;
+                server_name princealbergrawler.dblytics.com;
+  
+                ssl_certificate /etc/ssl/certs/princealbergrawler.crt;
+                ssl_certificate_key /etc/ssl/private/princealbergrawler.key;
+  
+                ssl_protocols TLSv1.2 TLSv1.3;
+                ssl_ciphers HIGH:!aNULL:!MD5;
+  
+                location / {
+                    proxy_pass http://localhost:5000;
+                    proxy_http_version 1.1;
+                    proxy_set_header Upgrade \$http_upgrade;
+                    proxy_set_header Connection 'upgrade';
+                    proxy_set_header Host \$host;
+                    proxy_cache_bypass \$http_upgrade;
+                }
+            }
+            EOF
+  
+            # Enable site and disable default
+            sudo ln -sf /etc/nginx/sites-available/princealbergrawler.dblytics.com /etc/nginx/sites-enabled/
+            sudo rm -f /etc/nginx/sites-enabled/default || true
+  
+            # Test and reload nginx
+            sudo nginx -t && sudo systemctl reload nginx
+  
+            # Login to AWS ECR
             aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 664418994345.dkr.ecr.us-east-2.amazonaws.com
-
-            # Stop and remove existing container if it exists
+  
+            # Stop and remove existing container
             docker stop pa_hotel_ai_assistant-container || true
             docker rm pa_hotel_ai_assistant-container || true
-            # Run the new container
+  
+            # Run the container
             docker run -d --name pa_hotel_ai_assistant-container \
-              -p 80:5000 \
+              -p 5000:5000 \
               -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
               -e SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
               -e SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
@@ -79,3 +124,4 @@ jobs:
               -e HOST=0.0.0.0 \
               --restart unless-stopped \
               ${{ steps.build-image.outputs.image }}
+  
