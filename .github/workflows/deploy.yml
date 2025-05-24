@@ -61,7 +61,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            DOMAIN=princealbertgrawler.dblytics.com
+            DOMAIN=princealberthotel.dblytics.com
             EMAIL="kshitijk146@gmail.com" 
 
             # Kill lock if present
