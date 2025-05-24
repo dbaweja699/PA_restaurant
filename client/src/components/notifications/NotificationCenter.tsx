@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { AlertNotification } from '@/components/notifications/AlertNotification';
 
 // Define the Notification type here to avoid importing from server code
 type Notification = {
@@ -212,6 +213,10 @@ export function NotificationCenter() {
     }
   };
   
+  // State for alert notification
+  const [showAlertNotification, setShowAlertNotification] = useState(false);
+  const [alertNotification, setAlertNotification] = useState<Notification | null>(null);
+  
   // Check for new notifications and play sound
   useEffect(() => {
     const currentCount = unreadNotifications.length;
@@ -221,24 +226,41 @@ export function NotificationCenter() {
       // Get the newest notification
       const newestNotification = unreadNotifications.length > 0 ? unreadNotifications[0] : null;
       
-      // Show toast for new notification
-      toast({
-        title: newestNotification ? 
-          `New ${newestNotification.type.charAt(0).toUpperCase() + newestNotification.type.slice(1)}` : 
-          "New Notification",
-        description: currentCount === lastNotificationCount + 1
-          ? unreadNotifications[0].message
-          : `You have ${currentCount - lastNotificationCount} new notifications`,
-        variant: "default",
-      });
-      
-      // Play appropriate sound based on notification type
       if (newestNotification) {
-        playNotificationSound(newestNotification.type);
-      } else if (soundEnabled && notificationSound.current) {
-        notificationSound.current.play().catch(err => {
-          console.error("Failed to play notification sound:", err);
+        // For orders, show the alert notification
+        if (newestNotification.type === 'order') {
+          setAlertNotification(newestNotification);
+          setShowAlertNotification(true);
+        } 
+        // For bookings and function_bookings, show the temporary alert notification
+        else if (newestNotification.type === 'booking' || newestNotification.type === 'function_booking') {
+          setAlertNotification(newestNotification);
+          setShowAlertNotification(true);
+        }
+        // For other notification types, show toast
+        else {
+          toast({
+            title: `New ${newestNotification.type.charAt(0).toUpperCase() + newestNotification.type.slice(1)}`,
+            description: newestNotification.message,
+            variant: "default",
+          });
+          
+          // Play appropriate sound based on notification type
+          playNotificationSound(newestNotification.type);
+        }
+      } else {
+        // If no specific notification, show general toast
+        toast({
+          title: "New Notification",
+          description: `You have ${currentCount - lastNotificationCount} new notifications`,
+          variant: "default",
         });
+        
+        if (soundEnabled && notificationSound.current) {
+          notificationSound.current.play().catch(err => {
+            console.error("Failed to play notification sound:", err);
+          });
+        }
       }
     }
     
@@ -307,21 +329,51 @@ export function NotificationCenter() {
   };
   
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative text-white">
-          {unreadNotifications.length > 0 ? (
-            <>
-              <BellDot className="h-5 w-5 text-white" />
-              <Badge className="absolute -top-2 -right-1 h-5 min-w-[1.25rem] px-1 bg-white text-black">
-                {unreadNotifications.length}
-              </Badge>
-            </>
-          ) : (
-            <Bell className="h-5 w-5 text-white" />
-          )}
-        </Button>
-      </PopoverTrigger>
+    <>
+      {/* Alert Notification for orders and bookings */}
+      {showAlertNotification && alertNotification && (
+        <AlertNotification 
+          type={alertNotification.type as 'order' | 'booking' | 'function_booking'} 
+          title={alertNotification.type === 'order' 
+            ? 'New Order Received!' 
+            : alertNotification.type === 'booking' 
+              ? 'New Booking Received!' 
+              : 'New Function Booking Received!'
+          }
+          message={alertNotification.message}
+          onAccept={alertNotification.type === 'order' ? () => {
+            // Mark as read
+            if (alertNotification) {
+              markAsReadMutation.mutate(alertNotification.id);
+            }
+          } : undefined}
+          onClose={() => {
+            setShowAlertNotification(false);
+            // Don't automatically mark bookings as read when dismissed
+            if (alertNotification.type === 'order') {
+              markAsReadMutation.mutate(alertNotification.id);
+            }
+          }}
+          autoClose={alertNotification.type !== 'order'} // Auto close for bookings, not for orders
+          autoCloseTime={5000} // 5 seconds
+        />
+      )}
+      
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative text-white">
+            {unreadNotifications.length > 0 ? (
+              <>
+                <BellDot className="h-5 w-5 text-white" />
+                <Badge className="absolute -top-2 -right-1 h-5 min-w-[1.25rem] px-1 bg-white text-black">
+                  {unreadNotifications.length}
+                </Badge>
+              </>
+            ) : (
+              <Bell className="h-5 w-5 text-white" />
+            )}
+          </Button>
+        </PopoverTrigger>
       <PopoverContent 
         className="w-80 p-0" 
         align="end"

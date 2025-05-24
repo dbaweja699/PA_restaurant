@@ -390,7 +390,22 @@ export default function Settings() {
                       <h4 className="font-medium">Order Sound Alerts</h4>
                       <p className="text-sm text-neutral-500">Play distinct sound for new orders</p>
                     </div>
-                    <Switch defaultChecked />
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const audio = new Audio('/sounds/alarm_clock.mp3');
+                          audio.volume = 1.0;
+                          audio.play().catch(err => {
+                            console.error("Failed to play test sound:", err);
+                          });
+                        }}
+                      >
+                        Test Sound
+                      </Button>
+                      <Switch defaultChecked />
+                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
@@ -398,7 +413,22 @@ export default function Settings() {
                       <h4 className="font-medium">Booking Sound Alerts</h4>
                       <p className="text-sm text-neutral-500">Play distinct sound for new bookings</p>
                     </div>
-                    <Switch defaultChecked />
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const audio = new Audio('/sounds/alarm_clock.mp3');
+                          audio.volume = 1.0;
+                          audio.play().catch(err => {
+                            console.error("Failed to play test sound:", err);
+                          });
+                        }}
+                      >
+                        Test Sound
+                      </Button>
+                      <Switch defaultChecked />
+                    </div>
                   </div>
                   
                   <div className="flex items-center justify-between">
