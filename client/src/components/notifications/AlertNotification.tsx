@@ -38,7 +38,7 @@ export function AlertNotification({
 
   // Play alert notification sound when component mounts
   useEffect(() => {
-    // Try to play the notification sound in a loop
+    // Try to play the notification sound
     try {
       const soundPath = '/sounds/alarm_clock.mp3';
 
@@ -46,7 +46,6 @@ export function AlertNotification({
       audioRef.current = new Audio(soundPath);
       audioRef.current.volume = 1.0;
       audioRef.current.preload = 'auto';
-      audioRef.current.loop = true; // Set audio to loop continuously
 
       // Add event listener for when audio is ready to play
       audioRef.current.addEventListener('canplaythrough', () => {
@@ -60,10 +59,7 @@ export function AlertNotification({
                 console.error("Failed to play alert notification sound:", err);
                 // Try playing on user interaction as fallback
                 document.addEventListener('click', function playOnInteraction() {
-                  if (audioRef.current) {
-                    audioRef.current.loop = true;
-                    audioRef.current.play();
-                  }
+                  if (audioRef.current) audioRef.current.play();
                   document.removeEventListener('click', playOnInteraction);
                 }, { once: true });
               });
@@ -101,12 +97,6 @@ export function AlertNotification({
   // Handle Accept action (for orders)
   const handleAccept = async () => {
     setIsProcessing(true);
-    
-    // Stop the audio playback
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
 
     // Only update order status if this is an order type and we have an orderId
     if (type === 'order' && details.orderId) {
@@ -160,12 +150,6 @@ export function AlertNotification({
 
   // Handle close action
   const handleClose = async () => {
-    // Stop the audio playback
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    
     // If this is an order notification and it's in processing status, set it back to "new"
     if (type === 'order' && details.orderId && details.status === 'processing') {
       setIsProcessing(true);
