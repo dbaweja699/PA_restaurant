@@ -115,11 +115,20 @@ export function AlertNotification({
         // Invalidate orders query to refresh the data
         queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
 
+        // Show success toast
         toast({
           title: "Order Status Updated",
           description: `Order #${details.orderId} is now processing`,
           variant: "default",
         });
+        
+        // Call the original onAccept callback if provided
+        if (onAccept) {
+          onAccept();
+        }
+        
+        // Close the notification after successful update
+        onClose();
       } catch (error) {
         console.error('Error updating order status:', error);
         toast({
@@ -127,17 +136,16 @@ export function AlertNotification({
           description: error instanceof Error ? error.message : 'Unknown error occurred',
           variant: "destructive",
         });
-      } finally {
         setIsProcessing(false);
       }
+    } else {
+      // If not an order or no orderId, just close
+      if (onAccept) {
+        onAccept();
+      }
+      onClose();
+      setIsProcessing(false);
     }
-
-    // Call the original onAccept callback
-    if (onAccept) {
-      onAccept();
-    }
-
-    onClose();
   };
 
   // Handle close action
