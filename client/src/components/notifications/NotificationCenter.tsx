@@ -119,13 +119,17 @@ export function NotificationCenter() {
     default: null,
     order: null,
     booking: null,
+    function_booking: null,
   });
   
   useEffect(() => {
     // Create audio elements for different notification sounds
-    notificationSounds.current.default = new Audio('/notification-sound.mp3');
-    notificationSounds.current.order = new Audio('/sounds/order-notification.mp3');
-    notificationSounds.current.booking = new Audio('/sounds/booking-notification.mp3');
+    // Using alarm_clock.mp3 for all notification types
+    const alarmSound = '/sounds/alarm_clock.mp3';
+    notificationSounds.current.default = new Audio(alarmSound);
+    notificationSounds.current.order = new Audio(alarmSound);
+    notificationSounds.current.booking = new Audio(alarmSound);
+    notificationSounds.current.function_booking = new Audio(alarmSound);
     
     // Fallback sounds if the files don't exist
     const fallbackBase64 = 'data:audio/mp3;base64,SUQzAwAAAAABOlRJVDIAAAAZAAAAbm90aWZpY2F0aW9uLXNvdW5kLm1wMwBUWVhYAAAADwAAAHVzZXIAAHgAYQBtAHAAVEVOQwAAAA8AAABpAFQAdQBuAGUAcwAgADEAMgAuADkALgAwAC4AMQAwADMAVENPTgAAAA8AAABTA09VTkQgRUZGRUNUAAA=';
@@ -166,17 +170,19 @@ export function NotificationCenter() {
     refetchInterval: 8000, // Refetch more frequently - every 8 seconds
   });
   
-  // Function to play the appropriate notification sound
+  // Function to play the alarm clock notification sound for all notification types
   const playNotificationSound = (type: string) => {
     if (!soundEnabled) return;
     
-    // Select the appropriate sound based on notification type
+    // Use the alarm clock sound for all notification types
     let soundToPlay = notificationSounds.current.default;
     
     if (type === 'order' && notificationSounds.current.order) {
       soundToPlay = notificationSounds.current.order;
     } else if (type === 'booking' && notificationSounds.current.booking) {
       soundToPlay = notificationSounds.current.booking;
+    } else if (type === 'function_booking' && notificationSounds.current.function_booking) {
+      soundToPlay = notificationSounds.current.function_booking;
     }
     
     // Play the selected sound
