@@ -212,36 +212,68 @@ export function NotificationCenter() {
   const playNotificationSound = (type: string) => {
     if (!soundEnabled) return;
 
-    // Use the alarm clock sound for all notification types
-    let soundToPlay = notificationSounds.current.default;
-
-    if (type === 'order' && notificationSounds.current.order) {
-      soundToPlay = notificationSounds.current.order;
-    } else if (type === 'booking' && notificationSounds.current.booking) {
-      soundToPlay = notificationSounds.current.booking;
-    } else if (type === 'function_booking' && notificationSounds.current.function_booking) {
-      soundToPlay = notificationSounds.current.function_booking;
-    }
-
-    // Play the selected sound
-    if (soundToPlay) {
-      // Make sure the audio is loaded before playing
-      soundToPlay.load();
-
-      console.log(`Attempting to play ${type} notification sound`);
-
-      // Add a small delay to ensure the audio is loaded
-      setTimeout(() => {
-        const playPromise = soundToPlay.play();
-
-        if (playPromise !== undefined) {
-          playPromise.catch(err => {
-            console.error(`Failed to play ${type} notification sound:`, err);
-            // Fallback for browsers that require user interaction
-            console.log('Using interaction fallback for audio playback');
-          });
+    console.log(`Attempting to play ${type} notification sound`);
+    
+    // For all notification types, use the alarm_clock.mp3 sound
+    const soundPath = '/sounds/alarm_clock.mp3';
+    let soundToPlay: HTMLAudioElement | null = null;
+    
+    try {
+      // Create a new Audio instance each time to avoid issues with repeated plays
+      soundToPlay = new Audio(soundPath);
+      soundToPlay.volume = 1.0;
+      
+      // Configure sound behavior based on notification type
+      if (type === 'order') {
+        // For orders, we want to make sure the sound is more noticeable
+        soundToPlay.loop = true;
+        
+        // Store in the ref for later access (to stop when accepted/dismissed)
+        notificationSounds.current.order = soundToPlay;
+      } else {
+        // For other notification types, don't loop
+        soundToPlay.loop = false;
+      }
+      
+      // Add an error handler
+      soundToPlay.onerror = (e) => {
+        console.error(`Error playing ${type} notification sound:`, e);
+        // Try with a system beep as last resort
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(`New ${type}`, { silent: false });
         }
-      }, 300);
+      };
+      
+      // Preload the sound
+      soundToPlay.load();
+      
+      // Try to play the sound directly
+      const playPromise = soundToPlay.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(err => {
+          console.error(`Failed to play ${type} notification sound:`, err);
+          
+          // On error, try playing on user interaction as a fallback
+          const playOnInteraction = () => {
+            if (soundToPlay) {
+              soundToPlay.play().catch(e => {
+                console.error("Failed to play sound even after interaction:", e);
+              });
+            }
+            document.removeEventListener('click', playOnInteraction);
+          };
+          
+          document.addEventListener('click', playOnInteraction, { once: true });
+          
+          // Show a message that sound requires interaction
+          if (type === 'order') {
+            console.log("Sound playback requires user interaction. Click anywhere to enable sound.");
+          }
+        });
+      }
+    } catch (err) {
+      console.error("Error setting up notification sound:", err);
     }
   };
 
@@ -306,10 +338,22 @@ export function NotificationCenter() {
 
   // Check for new notifications and play sound
   useEffect(() => {
+    // Request notification permission if not already done
+    if ('Notification' in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        console.log(`Notification permission: ${permission}`);
+      });
+    }
+    
     const currentCount = unreadNotifications.length;
 
     // Get the newest notification from the unread notifications
-    const newestNotification = unreadNotifications.length > 0 ? unreadNotifications[0] : null;
+    // Sort by creation date to ensure we get the newest one first
+    const sortedNotifications = [...unreadNotifications].sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    
+    const newestNotification = sortedNotifications.length > 0 ? sortedNotifications[0] : null;
 
     // Check if this is a new notification we haven't processed yet
     const isNewNotification = newestNotification && 
@@ -321,6 +365,43 @@ export function NotificationCenter() {
 
       // Add this notification ID to our processed set to prevent duplicates
       setProcessedNotificationIds(prev => new Set([...prev, newestNotification.id]));
+      
+      // Save to localStorage to prevent showing the same notification after page refresh
+      try {
+        const existingIds = JSON.parse(localStorage.getItem('processedNotificationIds') || '[]');
+        const updatedIds = [...existingIds, newestNotification.id];
+        localStorage.setItem('processedNotificationIds', JSON.stringify(updatedIds));
+      } catch (e) {
+        console.error('Error saving notification ID to localStorage:', e);
+      }
+
+      // Show system notification if permission granted
+      if ('Notification' in window && Notification.permission === "granted") {
+        let notificationTitle = "";
+        
+        if (newestNotification.type === 'order') {
+          notificationTitle = "New Order";
+        } else if (newestNotification.type === 'booking') {
+          notificationTitle = "New Booking";
+        } else if (newestNotification.type === 'function_booking') {
+          notificationTitle = "New Function Booking";
+        } else {
+          notificationTitle = `New ${newestNotification.type.charAt(0).toUpperCase() + newestNotification.type.slice(1)}`;
+        }
+        
+        // Create the system notification
+        const notification = new Notification(notificationTitle, {
+          body: newestNotification.message,
+          icon: '/icons/icon-192x192.png',
+          tag: `restaurant-notification-${newestNotification.type}-${newestNotification.id}`,
+          silent: false // Let the browser play the notification sound
+        });
+        
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+      }
 
       // For order type notifications, show the alert notification
       if (newestNotification.type === 'order') {
@@ -371,7 +452,7 @@ export function NotificationCenter() {
         console.error('Error saving trimmed IDs to localStorage:', e);
       }
     }
-  }, [unreadNotifications]);
+  }, [unreadNotifications, playNotificationSound]);
 
   // Mark a notification as read
   const markAsReadMutation = useMutation({
