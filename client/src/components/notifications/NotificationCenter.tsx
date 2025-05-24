@@ -430,5 +430,6 @@ export function NotificationCenter() {
         </ScrollArea>
       </PopoverContent>
     </Popover>
+  </>
   );
 }
