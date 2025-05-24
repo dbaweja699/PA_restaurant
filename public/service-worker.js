@@ -1,6 +1,5 @@
 // Service Worker for Restaurant AI Management Platform
-const CACHE_NAME = 'restaurant-ai-v2';
-const AUDIO_CACHE_NAME = 'restaurant-ai-audio-v2';
+const CACHE_NAME = 'restaurant-ai-v3';
 
 // Files to cache - regular app assets
 const urlsToCache = [
@@ -11,14 +10,6 @@ const urlsToCache = [
   '/icons/icon-512x512.png'
 ];
 
-// Audio files to cache with high priority
-const audioFilesToCache = [
-  '/sounds/alarm_clock.mp3',
-  '/api/sound/alarm_clock.mp3',
-  '/sounds/order-notification.mp3',
-  '/sounds/booking-notification.mp3'
-];
-
 // Check if we're in production or development
 const isProduction = self.location.hostname !== 'localhost' && !self.location.hostname.includes('replit');
 
@@ -26,11 +17,6 @@ const isProduction = self.location.hostname !== 'localhost' && !self.location.ho
 const getBasePath = () => {
   return isProduction ? self.location.origin : '';
 };
-
-// Correct audio file paths for production
-const correctAudioPaths = audioFilesToCache.map(path => {
-  return `${getBasePath()}${path}`;
-});
 
 // Install event - cache essential files
 self.addEventListener('install', event => {
@@ -42,16 +28,8 @@ self.addEventListener('install', event => {
       console.log('[Service Worker] Caching app shell');
       return cache.addAll(urlsToCache);
     });
-    
-  // Cache audio files with high priority
-  const cacheAudioAssets = caches.open(AUDIO_CACHE_NAME)
-    .then(cache => {
-      console.log('[Service Worker] Caching audio files');
-      // Use the corrected paths that account for production vs dev
-      return cache.addAll(correctAudioPaths);
-    });
   
-  event.waitUntil(Promise.all([cacheRegularAssets, cacheAudioAssets]));
+  event.waitUntil(cacheRegularAssets);
   self.skipWaiting();
 });
 
@@ -59,13 +37,11 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   console.log('[Service Worker] Activating...');
   
-  const currentCaches = [CACHE_NAME, AUDIO_CACHE_NAME];
-  
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (currentCaches.indexOf(cacheName) === -1) {
+          if (cacheName !== CACHE_NAME) {
             console.log('[Service Worker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
@@ -78,73 +54,8 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Fetch event - serve from cache or network with special handling for audio files
+// Fetch event - serve from cache or network
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  
-  // Special handling for audio files - prioritize fresh network responses
-  if (url.pathname.includes('/sounds/') && url.pathname.endsWith('.mp3')) {
-    console.log('[Service Worker] Fetching audio file:', url.pathname);
-    
-    event.respondWith(
-      // Try the network first
-      fetch(event.request)
-        .then(response => {
-          if (!response || response.status !== 200) {
-            throw new Error('Network response was not ok');
-          }
-          
-          // Clone the response for caching
-          const responseToCache = response.clone();
-          
-          // Update the cache with the fresh audio file
-          caches.open(AUDIO_CACHE_NAME).then(cache => {
-            cache.put(event.request, responseToCache);
-          });
-          
-          return response;
-        })
-        .catch(error => {
-          console.log('[Service Worker] Network fetch failed for audio, trying cache:', error);
-          
-          // If network fails, try to serve from cache
-          return caches.match(event.request)
-            .then(cachedResponse => {
-              if (cachedResponse) {
-                console.log('[Service Worker] Found audio in cache');
-                return cachedResponse;
-              }
-              
-              // If not in cache, try alternative URLs (with and without origin)
-              const audioName = url.pathname.split('/').pop();
-              const alternativeUrls = [
-                `/sounds/${audioName}`,
-                `${self.location.origin}/sounds/${audioName}`
-              ];
-              
-              console.log('[Service Worker] Trying alternative audio URLs:', alternativeUrls);
-              
-              // Try each alternative URL
-              return Promise.any(
-                alternativeUrls.map(altUrl => 
-                  caches.match(new Request(altUrl))
-                  .then(altResponse => {
-                    if (altResponse) {
-                      console.log('[Service Worker] Found audio in cache with alternative URL:', altUrl);
-                      return altResponse;
-                    }
-                    throw new Error(`No cached response for ${altUrl}`);
-                  })
-                )
-              ).catch(() => {
-                console.log('[Service Worker] Could not find audio in cache, returning empty response');
-                return new Response('Audio not found', { status: 404 });
-              });
-            });
-        })
-    );
-    return;
-  }
   
   // Standard caching strategy for other assets
   event.respondWith(
@@ -180,82 +91,7 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Function to play notification sound
-async function playNotificationSound(type) {
-  console.log('[Service Worker] Attempting to play notification sound for', type);
-  
-  try {
-    // Determine sound file based on notification type
-    let soundFile = 'alarm_clock.mp3';
-    if (type === 'booking') {
-      soundFile = 'booking-notification.mp3';
-    } else if (type === 'function_booking') {
-      soundFile = 'booking-notification.mp3';
-    }
-    
-    // Get base path for production vs development environment
-    const basePath = getBasePath();
-    const soundUrl = `${basePath}/sounds/${soundFile}`;
-    
-    console.log(`[Service Worker] Using sound URL: ${soundUrl}`);
-    
-    // Try to find all clients of this service worker
-    const allClients = await self.clients.matchAll({
-      includeUncontrolled: true,
-      type: 'window'
-    });
-    
-    if (allClients && allClients.length > 0) {
-      // Send message to all clients to play sound
-      allClients.forEach(client => {
-        console.log('[Service Worker] Sending play sound message to client:', client.id);
-        
-        // Send multiple possible paths to the client
-        // This helps ensure at least one path works in production
-        client.postMessage({
-          action: 'playSound',
-          soundType: type,
-          soundPath: soundUrl,
-          // Include alternative paths for better cross-environment compatibility
-          alternativePaths: [
-            `/api/sound/${soundFile}`,
-            `/sounds/${soundFile}`,
-            `${self.location.origin}/api/sound/${soundFile}`,
-            `${self.location.origin}/sounds/${soundFile}`,
-            `https://${self.location.hostname}/api/sound/${soundFile}`,
-            `https://${self.location.hostname}/sounds/${soundFile}`
-          ]
-        });
-      });
-      
-      // Also try to ensure the sound is cached for future use
-      try {
-        const cache = await caches.open(AUDIO_CACHE_NAME);
-        const cachedResponse = await cache.match(soundUrl);
-        
-        if (!cachedResponse || !cachedResponse.ok) {
-          console.log('[Service Worker] Sound not in cache, attempting to fetch and cache it');
-          fetch(soundUrl)
-            .then(response => {
-              if (response.ok) {
-                cache.put(soundUrl, response.clone());
-                console.log('[Service Worker] Successfully cached sound for future use');
-              }
-            })
-            .catch(err => {
-              console.error('[Service Worker] Failed to fetch and cache sound:', err);
-            });
-        }
-      } catch (cacheError) {
-        console.error('[Service Worker] Error with cache operations:', cacheError);
-      }
-    } else {
-      console.log('[Service Worker] No clients found to play sound');
-    }
-  } catch (error) {
-    console.error('[Service Worker] Error playing notification sound:', error);
-  }
-}
+// No sound functions needed
 
 // Handle push notifications
 self.addEventListener('push', event => {
@@ -309,9 +145,6 @@ self.addEventListener('push', event => {
       }
     ];
   }
-
-  // Try to play notification sound
-  playNotificationSound(data.type);
   
   event.waitUntil(
     self.registration.showNotification(data.title, options)
