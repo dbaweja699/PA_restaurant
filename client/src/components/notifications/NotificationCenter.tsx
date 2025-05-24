@@ -233,8 +233,9 @@ export function NotificationCenter() {
       if (isNewNotification) {
         console.log("New notification detected:", newestNotification.type, newestNotification.message);
         
-        // For orders, show the alert notification
-        if (newestNotification.type === 'order') {
+        // For orders or call type notifications about orders, show the alert notification
+        if (newestNotification.type === 'order' || 
+           (newestNotification.type === 'call' && newestNotification.message.toLowerCase().includes('order'))) {
           setAlertNotification(newestNotification);
           setShowAlertNotification(true);
           // Play order notification sound

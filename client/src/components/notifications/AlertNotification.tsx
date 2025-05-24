@@ -28,23 +28,40 @@ export function AlertNotification({
 
   useEffect(() => {
     // Play the sound when the notification appears
-    try {
-      // Make sure audio is ready to play
-      audio.load();
-      audio.volume = 1.0;
-      audio.loop = type === 'order'; // Loop only for orders that require acceptance
-      
-      // Small delay to ensure audio is loaded
-      setTimeout(() => {
-        audio.play().catch(err => {
-          console.error(`Failed to play alert notification sound:`, err);
-        });
-      }, 100);
-      
-      console.log(`Playing alert sound for ${type} notification`);
-    } catch (err) {
-      console.error('Error setting up audio:', err);
-    }
+    const playSound = () => {
+      try {
+        // Reset the audio to ensure it plays from the start
+        audio.pause();
+        audio.currentTime = 0;
+        
+        // Configure audio
+        audio.volume = 1.0;
+        audio.loop = type === 'order'; // Loop only for orders that require acceptance
+        
+        // Play with a small delay to ensure DOM is ready
+        setTimeout(() => {
+          const playPromise = audio.play();
+          
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.error(`Failed to play alert notification sound:`, err);
+              // Try again with user interaction requirement workaround
+              document.addEventListener('click', function playOnClick() {
+                audio.play();
+                document.removeEventListener('click', playOnClick);
+              }, { once: true });
+            });
+          }
+        }, 200);
+        
+        console.log(`Playing alert sound for ${type} notification`);
+      } catch (err) {
+        console.error('Error setting up audio:', err);
+      }
+    };
+    
+    // Call the function to play sound
+    playSound();
 
     // Auto-close for bookings after specified time
     let timeoutId: NodeJS.Timeout | null = null;
