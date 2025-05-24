@@ -18,6 +18,19 @@ const audioFilesToCache = [
   '/sounds/booking-notification.mp3'
 ];
 
+// Check if we're in production or development
+const isProduction = self.location.hostname !== 'localhost' && !self.location.hostname.includes('replit');
+
+// Get the base path for production URLs
+const getBasePath = () => {
+  return isProduction ? self.location.origin : '';
+};
+
+// Correct audio file paths for production
+const correctAudioPaths = audioFilesToCache.map(path => {
+  return `${getBasePath()}${path}`;
+});
+
 // Install event - cache essential files
 self.addEventListener('install', event => {
   console.log('[Service Worker] Installing...');
@@ -33,7 +46,8 @@ self.addEventListener('install', event => {
   const cacheAudioAssets = caches.open(AUDIO_CACHE_NAME)
     .then(cache => {
       console.log('[Service Worker] Caching audio files');
-      return cache.addAll(audioFilesToCache);
+      // Use the corrected paths that account for production vs dev
+      return cache.addAll(correctAudioPaths);
     });
   
   event.waitUntil(Promise.all([cacheRegularAssets, cacheAudioAssets]));
@@ -68,12 +82,17 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
   // Special handling for audio files - prioritize fresh network responses
-  if (url.pathname.startsWith('/sounds/') && url.pathname.endsWith('.mp3')) {
+  if (url.pathname.includes('/sounds/') && url.pathname.endsWith('.mp3')) {
     console.log('[Service Worker] Fetching audio file:', url.pathname);
     
     event.respondWith(
+      // Try the network first
       fetch(event.request)
         .then(response => {
+          if (!response || response.status !== 200) {
+            throw new Error('Network response was not ok');
+          }
+          
           // Clone the response for caching
           const responseToCache = response.clone();
           
@@ -84,10 +103,43 @@ self.addEventListener('fetch', event => {
           
           return response;
         })
-        .catch(() => {
+        .catch(error => {
+          console.log('[Service Worker] Network fetch failed for audio, trying cache:', error);
+          
           // If network fails, try to serve from cache
-          console.log('[Service Worker] Serving audio from cache after network failure');
-          return caches.match(event.request);
+          return caches.match(event.request)
+            .then(cachedResponse => {
+              if (cachedResponse) {
+                console.log('[Service Worker] Found audio in cache');
+                return cachedResponse;
+              }
+              
+              // If not in cache, try alternative URLs (with and without origin)
+              const audioName = url.pathname.split('/').pop();
+              const alternativeUrls = [
+                `/sounds/${audioName}`,
+                `${self.location.origin}/sounds/${audioName}`
+              ];
+              
+              console.log('[Service Worker] Trying alternative audio URLs:', alternativeUrls);
+              
+              // Try each alternative URL
+              return Promise.any(
+                alternativeUrls.map(altUrl => 
+                  caches.match(new Request(altUrl))
+                  .then(altResponse => {
+                    if (altResponse) {
+                      console.log('[Service Worker] Found audio in cache with alternative URL:', altUrl);
+                      return altResponse;
+                    }
+                    throw new Error(`No cached response for ${altUrl}`);
+                  })
+                )
+              ).catch(() => {
+                console.log('[Service Worker] Could not find audio in cache, returning empty response');
+                return new Response('Audio not found', { status: 404 });
+              });
+            });
         })
     );
     return;

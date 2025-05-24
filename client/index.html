@@ -16,12 +16,49 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/service-worker.js')
+          // Add a small delay to ensure the page is fully loaded
+          setTimeout(function() {
+            navigator.serviceWorker.register('/service-worker.js', {
+              scope: '/'
+            })
             .then(function(registration) {
               console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            }, function(err) {
-              console.log('ServiceWorker registration failed: ', err);
+              
+              // Force update check for the service worker
+              registration.update();
+              
+              // Set up periodic checks for service worker updates
+              setInterval(function() {
+                registration.update();
+                console.log('Checking for service worker updates...');
+              }, 60 * 60 * 1000); // Check every hour
+            })
+            .catch(function(err) {
+              console.error('ServiceWorker registration failed: ', err);
             });
+          }, 1000);
+        });
+        
+        // Listen for service worker messages
+        navigator.serviceWorker.addEventListener('message', function(event) {
+          console.log('Received message from service worker:', event.data);
+          if (event.data && event.data.action === 'playSound') {
+            console.log('Service worker requested sound playback:', event.data.soundPath);
+            try {
+              // Create and play audio
+              const audio = new Audio(event.data.soundPath);
+              audio.volume = 1.0;
+              const playPromise = audio.play();
+              
+              if (playPromise !== undefined) {
+                playPromise.catch(function(error) {
+                  console.error('Error playing sound from service worker message:', error);
+                });
+              }
+            } catch (error) {
+              console.error('Failed to create audio:', error);
+            }
+          }
         });
       }
     </script>

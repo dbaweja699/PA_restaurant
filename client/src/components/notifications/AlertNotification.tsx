@@ -80,13 +80,30 @@ export function AlertNotification({
     
     // Try to play the notification sound
     try {
-      const soundPath = '/sounds/alarm_clock.mp3';
+      // Make sure we use the proper base URL for production
+      const getBasePath = () => {
+        // Check if we're in a production domain
+        if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('replit')) {
+          return window.location.origin;
+        }
+        return '';
+      };
+
+      const basePath = getBasePath();
+      const soundPath = `${basePath}/sounds/alarm_clock.mp3`;
       console.log(`Loading sound from: ${soundPath}`);
 
       // Create and configure audio element immediately
       audioRef.current = new Audio(soundPath);
       audioRef.current.volume = 1.0;
       audioRef.current.preload = 'auto';
+      
+      // Add error handler for debugging production issues
+      audioRef.current.onerror = (e) => {
+        console.error('Audio error:', e);
+        console.error('Audio error code:', audioRef.current?.error?.code);
+        console.error('Audio error message:', audioRef.current?.error?.message);
+      };
       
       // For orders, we'll loop the sound until it's accepted or dismissed
       if (type === 'order') {
