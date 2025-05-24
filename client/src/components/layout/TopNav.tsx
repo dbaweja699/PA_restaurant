@@ -45,7 +45,7 @@ type SearchResult = {
   date?: string;
 }
 
-export default function TopNav({ openSidebar }: TopNavProps) {
+function TopNav({ openSidebar }: TopNavProps) {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -329,3 +329,6 @@ export default function TopNav({ openSidebar }: TopNavProps) {
     </div>
   );
 }
+
+export { TopNav };
+export default TopNav;
