@@ -110,7 +110,15 @@ function NotificationCard({ notification, onMarkAsRead }: {
 }
 
 export function NotificationCenter() {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
+  // Use localStorage to prevent notification persistence across sessions
+  useEffect(() => {
+    // Clear any previous notification state on component mount
+    localStorage.removeItem('currentNotification');
+  }, []);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastNotificationCount, setLastNotificationCount] = useState(0);
   const notificationSound = useRef<HTMLAudioElement | null>(null);
@@ -304,7 +312,7 @@ export function NotificationCenter() {
   // Check for new notifications and play sound
   useEffect(() => {
     const currentCount = unreadNotifications.length;
-    
+
     // Get the newest notification from the unread notifications
     const newestNotification = unreadNotifications.length > 0 ? unreadNotifications[0] : null;
 
@@ -435,12 +443,12 @@ export function NotificationCenter() {
           } : undefined}
           onClose={() => {
             setShowAlertNotification(false);
-            // Don't automatically mark bookings as read when dismissed
-            if (alertNotification.type === 'order') {
+            // Mark notification as read when closed, regardless of type
+            if (alertNotification?.id) {
               markAsReadMutation.mutate(alertNotification.id);
             }
           }}
-          autoClose={alertNotification.type !== 'order'} // Auto close for bookings, not for orders
+          autoClose={true} // Auto close for all notifications
           autoCloseTime={5000} // 5 seconds
         />
       )}

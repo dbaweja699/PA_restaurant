@@ -43,15 +43,13 @@ export function AlertNotification({
       }, autoCloseTime);
     }
 
-    // Force close when component unmounts
     return () => {
       if (timeout) {
         clearTimeout(timeout);
       }
-      // Ensure we call onClose when component unmounts to prevent persisting notifications
-      onClose();
+      // Do not call onClose when unmounting as this was causing issues
     };
-  }, [autoClose, autoCloseTime, onClose]);
+  }, [autoClose, autoCloseTime]);
 
   // Request notification permission for PWA
   useEffect(() => {
