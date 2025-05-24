@@ -334,7 +334,7 @@ export function NotificationCenter() {
   }, [orders]);
 
   // Track processed notification IDs to prevent duplicates
-  const [processedNotificationIds, setProcessedNotificationIds] = useState<Set<number>>(new Set());
+  const [processedNotificationIds, setProcessedNotificationIds] = useState<number[]>([]);
 
   // Check for new notifications and play sound
   useEffect(() => {
@@ -357,19 +357,19 @@ export function NotificationCenter() {
 
     // Check if this is a new notification we haven't processed yet
     const isNewNotification = newestNotification && 
-      !processedNotificationIds.has(newestNotification.id) &&
+      !processedNotificationIds.includes(newestNotification.id) &&
       (!alertNotification || newestNotification.id !== alertNotification.id);
 
     if (isNewNotification) {
       console.log("New notification detected:", newestNotification.type, newestNotification.message);
 
-      // Add this notification ID to our processed set to prevent duplicates
-      setProcessedNotificationIds(prev => new Set([...prev, newestNotification.id]));
+      // Add this notification ID to our array to prevent duplicates
+      setProcessedNotificationIds(prev => [...prev, newestNotification.id]);
       
       // Save to localStorage to prevent showing the same notification after page refresh
       try {
         const existingIds = JSON.parse(localStorage.getItem('processedNotificationIds') || '[]');
-        const updatedIds = [...existingIds, newestNotification.id];
+        const updatedIds = Array.isArray(existingIds) ? [...existingIds, newestNotification.id] : [newestNotification.id];
         localStorage.setItem('processedNotificationIds', JSON.stringify(updatedIds));
       } catch (e) {
         console.error('Error saving notification ID to localStorage:', e);
@@ -441,13 +441,12 @@ export function NotificationCenter() {
     setLastNotificationCount(currentCount);
 
     // Clean up old notifications from storage if we have too many
-    if (processedNotificationIds.size > 500) {
+    if (processedNotificationIds.length > 500) {
       // Only keep the 300 most recent IDs to prevent localStorage from growing too large
-      const idsArray = [...processedNotificationIds];
-      const recentIds = new Set(idsArray.slice(-300));
+      const recentIds = processedNotificationIds.slice(-300);
       setProcessedNotificationIds(recentIds);
       try {
-        localStorage.setItem('processedNotificationIds', JSON.stringify([...recentIds]));
+        localStorage.setItem('processedNotificationIds', JSON.stringify(recentIds));
       } catch (e) {
         console.error('Error saving trimmed IDs to localStorage:', e);
       }
