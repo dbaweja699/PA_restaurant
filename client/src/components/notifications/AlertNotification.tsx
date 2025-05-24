@@ -197,28 +197,26 @@ export function AlertNotification({
         }, 300);
       };
       
-      // Add production file paths to our sources
-      soundSources.push(
-        // Try with notification-sound.mp3 which exists in production Docker container
-        `${basePath}/notification-sound.mp3`,
-        `${window.location.origin}/notification-sound.mp3`,
-        `/notification-sound.mp3`,
-        // Try our new dedicated endpoint
-        `${basePath}/api/notification-sound`,
-        `${window.location.origin}/api/notification-sound`,
-        `/api/notification-sound`,
-        // Try absolute URLs with production domain
-        `https://princealberthotel.dblytics.com/notification-sound.mp3`,
-        `https://princealberthotel.dblytics.com/api/notification-sound`
-      );
+      // Log the paths we're trying
+      console.log(`API sound path: ${apiSoundPath}`);
+      console.log(`Direct sound path: ${directSoundPath}`);
       
-      // For production only, add additional paths to try
-      if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('replit')) {
-        soundSources.push(
-          `https://${window.location.hostname}/api/sound/alarm_clock.mp3`,
-          `https://${window.location.hostname}/sounds/alarm_clock.mp3`
-        );
-      }
+      // Create list of sound sources to try
+      const soundSources = [
+        apiSoundPath,
+        directSoundPath,
+        notificationSoundPath,
+        apiNotificationPath,
+        // Add other paths
+        '/sounds/alarm_clock.mp3',
+        '/api/sound/alarm_clock.mp3',
+        '/notification-sound.mp3',
+        '/api/notification-sound',
+        `${window.location.origin}/sounds/alarm_clock.mp3`,
+        `${window.location.origin}/api/sound/alarm_clock.mp3`,
+        'https://princealberthotel.dblytics.com/sounds/alarm_clock.mp3',
+        'https://princealberthotel.dblytics.com/api/sound/alarm_clock.mp3'
+      ];
       
       // Start trying sound sources
       tryMultipleSoundSources(soundSources);
