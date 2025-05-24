@@ -40,63 +40,127 @@ export function AlertNotification({
   useEffect(() => {
     // Try to play the notification sound
     try {
-      // Create an audio element directly in the component for better browser support
-      const audioElement = document.createElement('audio');
+      // Create an embedded audio element that's visible in the DOM
+      // This helps bypass some browser autoplay restrictions
+      const audioElement = new Audio();
       audioElement.src = '/sounds/alarm_clock.mp3';
       audioElement.id = 'alert-notification-sound';
       audioElement.volume = 1.0;
       audioElement.preload = 'auto';
-      document.body.appendChild(audioElement);
+      audioElement.loop = false;
+      audioElement.muted = false;
       
-      // Store reference for cleanup
-      audioRef.current = audioElement;
-      
-      console.log("Alert sound element created");
-      
-      // Force immediate play attempt after a small delay
-      setTimeout(() => {
-        console.log("Attempting to play notification sound now");
-        
-        // Play the sound with user interaction context
-        const playSound = () => {
-          if (audioRef.current) {
-            // Play it twice to ensure it works (browser quirk workaround)
-            const promise = audioRef.current.play();
+      // Force the browser to load the audio file
+      fetch('/sounds/alarm_clock.mp3')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Sound file not found');
+          }
+          console.log('Alert sound file confirmed available');
+          return response.blob();
+        })
+        .then(blob => {
+          // Create a direct object URL from the blob for more reliable playback
+          const objectUrl = URL.createObjectURL(blob);
+          audioElement.src = objectUrl;
+          
+          // Store reference with the object URL for cleanup
+          audioRef.current = audioElement;
+          document.body.appendChild(audioElement);
+          
+          console.log("Alert sound element created with direct blob URL");
+          
+          // Play using multiple strategies
+          const playStrategies = () => {
+            console.log("Attempting to play notification sound with multiple strategies");
             
-            if (promise !== undefined) {
-              promise.then(() => {
+            // Strategy 1: Direct play
+            const playPromise = audioElement.play();
+            
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
                 console.log("Alert sound playing successfully");
               }).catch(err => {
-                console.error("Failed to play alert sound:", err);
+                console.error("Strategy 1 failed to play alert sound:", err);
                 
-                // Create and play a very short beep as fallback
-                try {
-                  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                  const oscillator = audioContext.createOscillator();
-                  oscillator.type = 'sine';
-                  oscillator.frequency.value = 800;
-                  oscillator.connect(audioContext.destination);
-                  oscillator.start();
-                  setTimeout(() => oscillator.stop(), 200);
-                  console.log("Played fallback beep sound");
-                } catch (err) {
-                  console.error("Even fallback sound failed:", err);
-                }
+                // Strategy 2: Play via user interaction simulation
+                // Use a click event to trigger playback
+                const simulateUserInteraction = () => {
+                  console.log("Trying strategy 2: User interaction simulation");
+                  
+                  // Add an inline play button that auto-clicks itself
+                  const tempButton = document.createElement('button');
+                  tempButton.textContent = 'Play Sound';
+                  tempButton.style.position = 'absolute';
+                  tempButton.style.left = '-9999px';
+                  
+                  tempButton.onclick = () => {
+                    const newPlayPromise = audioElement.play();
+                    if (newPlayPromise) {
+                      newPlayPromise.catch(e => {
+                        console.error("Strategy 2 failed:", e);
+                        // Strategy 3: Fall back to beep only as last resort
+                        useBeepFallback();
+                      });
+                    }
+                    document.body.removeChild(tempButton);
+                  };
+                  
+                  document.body.appendChild(tempButton);
+                  setTimeout(() => tempButton.click(), 50);
+                };
+                
+                simulateUserInteraction();
               });
             }
-          }
-        };
-        
-        // Try to play immediately
-        playSound();
-        
-        // Also add a click handler to ensure it works on first user interaction
-        document.addEventListener('click', function playOnFirstClick() {
-          playSound();
-          document.removeEventListener('click', playOnFirstClick);
-        }, { once: true });
-        
-      }, 300);
+          };
+          
+          // Last resort beep fallback if all else fails
+          const useBeepFallback = () => {
+            console.log("Using beep fallback as last resort");
+            try {
+              const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+              const oscillator = audioContext.createOscillator();
+              oscillator.type = 'sine';
+              oscillator.frequency.value = 800;
+              oscillator.connect(audioContext.destination);
+              oscillator.start();
+              setTimeout(() => oscillator.stop(), 300);
+            } catch (err) {
+              console.error("Even fallback beep failed:", err);
+            }
+          };
+          
+          // Try playing after a short delay
+          setTimeout(playStrategies, 200);
+          
+          // Also try to play on first click anywhere
+          document.addEventListener('click', function playOnFirstClick() {
+            audioElement.play().catch(e => console.log("Click-triggered play failed:", e));
+            document.removeEventListener('click', playOnFirstClick);
+          }, { once: true });
+        })
+        .catch(err => {
+          console.error('Error loading sound file:', err);
+          // Fall back to inline audio data if file fetch fails
+          const base64Sound = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAASAAAeMwAUFBQUFCgUFBQUFDMzMzMzM0dHR0dHR1paWlpaWm5ubm5ubm5HR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0dHR0c=';
+          
+          // Create a fallback audio element with the base64 data
+          const fallbackAudio = new Audio(base64Sound);
+          audioRef.current = fallbackAudio;
+          fallbackAudio.volume = 1.0;
+          fallbackAudio.play().catch(e => {
+            console.error("Base64 fallback failed:", e);
+            // Use beep as absolute last resort
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = 800;
+            oscillator.connect(audioContext.destination);
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), 300);
+          });
+        });
     } catch (err) {
       console.error("Error setting up alert notification sound:", err);
     }
@@ -112,32 +176,55 @@ export function AlertNotification({
     // Clean up
     return () => {
       if (audioRef.current) {
+        // Stop any playback
         audioRef.current.pause();
-        // Remove the element from DOM if it was added
+        
+        // Reset to beginning
+        try {
+          audioRef.current.currentTime = 0;
+        } catch (e) {
+          console.log("Error resetting audio time:", e);
+        }
+        
+        // Release any media streams
+        if (audioRef.current.srcObject) {
+          audioRef.current.srcObject = null;
+        }
+        
+        // Release any object URLs to prevent memory leaks
+        if (audioRef.current.src && audioRef.current.src.startsWith('blob:')) {
+          URL.revokeObjectURL(audioRef.current.src);
+        }
+        
+        // Remove from DOM if it was added
         if (audioRef.current.parentNode) {
           audioRef.current.parentNode.removeChild(audioRef.current);
         }
+        
         audioRef.current = null;
       }
+      
       if (timeout) {
         clearTimeout(timeout);
       }
     };
   }, [autoClose, autoCloseTime, onClose]);
   
-  // Attempt to play sound again when the alert becomes visible
+  // This component renders a full-screen notification, so ensure the UI is accessible
   useEffect(() => {
-    // This second effect helps ensure the sound plays even if browser needs user interaction first
-    const playAfterDelay = setTimeout(() => {
-      if (audioRef.current) {
-        console.log("Second attempt to play notification sound");
-        audioRef.current.play().catch(err => {
-          console.log("Second play attempt failed:", err);
-        });
-      }
-    }, 800);
+    // Set focus trap for accessibility
+    const prevFocusedElement = document.activeElement as HTMLElement;
     
-    return () => clearTimeout(playAfterDelay);
+    // Return focus when component unmounts
+    return () => {
+      if (prevFocusedElement && 'focus' in prevFocusedElement) {
+        try {
+          prevFocusedElement.focus();
+        } catch (e) {
+          console.log("Error returning focus:", e);
+        }
+      }
+    };
   }, []);
 
   // Handle Accept action (for orders)
