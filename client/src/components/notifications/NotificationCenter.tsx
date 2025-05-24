@@ -222,20 +222,30 @@ export function NotificationCenter() {
     const currentCount = unreadNotifications.length;
     
     // Check if we have new notifications since last check
-    if (currentCount > lastNotificationCount && lastNotificationCount > 0) {
-      // Get the newest notification
-      const newestNotification = unreadNotifications.length > 0 ? unreadNotifications[0] : null;
+    if (currentCount > 0) {
+      // Get the newest notification (first one in the list)
+      const newestNotification = unreadNotifications[0];
       
-      if (newestNotification) {
+      // Check if this is a new notification we haven't processed yet
+      const isNewNotification = newestNotification && 
+        (!alertNotification || newestNotification.id !== alertNotification.id);
+      
+      if (isNewNotification) {
+        console.log("New notification detected:", newestNotification.type, newestNotification.message);
+        
         // For orders, show the alert notification
         if (newestNotification.type === 'order') {
           setAlertNotification(newestNotification);
           setShowAlertNotification(true);
+          // Play order notification sound
+          playNotificationSound('order');
         } 
         // For bookings and function_bookings, show the temporary alert notification
         else if (newestNotification.type === 'booking' || newestNotification.type === 'function_booking') {
           setAlertNotification(newestNotification);
           setShowAlertNotification(true);
+          // Play booking notification sound
+          playNotificationSound(newestNotification.type);
         }
         // For other notification types, show toast
         else {
@@ -248,25 +258,12 @@ export function NotificationCenter() {
           // Play appropriate sound based on notification type
           playNotificationSound(newestNotification.type);
         }
-      } else {
-        // If no specific notification, show general toast
-        toast({
-          title: "New Notification",
-          description: `You have ${currentCount - lastNotificationCount} new notifications`,
-          variant: "default",
-        });
-        
-        if (soundEnabled && notificationSound.current) {
-          notificationSound.current.play().catch(err => {
-            console.error("Failed to play notification sound:", err);
-          });
-        }
       }
     }
     
     // Update the last count
     setLastNotificationCount(currentCount);
-  }, [unreadNotifications, lastNotificationCount]);
+  }, [unreadNotifications]);
   
   // Mark a notification as read
   const markAsReadMutation = useMutation({

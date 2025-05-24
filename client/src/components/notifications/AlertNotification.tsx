@@ -29,11 +29,19 @@ export function AlertNotification({
   useEffect(() => {
     // Play the sound when the notification appears
     try {
+      // Make sure audio is ready to play
+      audio.load();
       audio.volume = 1.0;
       audio.loop = type === 'order'; // Loop only for orders that require acceptance
-      audio.play().catch(err => {
-        console.error(`Failed to play alert notification sound:`, err);
-      });
+      
+      // Small delay to ensure audio is loaded
+      setTimeout(() => {
+        audio.play().catch(err => {
+          console.error(`Failed to play alert notification sound:`, err);
+        });
+      }, 100);
+      
+      console.log(`Playing alert sound for ${type} notification`);
     } catch (err) {
       console.error('Error setting up audio:', err);
     }
