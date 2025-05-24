@@ -304,6 +304,9 @@ export function NotificationCenter() {
   // Check for new notifications and play sound
   useEffect(() => {
     const currentCount = unreadNotifications.length;
+    
+    // Get the newest notification from the unread notifications
+    const newestNotification = unreadNotifications.length > 0 ? unreadNotifications[0] : null;
 
     // Check if this is a new notification we haven't processed yet
     const isNewNotification = newestNotification && 

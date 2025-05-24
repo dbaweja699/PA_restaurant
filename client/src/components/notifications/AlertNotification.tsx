@@ -1,181 +1,153 @@
-
-import { useState, useEffect } from 'react';
-import { X, Bell, Calendar, ShoppingCart } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ShoppingBag, Calendar, X, Music, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useMutation } from '@tanstack/react-query';
-import { apiRequest, queryClient } from '@/lib/queryClient';
+import { Badge } from '@/components/ui/badge';
+import { apiRequest } from '@/lib/queryClient';
+import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 
-interface AlertNotificationProps {
+type AlertNotificationProps = {
   type: 'order' | 'booking' | 'function_booking';
   title: string;
   message: string;
-  onAccept?: () => void;
+  details: Record<string, any>;
   onClose: () => void;
+  onAccept?: () => void;
   autoClose?: boolean;
   autoCloseTime?: number;
-  details?: any; // Order details if available
-}
+};
 
 export function AlertNotification({
   type,
   title,
   message,
-  onAccept,
+  details,
   onClose,
+  onAccept,
   autoClose = false,
-  autoCloseTime = 5000,
-  details
+  autoCloseTime = 7000,
 }: AlertNotificationProps) {
-  const [audio] = useState(() => {
-    const audioElement = new Audio('/sounds/alarm_clock.mp3');
-    // Set preload attribute to ensure the audio file is loaded before attempting to play
-    audioElement.preload = 'auto';
-    return audioElement;
-  });
-  const [isVisible, setIsVisible] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Status update mutation for orders
-  const updateOrderStatusMutation = useMutation({
-    mutationFn: async (orderId: number) => {
-      setIsProcessing(true);
-      const response = await apiRequest("PATCH", `/api/orders/${orderId}`, { 
-        status: "processing" 
-      });
+  // Order ID text for display
+  const orderIdText = type === 'order' && details.orderId ? ` #${details.orderId}` : '';
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update order status");
-      }
-
-      return await response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Order Accepted",
-        description: "The order status has been changed to processing.",
-        variant: "default",
-      });
-      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
-      handleClose();
-    },
-    onError: (error) => {
-      setIsProcessing(false);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update status",
-        variant: "destructive",
-      });
-    }
-  });
-
+  // Play alert notification sound when component mounts
   useEffect(() => {
-    // Play the sound when the notification appears
-    const playSound = () => {
-      try {
-        // Check if the audio file exists first
-        fetch('/sounds/alarm_clock.mp3', { method: 'HEAD' })
-          .then(() => {
-            // Reset the audio to ensure it plays from the start
-            audio.pause();
-            audio.currentTime = 0;
-            
-            // Configure audio
-            audio.volume = 1.0;
-            audio.loop = type === 'order'; // Loop only for orders that require acceptance
-            
-            // Ensure audio is loaded before attempting to play
-            audio.load();
-            
-            // Play with a small delay to ensure DOM is ready
-            setTimeout(() => {
-              console.log('Attempting to play notification sound');
-              const playPromise = audio.play();
-              
-              if (playPromise !== undefined) {
-                playPromise.catch(err => {
-                  console.error(`Failed to play alert notification sound:`, err);
-                  // Try again with user interaction requirement workaround
-                  document.addEventListener('click', function playOnClick() {
-                    audio.play().catch(e => console.warn('Still unable to play audio:', e));
-                    document.removeEventListener('click', playOnClick);
-                  }, { once: true });
-                });
-              }
-            }, 300);
-          })
-          .catch(err => {
-            console.error('Audio file not found:', err);
-          });
-        
-        console.log(`Playing alert sound for ${type} notification`);
-      } catch (err) {
-        console.error('Error setting up audio:', err);
-      }
-    };
-    
-    // Call the function to play sound
-    playSound();
+    // Try to play the notification sound
+    try {
+      const soundPath = '/sounds/alarm_clock.mp3';
 
-    // Auto-close for bookings after specified time
-    let timeoutId: NodeJS.Timeout | null = null;
-    
+      // Check if the file exists
+      fetch(soundPath, { method: 'HEAD' })
+        .then(() => {
+          audioRef.current = new Audio(soundPath);
+          audioRef.current.volume = 1.0;
+
+          // Play the audio
+          const playPromise = audioRef.current.play();
+
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.error("Failed to play alert notification sound:", err);
+            });
+          }
+        })
+        .catch(err => {
+          console.error("Alert sound file not found:", err);
+        });
+    } catch (err) {
+      console.error("Error playing alert notification sound:", err);
+    }
+
+    // Auto-close the notification after the specified time if autoClose is true
+    let timeout: NodeJS.Timeout | null = null;
     if (autoClose) {
-      timeoutId = setTimeout(() => {
-        handleClose();
+      timeout = setTimeout(() => {
+        onClose();
       }, autoCloseTime);
     }
 
+    // Clean up
     return () => {
-      // Clean up
-      audio.pause();
-      audio.currentTime = 0;
-      
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (timeout) {
+        clearTimeout(timeout);
       }
     };
-  }, []);
+  }, [autoClose, autoCloseTime, onClose]);
 
-  const handleClose = () => {
-    setIsVisible(false);
-    audio.pause();
-    audio.currentTime = 0;
+  // Handle Accept action (for orders)
+  const handleAccept = async () => {
+    setIsProcessing(true);
+
+    // Only update order status if this is an order type and we have an orderId
+    if (type === 'order' && details.orderId) {
+      try {
+        // Update the order status to "processing"
+        const response = await apiRequest(
+          'PATCH',
+          `/api/orders/${details.orderId}/status`,
+          { status: 'processing' }
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to update order status');
+        }
+
+        // Invalidate orders query to refresh the data
+        queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+
+        toast({
+          title: "Order Status Updated",
+          description: `Order #${details.orderId} is now processing`,
+          variant: "default",
+        });
+      } catch (error) {
+        console.error('Error updating order status:', error);
+        toast({
+          title: "Failed to Update Order Status",
+          description: error instanceof Error ? error.message : 'Unknown error occurred',
+          variant: "destructive",
+        });
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+
+    // Call the original onAccept callback
+    if (onAccept) {
+      onAccept();
+    }
+
     onClose();
   };
 
-  const handleAccept = () => {
-    if (type === 'order' && details?.orderId) {
-      console.log("Accepting order and updating status to processing:", details.orderId);
-      // Update order status to "processing"
-      updateOrderStatusMutation.mutate(details.orderId);
-    } else if (onAccept) {
-      onAccept();
-      handleClose();
-    } else {
-      handleClose();
-    }
+  // Handle close action
+  const handleClose = () => {
+    onClose();
   };
 
-  if (!isVisible) return null;
-
+  // Get the appropriate icon based on notification type
   const getIcon = () => {
     switch (type) {
       case 'order':
-        return <ShoppingCart className="h-10 w-10 text-orange-500" />;
+        return <div className="bg-orange-500 p-3 rounded-full text-white"><ShoppingBag className="h-6 w-6" /></div>;
       case 'booking':
+        return <div className="bg-green-500 p-3 rounded-full text-white"><Calendar className="h-6 w-6" /></div>;
       case 'function_booking':
-        return <Calendar className="h-10 w-10 text-green-500" />;
+        return <div className="bg-blue-500 p-3 rounded-full text-white"><Music className="h-6 w-6" /></div>;
       default:
-        return <Bell className="h-10 w-10 text-primary" />;
+        return <div className="bg-neutral-500 p-3 rounded-full text-white"><ShoppingBag className="h-6 w-6" /></div>;
     }
   };
-
-  // Extract order number for display
-  const orderIdText = type === 'order' && details?.orderId ? ` #${details.orderId}` : '';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
@@ -187,7 +159,7 @@ export function AlertNotification({
             <p className="text-gray-600">{message}</p>
           </div>
         </div>
-        
+
         <div className="flex justify-end gap-2 mt-6">
           {type === 'order' && (
             <Button 
