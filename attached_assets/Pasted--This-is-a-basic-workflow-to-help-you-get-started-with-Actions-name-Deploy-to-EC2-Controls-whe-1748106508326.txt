@@ -77,7 +77,6 @@ jobs:
             server {
                 listen 80;
                 server_name $DOMAIN;
-                
                 location / {
                     proxy_pass http://localhost:5000;
                     proxy_http_version 1.1;
@@ -85,30 +84,6 @@ jobs:
                     proxy_set_header Connection 'upgrade';
                     proxy_set_header Host \$host;
                     proxy_cache_bypass \$http_upgrade;
-                }
-                
-                # Sound files location with proper CORS headers
-                location /sounds/ {
-                    proxy_pass http://localhost:5000;
-                    add_header Access-Control-Allow-Origin "*";
-                    add_header Cross-Origin-Resource-Policy "cross-origin";
-                    expires 1d;
-                }
-                
-                # Service worker with proper cache headers
-                location = /service-worker.js {
-                    proxy_pass http://localhost:5000;
-                    add_header Service-Worker-Allowed "/";
-                    add_header Cache-Control "no-cache";
-                    add_header Cross-Origin-Embedder-Policy "require-corp";
-                    add_header Cross-Origin-Opener-Policy "same-origin";
-                }
-                
-                # Web app manifest with proper content type
-                location = /manifest.json {
-                    proxy_pass http://localhost:5000;
-                    add_header Content-Type "application/manifest+json";
-                    add_header Cache-Control "no-cache";
                 }
             }
             EOF
@@ -120,12 +95,6 @@ jobs:
 
             # Run certbot to install SSL certificate
             sudo certbot --nginx --non-interactive --agree-tos --email $EMAIL -d $DOMAIN
-            
-            # Add security headers for PWA support to the HTTPS config
-            sudo sed -i '/ssl_prefer_server_ciphers/a \\n    # Security headers for PWA and audio playback\n    add_header Content-Security-Policy "default-src \x27self\x27; script-src \x27self\x27 \x27unsafe-inline\x27 \x27unsafe-eval\x27; connect-src \x27self\x27; img-src \x27self\x27 data: blob:; style-src \x27self\x27 \x27unsafe-inline\x27; media-src \x27self\x27 blob:; object-src \x27none\x27; frame-ancestors \x27self\x27; worker-src \x27self\x27 blob:;";\n    add_header X-Content-Type-Options "nosniff";\n    add_header X-Frame-Options "DENY";\n    add_header X-XSS-Protection "1; mode=block";' /etc/nginx/sites-available/$DOMAIN
-
-            # Reload nginx to apply the changes
-            sudo nginx -t && sudo systemctl reload nginx
 
             # Login to AWS ECR
             aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 664418994345.dkr.ecr.us-east-2.amazonaws.com
@@ -146,3 +115,5 @@ jobs:
             -e HOST=0.0.0.0 \
             --restart unless-stopped \
               664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest
+
+      

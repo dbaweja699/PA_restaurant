@@ -1,0 +1,61 @@
+Here's what's likely causing the issues:
+
+Service Worker Registration: In a production environment, your service worker may not be registering properly.
+PWA Installation: For HTTPS-served sites, the browser should offer PWA installation but something is preventing that.
+Cross-Domain Issues: The sound files may not be accessible due to security policies.
+Let me provide you with a plan to fix these issues:
+
+Plan to Fix Notification Alerts and PWA Installation
+Fix Service Worker Registration:
+
+The service worker needs proper HTTPS headers to register
+Make sure your Docker container is correctly serving the static files
+Add Missing Web App Manifest Headers:
+
+We need to ensure proper HTTP headers for the manifest.json file
+Fix Missing Sounds Directory Access:
+
+Make sure the /sounds/ directory is properly accessible
+Add Missing Content Security Policy Headers:
+
+Add headers to allow audio playback
+Here's what you need to do:
+
+1. First, check if your static files are being served correctly
+# Add the following to your Nginx or web server config
+location /sounds/ {
+    add_header Access-Control-Allow-Origin "*";
+    expires 1d;
+}
+location /service-worker.js {
+    add_header Service-Worker-Allowed "/";
+    add_header Cache-Control "no-cache";
+}
+location /manifest.json {
+    add_header Content-Type "application/manifest+json";
+    add_header Cache-Control "no-cache";
+}
+2. Add proper HTTP headers for PWA support
+# Add these headers to your web server
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; media-src 'self' blob:; object-src 'none'; frame-ancestors 'self'; worker-src 'self' blob:;";
+add_header X-Content-Type-Options "nosniff";
+add_header X-Frame-Options "DENY";
+add_header X-XSS-Protection "1; mode=block";
+3. Make sure your service worker is being registered correctly
+Check your browser console for any errors related to service worker registration. If you see errors, you may need to modify the registration code in your index.html file to account for the production domain.
+
+In the client/index.html file, update the service worker registration to be more robust:
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js', {
+      scope: '/'
+    })
+    .then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    })
+    .catch(function(err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
