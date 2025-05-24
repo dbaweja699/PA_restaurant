@@ -149,42 +149,7 @@ export function AlertNotification({
   };
 
   // Handle close action
-  const handleClose = async () => {
-    // If this is an order notification and it's in processing status, set it back to "new"
-    if (type === 'order' && details.orderId && details.status === 'processing') {
-      setIsProcessing(true);
-      try {
-        // Update the order status to "new"
-        const response = await apiRequest(
-          'PATCH',
-          `/api/orders/${details.orderId}/status`,
-          { status: 'new' }
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to update order status');
-        }
-
-        // Invalidate orders query to refresh the data
-        queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
-
-        toast({
-          title: "Order Status Updated",
-          description: `Order #${details.orderId} has been set to new`,
-          variant: "default",
-        });
-      } catch (error) {
-        console.error('Error updating order status:', error);
-        toast({
-          title: "Failed to Update Order Status",
-          description: error instanceof Error ? error.message : 'Unknown error occurred',
-          variant: "destructive",
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    }
-    
+  const handleClose = () => {
     onClose();
   };
 
@@ -223,12 +188,8 @@ export function AlertNotification({
               {isProcessing ? 'Processing...' : 'Accept Order'}
             </Button>
           )}
-          <Button 
-            variant="outline" 
-            onClick={handleClose} 
-            disabled={isProcessing}
-          >
-            {isProcessing ? 'Processing...' : type === 'order' ? 'Dismiss' : 'Close'}
+          <Button variant="outline" onClick={handleClose} disabled={isProcessing}>
+            {type === 'order' ? 'Dismiss' : 'Close'}
           </Button>
         </div>
       </Card>
