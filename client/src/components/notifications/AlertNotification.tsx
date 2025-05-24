@@ -213,53 +213,138 @@ export function AlertNotification({
         tryHTMLAudioPlayback();
         
         function tryHTMLAudioPlayback() {
-          // Strategy 1: Normal play with error handling
-          const playPromise = audioRef.current!.play();
-          if (playPromise !== undefined) {
-            playPromise.catch(err => {
-              console.error("Failed to play notification sound:", err);
-              
-              // Strategy 2: Create a user gesture requirement message
-              const message = document.createElement('div');
-              message.style.position = 'fixed';
-              message.style.bottom = '20px';
-              message.style.left = '50%';
-              message.style.transform = 'translateX(-50%)';
-              message.style.backgroundColor = '#f44336';
-              message.style.color = 'white';
-              message.style.padding = '10px 20px';
-              message.style.borderRadius = '4px';
-              message.style.zIndex = '9999';
-              message.textContent = 'Click here to enable sound notifications';
-              message.style.cursor = 'pointer';
-              
-              // Play sound on click
-              message.onclick = () => {
-                if (audioRef.current) {
-                  audioRef.current.play().catch(e => console.error("Still couldn't play:", e));
-                }
-                document.body.removeChild(message);
-              };
-              
-              document.body.appendChild(message);
-              
-              // Remove after 10 seconds if not clicked
-              setTimeout(() => {
-                if (document.body.contains(message)) {
-                  document.body.removeChild(message);
-                }
-              }, 10000);
-              
-              // Also try to use system beep as a fallback
-              if ('Notification' in window) {
-                try {
-                  new Notification("New notification", { silent: false });
-                } catch (e) {
-                  console.error("Could not use system notification for sound:", e);
-                }
+          // Create a function to try multiple audio sources
+          const tryMultipleAudioSources = (sources: string[]) => {
+            if (!sources.length) {
+              console.error("All audio sources failed");
+              return;
+            }
+            
+            console.log("Trying audio sources:", sources);
+            const currentSource = sources[0];
+            const remainingSources = sources.slice(1);
+            
+            // Create a new audio element for this attempt
+            const audio = new Audio(currentSource);
+            audio.volume = 1.0;
+            audio.preload = 'auto';
+            
+            // For orders, we need looping
+            if (type === 'order') {
+              audio.loop = true;
+            }
+            
+            // Add error handler to try next source
+            audio.onerror = (e) => {
+              console.error(`Failed to play audio from ${currentSource}:`, e);
+              if (remainingSources.length) {
+                console.log("Trying next audio source...");
+                tryMultipleAudioSources(remainingSources);
+              } else {
+                showClickToEnableMessage();
               }
-            });
+            };
+            
+            // Try to play this source
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise.then(() => {
+                console.log(`Successfully playing audio from ${currentSource}`);
+                // Save the successful audio element
+                audioRef.current = audio;
+              }).catch(err => {
+                console.error(`Error playing from ${currentSource}:`, err);
+                if (remainingSources.length) {
+                  console.log("Trying next audio source due to play error...");
+                  tryMultipleAudioSources(remainingSources);
+                } else {
+                  showClickToEnableMessage();
+                }
+              });
+            }
+          };
+          
+          // Function to show a click-to-enable message as last resort
+          const showClickToEnableMessage = () => {
+            console.error("All audio sources failed, showing user gesture message");
+            
+            // Strategy 2: Create a user gesture requirement message
+            const message = document.createElement('div');
+            message.style.position = 'fixed';
+            message.style.bottom = '20px';
+            message.style.left = '50%';
+            message.style.transform = 'translateX(-50%)';
+            message.style.backgroundColor = '#f44336';
+            message.style.color = 'white';
+            message.style.padding = '10px 20px';
+            message.style.borderRadius = '4px';
+            message.style.zIndex = '9999';
+            message.textContent = 'Click here to enable sound notifications';
+            message.style.cursor = 'pointer';
+            
+            // Play sound on click
+            message.onclick = () => {
+              if (audioRef.current) {
+                audioRef.current.play().catch(e => console.error("Still couldn't play:", e));
+              } else {
+                // Try to create a new audio element
+                const audio = new Audio('/sounds/alarm_clock.mp3');
+                audio.volume = 1.0;
+                if (type === 'order') audio.loop = true;
+                audio.play().catch(e => console.error("Still couldn't play:", e));
+                audioRef.current = audio;
+              }
+              document.body.removeChild(message);
+            };
+            
+            document.body.appendChild(message);
+            
+            // Remove after 10 seconds if not clicked
+            setTimeout(() => {
+              if (document.body.contains(message)) {
+                document.body.removeChild(message);
+              }
+            }, 10000);
+            
+            // Also try to use system beep as a fallback
+            if ('Notification' in window) {
+              try {
+                new Notification("New notification", { silent: false });
+              } catch (e) {
+                console.error("Could not use system notification for sound:", e);
+              }
+            }
+          };
+          
+          // Get the hostname for production vs development environment
+          const hostname = window.location.hostname;
+          const isProduction = hostname !== 'localhost' && !hostname.includes('replit');
+          
+          // Create a list of audio sources to try
+          const soundFileName = 'alarm_clock.mp3';
+          const audioSources = [
+            // Original path from the component
+            audioRef.current?.src || '',
+            
+            // Common variations that might work
+            `/sounds/${soundFileName}`,
+            `${window.location.origin}/sounds/${soundFileName}`,
+          ];
+          
+          // Additional production-specific paths
+          if (isProduction) {
+            audioSources.push(
+              `https://${hostname}/sounds/${soundFileName}`,
+              `//${hostname}/sounds/${soundFileName}`,
+              `https://princealberthotel.dblytics.com/sounds/${soundFileName}`
+            );
           }
+          
+          // Filter out empty sources
+          const validSources = audioSources.filter(src => src);
+          
+          // Try multiple audio sources
+          tryMultipleAudioSources(validSources);
         }
       };
       
