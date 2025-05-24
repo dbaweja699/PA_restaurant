@@ -81,6 +81,7 @@ export function AlertNotification({
     // Try to play the notification sound
     try {
       const soundPath = '/sounds/alarm_clock.mp3';
+      console.log(`Loading sound from: ${soundPath}`);
 
       // Create and configure audio element immediately
       audioRef.current = new Audio(soundPath);
@@ -89,86 +90,142 @@ export function AlertNotification({
       
       // For orders, we'll loop the sound until it's accepted or dismissed
       if (type === 'order') {
-        // Instead of setting loop=true which can be problematic,
-        // manually restart the audio when it ends
-        audioRef.current.addEventListener('ended', () => {
+        // Loop continuously for orders until accepted or dismissed
+        // Using a clean implementation that works across browsers
+        const handleAudioEnded = () => {
           if (audioRef.current) {
             audioRef.current.currentTime = 0;
+            // Try to play again
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(err => {
+                console.error("Failed to replay notification sound:", err);
+              });
+            }
+          }
+        };
+        
+        // Add the event listener for continuous play
+        audioRef.current.addEventListener('ended', handleAudioEnded);
+        
+        // Save the handler for cleanup
+        audioIntervalRef.current = window.setInterval(() => {
+          // If sound stopped for any reason, try to restart it
+          if (audioRef.current && audioRef.current.paused) {
             audioRef.current.play().catch(err => {
-              console.error("Failed to replay notification sound:", err);
+              console.error("Failed to restart notification sound:", err);
             });
           }
-        });
+        }, 2000); // Check every 2 seconds
       }
       
       // Also show a system notification if permission is granted
-      if (Notification.permission === "granted") {
+      if ('Notification' in window && Notification.permission === "granted") {
         let icon = '/icons/icon-192x192.png';
         let typeText = type === 'order' ? 'Order' : type === 'booking' ? 'Booking' : 'Function Booking';
         
-        const notification = new Notification(`New ${typeText}: ${title}`, {
-          body: message,
-          icon: icon,
-          tag: `restaurant-notification-${type}-${details.id || Date.now()}`
-        });
-        
-        notification.onclick = () => {
-          window.focus();
-          notification.close();
-        };
+        try {
+          const notification = new Notification(`New ${typeText}: ${title}`, {
+            body: message,
+            icon: icon,
+            tag: `restaurant-notification-${type}-${details.id || Date.now()}`,
+            // Set silent to false to let the browser play its own sound too
+            silent: false
+          });
+          
+          notification.onclick = () => {
+            window.focus();
+            notification.close();
+          };
+        } catch (notificationErr) {
+          console.error("Error creating system notification:", notificationErr);
+        }
       }
       
-      // Function to attempt playing the sound
-      const attemptPlay = () => {
-        if (audioRef.current) {
-          console.log("Attempting to play notification sound");
-          audioRef.current.play().catch(err => {
+      // Play the sound - multiple strategies for cross-browser compatibility
+      const playSound = () => {
+        if (!audioRef.current) return;
+        
+        console.log("Attempting to play notification sound");
+        
+        // Strategy 1: Normal play with error handling
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
             console.error("Failed to play notification sound:", err);
+            
+            // Strategy 2: Play on next user interaction
+            const playOnInteraction = () => {
+              if (audioRef.current) {
+                audioRef.current.play().catch(interactionErr => {
+                  console.error("Failed to play sound even after interaction:", interactionErr);
+                });
+              }
+            };
+            
+            // Add the event listener and display message to user
+            document.addEventListener('click', playOnInteraction, { once: true });
+            console.log("Sound will play on next interaction. Please click anywhere.");
+            
+            // Strategy 3: Use Web Audio API as a last resort
+            try {
+              const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+              fetch(soundPath)
+                .then(response => response.arrayBuffer())
+                .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+                .then(audioBuffer => {
+                  const source = audioContext.createBufferSource();
+                  source.buffer = audioBuffer;
+                  source.connect(audioContext.destination);
+                  source.start(0);
+                })
+                .catch(audioContextErr => {
+                  console.error("Web Audio API fallback failed:", audioContextErr);
+                });
+            } catch (audioContextErr) {
+              console.error("Could not initialize Web Audio API:", audioContextErr);
+            }
           });
         }
       };
       
-      // Try to play sound immediately
+      // Load the audio first
+      audioRef.current.addEventListener('canplaythrough', playSound, { once: true });
       audioRef.current.load();
       
-      // Add event listener for when audio is ready to play
-      audioRef.current.addEventListener('canplaythrough', () => {
-        console.log("Alert sound loaded and ready to play");
-        attemptPlay();
-      });
-      
-      // Set up a backup strategy for browsers that require user interaction
-      // We'll use a button click anywhere on the page as a trigger
-      const playOnInteraction = () => {
+      // Fallback: If canplaythrough doesn't fire within 1 second, try to play anyway
+      const fallbackTimer = setTimeout(() => {
         if (audioRef.current) {
-          audioRef.current.play().catch(err => {
-            console.error("Failed to play notification sound even after interaction:", err);
-          });
+          console.log("Canplaythrough event didn't fire, trying fallback play");
+          playSound();
         }
-      };
-      
-      document.addEventListener('click', playOnInteraction, { once: true });
+      }, 1000);
       
       // Auto-close the notification after the specified time if autoClose is true
-      let timeout: NodeJS.Timeout | null = null;
+      let closeTimeout: NodeJS.Timeout | null = null;
       if (autoClose) {
-        timeout = setTimeout(() => {
+        closeTimeout = setTimeout(() => {
           onClose();
         }, autoCloseTime);
       }
 
       // Clean up
       return () => {
-        document.removeEventListener('click', playOnInteraction);
+        if (fallbackTimer) clearTimeout(fallbackTimer);
         
         if (audioRef.current) {
           audioRef.current.pause();
-          audioRef.current.removeEventListener('ended', attemptPlay);
+          audioRef.current.removeEventListener('canplaythrough', playSound);
           audioRef.current = null;
         }
         
-        if (timeout) {
-          clearTimeout(timeout);
+        if (audioIntervalRef.current) {
+          clearInterval(audioIntervalRef.current);
+          audioIntervalRef.current = null;
+        }
+        
+        if (closeTimeout) {
+          clearTimeout(closeTimeout);
         }
       };
     } catch (err) {

@@ -6,6 +6,7 @@ import { MainLayout } from "./components/layout/MainLayout";
 import { AuthLayout } from "./components/layout/AuthLayout";
 import { Protected } from "@/components/layout/Protected";
 import { AIChatbot } from "@/components/chat/AIChatbot";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 // Dashboard pages
 import Dashboard from "@/pages/dashboard";
@@ -49,6 +50,15 @@ function AppRouter() {
 }
 
 function App() {
+  // Request notification permission on app load
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        console.log(`Notification permission: ${permission}`);
+      });
+    }
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <Switch>
@@ -73,6 +83,8 @@ function App() {
       </Switch>
       <Toaster />
       <AIChatbot />
+      {/* PWA Install Prompt - will only show if app can be installed */}
+      <InstallPrompt />
     </QueryClientProvider>
   );
 }
