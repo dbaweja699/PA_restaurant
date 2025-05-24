@@ -1,7 +1,7 @@
 {
   "name": "Restaurant AI Management Platform",
   "short_name": "RestaurantAI",
-  "description": "AI-powered restaurant management platform with notifications",
+  "description": "AI-powered restaurant management platform with notifications and sound alerts",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -21,6 +21,24 @@
     }
   ],
   "permissions": [
-    "notifications"
-  ]
+    "notifications",
+    "audio-capture",
+    "audio-output"
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-1.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg"
+    }
+  ],
+  "categories": [
+    "business",
+    "productivity",
+    "utilities"
+  ],
+  "orientation": "any",
+  "scope": "/"
 }

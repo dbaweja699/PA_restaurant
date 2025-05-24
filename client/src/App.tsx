@@ -7,6 +7,7 @@ import { AuthLayout } from "./components/layout/AuthLayout";
 import { Protected } from "@/components/layout/Protected";
 import { AIChatbot } from "@/components/chat/AIChatbot";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { ServiceWorkerHandler } from "@/components/pwa/ServiceWorkerHandler";
 
 // Dashboard pages
 import Dashboard from "@/pages/dashboard";
@@ -85,6 +86,8 @@ function App() {
       <AIChatbot />
       {/* PWA Install Prompt - will only show if app can be installed */}
       <InstallPrompt />
+      {/* Service Worker handler for audio notifications */}
+      <ServiceWorkerHandler />
     </QueryClientProvider>
   );
 }

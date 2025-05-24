@@ -148,28 +148,18 @@ export function AlertNotification({
         
         console.log("Attempting to play notification sound");
         
-        // Strategy 1: Normal play with error handling
-        const playPromise = audioRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(err => {
-            console.error("Failed to play notification sound:", err);
-            
-            // Strategy 2: Play on next user interaction
-            const playOnInteraction = () => {
-              if (audioRef.current) {
-                audioRef.current.play().catch(interactionErr => {
-                  console.error("Failed to play sound even after interaction:", interactionErr);
-                });
-              }
-            };
-            
-            // Add the event listener and display message to user
-            document.addEventListener('click', playOnInteraction, { once: true });
-            console.log("Sound will play on next interaction. Please click anywhere.");
-            
-            // Strategy 3: Use Web Audio API as a last resort
-            try {
-              const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        // Check if running in standalone mode (PWA installed)
+        const isPwa = window.matchMedia('(display-mode: standalone)').matches;
+        console.log("Is running as PWA:", isPwa);
+        
+        // For PWA, try to create and use an AudioContext first (more reliable in PWAs)
+        if (isPwa) {
+          try {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (AudioContext) {
+              const audioContext = new AudioContext();
+              console.log("Using AudioContext for PWA sound playback");
+              
               fetch(soundPath)
                 .then(response => response.arrayBuffer())
                 .then(arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
@@ -177,15 +167,82 @@ export function AlertNotification({
                   const source = audioContext.createBufferSource();
                   source.buffer = audioBuffer;
                   source.connect(audioContext.destination);
+                  
+                  // For orders, loop the sound
+                  if (type === 'order') {
+                    source.loop = true;
+                  }
+                  
                   source.start(0);
+                  console.log("AudioContext sound started successfully");
+                  
+                  // Save the audio context for cleanup
+                  (window as any).currentAudioContext = audioContext;
+                  (window as any).currentAudioSource = source;
                 })
                 .catch(audioContextErr => {
-                  console.error("Web Audio API fallback failed:", audioContextErr);
+                  console.error("AudioContext sound playback failed, falling back to HTML Audio:", audioContextErr);
+                  tryHTMLAudioPlayback();
                 });
-            } catch (audioContextErr) {
-              console.error("Could not initialize Web Audio API:", audioContextErr);
+              
+              return; // Exit if we're using AudioContext
             }
-          });
+          } catch (err) {
+            console.error("Failed to initialize AudioContext:", err);
+          }
+        }
+        
+        // Fallback to regular HTML Audio API
+        tryHTMLAudioPlayback();
+        
+        function tryHTMLAudioPlayback() {
+          // Strategy 1: Normal play with error handling
+          const playPromise = audioRef.current!.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(err => {
+              console.error("Failed to play notification sound:", err);
+              
+              // Strategy 2: Create a user gesture requirement message
+              const message = document.createElement('div');
+              message.style.position = 'fixed';
+              message.style.bottom = '20px';
+              message.style.left = '50%';
+              message.style.transform = 'translateX(-50%)';
+              message.style.backgroundColor = '#f44336';
+              message.style.color = 'white';
+              message.style.padding = '10px 20px';
+              message.style.borderRadius = '4px';
+              message.style.zIndex = '9999';
+              message.textContent = 'Click here to enable sound notifications';
+              message.style.cursor = 'pointer';
+              
+              // Play sound on click
+              message.onclick = () => {
+                if (audioRef.current) {
+                  audioRef.current.play().catch(e => console.error("Still couldn't play:", e));
+                }
+                document.body.removeChild(message);
+              };
+              
+              document.body.appendChild(message);
+              
+              // Remove after 10 seconds if not clicked
+              setTimeout(() => {
+                if (document.body.contains(message)) {
+                  document.body.removeChild(message);
+                }
+              }, 10000);
+              
+              // Also try to use system beep as a fallback
+              if ('Notification' in window) {
+                try {
+                  new Notification("New notification", { silent: false });
+                } catch (e) {
+                  console.error("Could not use system notification for sound:", e);
+                }
+              }
+            });
+          }
         }
       };
       
