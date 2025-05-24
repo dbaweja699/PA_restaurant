@@ -1,0 +1,26 @@
+https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418.
+(anonymous) @ chunk-mgcl-GAOGP47Q.js:16Understand this warning
+2index-CjlgWKZb.js:646 Calculated total: $1.00 for 1 items
+index-CjlgWKZb.js:646 Submitting order with data: Object
+index-CjlgWKZb.js:646 Submitting order data: Object
+index-CjlgWKZb.js:646 Server response: Object
+index-CjlgWKZb.js:646 Order created successfully: Object
+index-CjlgWKZb.js:646 Order webhook notification sent successfully
+orders:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+orders:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+index-CjlgWKZb.js:646 Processing review: {id: 35, customerName: 'Dipanshu', rating: null, comment: null, source: 'phone ', …}
+index-CjlgWKZb.js:646 Processing review: {id: 24, customerName: 'paul', rating: 5, comment: 'Bursting with bold flavors! The Penne Monte Carlo hits that perfect spicy-creamy balance', source: 'Google review', …}
+index-CjlgWKZb.js:646 Bookings data received: (11) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-CjlgWKZb.js:646 Selected date: undefined
+index-CjlgWKZb.js:646 Calculated total: $1.00 for 1 items
+index-CjlgWKZb.js:646 Calculated total: $1.00 for 1 items
+index-CjlgWKZb.js:646 Submitting order with data: {customerName: 'bkb', type: 'delivery', tableNumber: undefined, items: Array(1), total: '1.00', …}
+index-CjlgWKZb.js:646 Submitting order data: {customerName: 'bkb', type: 'manual-delivery', tableNumber: null, items: Array(1), total: '1.00', …}
+index-CjlgWKZb.js:646 Server response: {id: 217, customer_name: 'bkb', order_time: '2025-05-24T18:12:38.429+00:00', status: 'processing', type: 'manual-delivery', …}
+index-CjlgWKZb.js:646 Order created successfully: {id: 217, customer_name: 'bkb', order_time: '2025-05-24T18:12:38.429+00:00', status: 'processing', type: 'manual-delivery', …}
+index-CjlgWKZb.js:646 Order webhook notification sent successfully
+index-CjlgWKZb.js:363 Failed to play notification sound: NotSupp

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { apiRequest } from '@/lib/queryClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import SoundFallback from './SoundFallback';
 
 type AlertNotificationProps = {
   type: 'order' | 'booking' | 'function_booking';
@@ -130,33 +131,81 @@ export function AlertNotification({
         };
         
         // Try to play this source
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              console.log(`Successfully playing sound from: ${currentSource}`);
-              audioRef.current = audio;
-            })
-            .catch(err => {
-              console.error(`Error playing from ${currentSource}:`, err);
-              
-              // Try next source
-              if (remainingSources.length) {
-                console.log(`Trying next sound source due to play error...`);
-                tryMultipleSoundSources(remainingSources);
+        // Before attempting to play, wait for a bit for the audio to load
+        setTimeout(() => {
+          try {
+            console.log(`Ready to play from: ${currentSource}`);
+            
+            // Add a user interaction handler if autoplay is blocked
+            const handleUserInteraction = () => {
+              if (audioRef.current && audioRef.current.paused) {
+                audioRef.current.play().catch(err => {
+                  console.error("Failed to play after user interaction:", err);
+                });
               }
+              
+              // Remove the event listeners after first interaction
+              ['click', 'touchstart', 'keydown'].forEach(eventType => {
+                document.removeEventListener(eventType, handleUserInteraction, { capture: true });
+              });
+            };
+            
+            // Add user interaction handlers to enable sound on first interaction
+            ['click', 'touchstart', 'keydown'].forEach(eventType => {
+              document.addEventListener(eventType, handleUserInteraction, { capture: true, once: true });
             });
-        }
+            
+            // Try to play
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+              playPromise
+                .then(() => {
+                  console.log(`Successfully playing sound from: ${currentSource}`);
+                  audioRef.current = audio;
+                  
+                  // Flash browser title to get user's attention
+                  let originalTitle = document.title;
+                  let titleInterval = setInterval(() => {
+                    document.title = document.title === originalTitle ? 
+                      '🔔 New Order!' : originalTitle;
+                  }, 1000);
+                  
+                  // Clear interval after 30 seconds
+                  setTimeout(() => clearInterval(titleInterval), 30000);
+                })
+                .catch(err => {
+                  console.error(`Error playing from ${currentSource}:`, err);
+                  
+                  // Try next source
+                  if (remainingSources.length) {
+                    console.log(`Trying next sound source due to play error...`);
+                    tryMultipleSoundSources(remainingSources);
+                  }
+                });
+            }
+          } catch (e) {
+            console.error(`Exception playing sound from ${currentSource}:`, e);
+            
+            // Try next source
+            if (remainingSources.length) {
+              console.log(`Trying next sound source due to exception...`);
+              tryMultipleSoundSources(remainingSources);
+            }
+          }
+        }, 300);
       };
       
-      // Create a list of sound sources to try
+      // Create a list of sound sources to try - using .wav format for wider compatibility
       const soundSources = [
-        apiSoundPath,
-        directSoundPath,
+        `${basePath}/api/sound/alarm_clock.mp3`,
+        `${basePath}/sounds/alarm_clock.mp3`,
         `${window.location.origin}/api/sound/alarm_clock.mp3`,
         `${window.location.origin}/sounds/alarm_clock.mp3`,
         `/api/sound/alarm_clock.mp3`,
         `/sounds/alarm_clock.mp3`,
+        // Try absolute URLs with the exact production domain
+        `https://princealberthotel.dblytics.com/api/sound/alarm_clock.mp3`,
+        `https://princealberthotel.dblytics.com/sounds/alarm_clock.mp3`,
       ];
       
       // For production only, add additional paths to try
@@ -187,6 +236,10 @@ export function AlertNotification({
           }
         }, 1000); // Check every second
       }
+      
+      // Add our fallback sound component
+      // This provides a visual indicator that users can click to enable sounds
+      // Works around autoplay restrictions in browsers
       
       // Also show a system notification if permission is granted
       if ('Notification' in window && Notification.permission === "granted") {
