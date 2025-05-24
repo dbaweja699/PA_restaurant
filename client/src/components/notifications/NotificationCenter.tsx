@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, BellDot, X, Check, Volume2, VolumeX } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { getQueryFn, apiRequest, queryClient } from '@/lib/queryClient';
+import { type Order } from "@shared/schema";
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -248,6 +249,58 @@ export function NotificationCenter() {
   const [showAlertNotification, setShowAlertNotification] = useState(false);
   const [alertNotification, setAlertNotification] = useState<Notification | null>(null);
   
+  // Fetch orders data for notification monitoring
+  const { data: orders = [] } = useQuery<Order[]>({
+    queryKey: ['/api/orders'],
+    queryFn: getQueryFn({ on401: 'returnNull' }),
+    refetchInterval: 10000, // Refetch every 10 seconds
+  });
+
+  // Track the last seen order ID to detect new orders
+  const [lastSeenOrderId, setLastSeenOrderId] = useState<number>(0);
+  
+  // Check for new orders directly from the orders table
+  useEffect(() => {
+    if (orders && orders.length > 0) {
+      // Sort orders by ID (descending) to get the newest order first
+      const sortedOrders = [...orders].sort((a, b) => b.id - a.id);
+      const newestOrder = sortedOrders[0];
+      
+      // If this is a new order we haven't seen yet and it's in pending status
+      if (newestOrder && newestOrder.id > lastSeenOrderId && newestOrder.status.toLowerCase() === 'pending') {
+        console.log("New order detected from order table:", newestOrder.id, newestOrder.customerName);
+        
+        setLastSeenOrderId(newestOrder.id);
+        
+        // Create an alert notification for the new order
+        const orderNotification = {
+          id: newestOrder.id,
+          type: 'order',
+          message: `New order: ${newestOrder.customerName} - $${newestOrder.total}`,
+          details: {
+            orderId: newestOrder.id,
+            orderTime: newestOrder.orderTime,
+            customerName: newestOrder.customerName,
+            total: newestOrder.total,
+            status: newestOrder.status,
+          },
+          isRead: false,
+          createdAt: new Date(),
+          userId: null
+        };
+        
+        setAlertNotification(orderNotification);
+        setShowAlertNotification(true);
+        
+        // Play order notification sound
+        playNotificationSound('order');
+      } else if (sortedOrders.length > 0 && lastSeenOrderId === 0) {
+        // Initialize the last seen order ID on first load
+        setLastSeenOrderId(sortedOrders[0].id);
+      }
+    }
+  }, [orders]);
+
   // Check for new notifications and play sound
   useEffect(() => {
     const currentCount = unreadNotifications.length;
@@ -264,9 +317,8 @@ export function NotificationCenter() {
       if (isNewNotification) {
         console.log("New notification detected:", newestNotification.type, newestNotification.message);
         
-        // For orders or call type notifications about orders, show the alert notification
-        if (newestNotification.type === 'order' || 
-           (newestNotification.type === 'call' && newestNotification.message.toLowerCase().includes('order'))) {
+        // For call type notifications about orders, show the alert notification
+        if (newestNotification.type === 'call' && newestNotification.message.toLowerCase().includes('order')) {
           setAlertNotification(newestNotification);
           setShowAlertNotification(true);
           // Play order notification sound
@@ -280,7 +332,7 @@ export function NotificationCenter() {
           playNotificationSound(newestNotification.type);
         }
         // For other notification types, show toast
-        else {
+        else if (newestNotification.type !== 'order') { // Skip order notifications as we handle them separately
           toast({
             title: `New ${newestNotification.type.charAt(0).toUpperCase() + newestNotification.type.slice(1)}`,
             description: newestNotification.message,
@@ -370,6 +422,7 @@ export function NotificationCenter() {
               : 'New Function Booking Received!'
           }
           message={alertNotification.message}
+          details={alertNotification.details || {}}
           onAccept={alertNotification.type === 'order' ? () => {
             // Mark as read
             if (alertNotification) {
