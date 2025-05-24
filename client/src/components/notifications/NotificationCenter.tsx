@@ -301,6 +301,9 @@ export function NotificationCenter() {
     }
   }, [orders]);
 
+  // Track processed notification IDs to prevent duplicates
+  const [processedNotificationIds, setProcessedNotificationIds] = useState<Set<number>>(new Set());
+  
   // Check for new notifications and play sound
   useEffect(() => {
     const currentCount = unreadNotifications.length;
@@ -310,10 +313,14 @@ export function NotificationCenter() {
 
     // Check if this is a new notification we haven't processed yet
     const isNewNotification = newestNotification && 
+      !processedNotificationIds.has(newestNotification.id) &&
       (!alertNotification || newestNotification.id !== alertNotification.id);
 
     if (isNewNotification) {
       console.log("New notification detected:", newestNotification.type, newestNotification.message);
+      
+      // Add this notification ID to our processed set to prevent duplicates
+      setProcessedNotificationIds(prev => new Set([...prev, newestNotification.id]));
 
       // For order type notifications, show the alert notification
       if (newestNotification.type === 'order') {
