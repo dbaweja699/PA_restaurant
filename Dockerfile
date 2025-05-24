@@ -9,6 +9,10 @@ RUN npm ci
 # copy the rest of the application code 
 COPY . . 
 
+# Add after the COPY . . line
+RUN mkdir -p /app/public/sounds && \
+    cp -f /app/public/notification-sound.mp3 /app/public/sounds/alarm_clock.mp3 || true
+
 # Build the application 
 RUN npm run build
 
