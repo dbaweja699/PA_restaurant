@@ -218,8 +218,11 @@ async function playNotificationSound(type) {
           soundPath: soundUrl,
           // Include alternative paths for better cross-environment compatibility
           alternativePaths: [
+            `/api/sound/${soundFile}`,
             `/sounds/${soundFile}`,
+            `${self.location.origin}/api/sound/${soundFile}`,
             `${self.location.origin}/sounds/${soundFile}`,
+            `https://${self.location.hostname}/api/sound/${soundFile}`,
             `https://${self.location.hostname}/sounds/${soundFile}`
           ]
         });
