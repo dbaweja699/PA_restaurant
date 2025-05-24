@@ -17,6 +17,7 @@ import { setupOpenAIRoutes } from "./openai";
 import { pool } from "./db";
 import { registerInventoryRoutes } from "./inventory-routes";
 import { registerPhotoGalleryRoutes } from "./photo-gallery-routes";
+import { registerSoundRoutes } from "./sound-routes";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -30,6 +31,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register photo gallery routes
   registerPhotoGalleryRoutes(app);
+  
+  // Register sound routes for audio troubleshooting
+  registerSoundRoutes(app);
 
   // Dashboard stats endpoint will be implemented below
 
@@ -1389,6 +1393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? parseInt(req.query.userId as string)
         : undefined;
       const notifications = await storage.getNotifications(userId);
+      console.log(`Sending ${notifications.length} notifications to client`);
       res.json(notifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);

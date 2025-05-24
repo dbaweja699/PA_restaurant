@@ -1,0 +1,63 @@
+# Stop and remove old container
+docker stop pa_hotel_ai_assistant-container || true
+docker rm pa_hotel_ai_assistant-container || true
+
+# Run container
+docker run -d --name pa_hotel_ai_assistant-container \
+-p 5000:5000 \
+-e DATABASE_URL=*** \
+-e SESSION_SECRET=*** \
+-e SUPABASE_URL=*** \
+-e SUPABASE_ANON_KEY=*** \
+-e SUPABASE_SERVICE_ROLE_KEY=*** \
+-e N8N_WEBHOOK_URL=*** \
+-e HOST=0.0.0.0 \
+--restart unless-stopped \
+  664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest
+======END======
+err: lsof: WARNING: can't stat() overlay file system /data/docker/overlay2/76a10f64754c1b6df078e608462b4a181171537cf54d0b36c7ffb0cb91725ac5/merged
+err:       Output information may be incomplete.
+err: lsof: WARNING: can't stat() nsfs file system /run/docker/netns/49fc99863383
+err:       Output information may be incomplete.
+err: lsof: WARNING: can't stat() overlay file system /data/docker/overlay2/8d3b73154c6f6e181ad35b4e1cdd56c6e55c4508bb14aca8ed12e28e166b6ba4/merged
+err:       Output information may be incomplete.
+err: lsof: WARNING: can't stat() nsfs file system /run/docker/netns/24a8152b43e5
+err:       Output information may be incomplete.
+err: lsof: status error on -t: No such file or directory
+out: Hit:1 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble InRelease
+out: Get:2 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+out: Hit:3 http://us-east-2.ec2.archive.ubuntu.com/ubuntu noble-backports InRelease
+out: Hit:4 http://security.ubuntu.com/ubuntu noble-security InRelease
+out: Fetched 126 kB in 1s (206 kB/s)
+out: Reading package lists...
+out: Reading package lists...
+out: Building dependency tree...
+out: Reading state information...
+out: nginx is already the newest version (1.24.0-2ubuntu7.3).
+out: certbot is already the newest version (2.9.0-1).
+out: python3-certbot-nginx is already the newest version (2.9.0-1).
+out: 0 upgraded, 0 newly installed, 0 to remove and 116 not upgraded.
+err: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+err: nginx: configuration file /etc/nginx/nginx.conf test is successful
+err: Saving debug log to /var/log/letsencrypt/letsencrypt.log
+out: Certificate not yet due for renewal
+out: Deploying certificate
+out: Successfully deployed certificate for princealberthotel.dblytics.com to /etc/nginx/sites-enabled/princealberthotel.dblytics.com
+out: Congratulations! You have successfully enabled HTTPS on https://princealberthotel.dblytics.com
+out: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+out: If you like Certbot, please consider supporting our work by:
+out:  * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+out:  * Donating to EFF:                    https://eff.org/donate-le
+out: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+err: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+err: nginx: configuration file /etc/nginx/nginx.conf test is successful
+err: WARNING! Your password will be stored unencrypted in /home/ubuntu/.docker/config.json.
+err: Configure a credential helper to remove this warning. See
+err: https://docs.docker.com/engine/reference/commandline/login/#credentials-store
+out: Login Succeeded
+out: pa_hotel_ai_assistant-container
+out: pa_hotel_ai_assistant-container
+out: 88130d2d6ac8458935b30d59ab50e400a34fc850d77f4d53a7c0c36d10e93027
+==============================================
+✅ Successfully executed commands to all host.
+==============================================
