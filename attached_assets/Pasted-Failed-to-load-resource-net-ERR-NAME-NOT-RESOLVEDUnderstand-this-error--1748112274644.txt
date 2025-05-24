@@ -1,0 +1,422 @@
+Failed to load resource: net::ERR_NAME_NOT_RESOLVEDUnderstand this error
+        
+          
+      
+        
+        
+          
+            Explanation
+          
+          
+        
+        
+          
+                
+          
+          
+          
+        
+        
+      
+    
+          
+        
+          
+        Understanding the problemThe net::ERR_NAME_NOT_RESOLVED error means that the browser could not translate the domain name of the resource it was trying to load into an IP address. This process is handled by the Domain Name System (DNS). Essentially, the browser doesn't know where to find the server hosting the resource because the domain name couldn't be resolved. This can happen for various reasons, including issues with your internet connection, local network configuration, or problems with the domain's DNS records [2].How to verifyTo verify that the domain name is not resolving, you can use command-line tools like ping or nslookup. For example, opening a terminal or command prompt and typing ping [domain_name] or nslookup [domain_name] should fail if the name is not resolvable.Suggested fixSince the issue can be on either the client side (your computer/network) or the server side (the website's DNS), the fix depends on the cause.If the issue is client-side:Check your internet connection: Ensure you are connected to the internet and your connection is stable.Clear browser cache and cookies: Sometimes outdated cached DNS information can cause this error [2].Change your DNS server: You can try using a public DNS server like Google Public DNS (8.8.8.8 and 8.8.4.4 for IPv4, 2001:4860:4860::8888 and 2001:4860:4860::8844 for IPv6) [2].Flush your DNS cache: This can clear out old or incorrect DNS entries stored on your computer. The command varies depending on your operating system (e.g., ipconfig /flushdns on Windows).If the issue is server-side:Contact the website administrator: If the problem persists after trying the client-side solutions, the issue is likely with the website's DNS records. You'll need to inform the website owner so they can investigate and fix their DNS configuration [1, 2].SummaryThe net::ERR_NAME_NOT_RESOLVED error indicates a DNS resolution failure. It means the browser couldn't find the IP address for a domain name. This can be caused by local network issues or problems with the domain's DNS records. Troubleshooting involves checking your internet, clearing cache, potentially changing DNS servers, or contacting the website owner if the issue is with their domain.
+      
+          
+          
+            
+              Sources and related content
+              
+              
+      
+      
+        
+          
+            
+              https://docs.jentis.com/jkb/how-to-resolve-javascript-error-net-err_name_not_r
+            
+          
+        
+          
+            
+              https://kinsta.com/knowledgebase/err_name_not_resolved/
+            
+          
+        
+      
+    
+            
+          
+          
+            Data used to understand this message
+            
+        
+            
+            Console message
+          
+        
+          
+          Reload the page to capture related network request data for this message in order to create a better insight.
+      
+          
+          
+            
+          
+          
+          
+      Use search instead
+    
+        
+          
+        
+          
+        
+          
+      AI tools may generate inaccurate info that doesn't represent Google's views.
+      Data sent to Google may be seen by human reviewers to improve this feature.
+      Open settings
+      or
+      learn more
+    
+        
+        
+        
+          
+            
+                
+          
+          
+          
+        
+            
+                
+          
+          
+          
+        
+          
+          
+                
+          
+          
+          
+        
+        
+
+      
+        
+      
+chunk-mgcl-GAOGP47Q.js:16 @import rules are not allowed here. See https://github.com/WICG/construct-stylesheets/issues/119#issuecomment-588352418.
+(anonymous) @ chunk-mgcl-GAOGP47Q.js:16Understand this warning
+princealberthotel.dblytics.com/:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+        
+          
+      
+        
+        
+          
+            Explanation
+          
+          
+        
+        
+          
+                
+          
+          
+          
+        
+        
+      
+    
+          
+        
+          
+        Understanding the problemThis error message indicates that a message was sent within a browser extension or similar environment, and the listener for that message returned true to signify that it would send an asynchronous response. However, the communication channel (the message channel) was closed before the response was actually sent. This commonly happens when the context that was listening for the message (e.g., a tab) is closed before the asynchronous operation completes and sendResponse is called.Suggested fixEnsure that the listener function for the message either:Does not return true if it does not intend to send an asynchronous response.Always calls the sendResponse function provided as an argument, even if with no arguments, to complete the asynchronous response before the message channel is closed. This might require handling cases where the context closes before the asynchronous operation finishes (e.g., using try...finally or checking the state of the channel before responding).If you are not sending an asynchronous response, remove the return true; statement from your message listener.
+      
+        
+          Code
+          
+      
+        
+                
+          
+          
+          
+        
+        
+      
+        
+        
+      
+        
+      
+    
+      
+      
+      
+        Use code snippets with caution
+      
+    
+    If you are sending an asynchronous response, make sure sendResponse is called:
+      
+        
+          Code
+          
+      
+        
+                
+          
+          
+          
+        
+        
+      
+        
+        
+      
+        
+      
+    
+      
+      
+      
+        Use code snippets with caution
+      
+    
+    SummaryThe error "A listener indicated an asynchronous response by returning true, but the message channel closed[1] before a response was received" means that a message listener returned true to signal an async response but failed to call sendResponse before the communication channel closed. To fix this, either don't return true if no async response is needed, or ensure sendResponse is called in all code paths where true is returned.
+      
+          
+          
+            
+              Sources and related content
+              
+      
+        
+          
+            
+              https://github.com/mozilla/webextension-polyfill/issues/384
+            
+          
+        
+      
+    
+              
+      Related content
+      
+        
+          
+            
+              https://learn.microsoft.com/en-us/answers/questions/1369340/bug-report-a-listener-indicated-an-asynchronous-re
+            
+          
+        
+      
+    
+            
+          
+          
+            Data used to understand this message
+            
+        
+            
+            Console message
+          
+        
+      
+          
+          
+            
+          
+          
+          
+      Use search instead
+    
+        
+          
+        
+          
+        
+          
+      AI tools may generate inaccurate info that doesn't represent Google's views.
+      Data sent to Google may be seen by human reviewers to improve this feature.
+      Open settings
+      or
+      learn more
+    
+        
+        
+        
+          
+            
+                
+          
+          
+          
+        
+            
+                
+          
+          
+          
+        
+          
+          
+                
+          
+          
+          
+        
+        
+
+      
+        
+      
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+2index-CjlgWKZb.js:646 Calculated total: $1.00 for 1 items
+index-CjlgWKZb.js:646 Submitting order with data: Object
+index-CjlgWKZb.js:646 Submitting order data: Object
+index-CjlgWKZb.js:646 Server response: Object
+index-CjlgWKZb.js:646 Order created successfully: Object
+index-CjlgWKZb.js:646 Order webhook notification sent successfully
+index-CjlgWKZb.js:363 Failed to play notification sound: NotSupportedError: The element has no supported sources.
+(anonymous) @ index-CjlgWKZb.js:363Understand this error
+        
+          
+      
+        
+        
+          
+            Explanation
+          
+          
+        
+        
+          
+                
+          
+          
+          
+        
+        
+      
+    
+          
+        
+          
+        Understanding the problemThe error "Failed to play notification sound: NotSupportedError: The element has no supported sources." indicates that the browser's audio element (likely o.current in your code) was instructed to play a sound, but it couldn't find any audio source (like an MP3 or OGG file) that the browser supports. This often happens when the src attribute of an <audio> element is missing or set to an invalid or unsupported file format. In the context of Blockly, this error can occur when attempting to play the sound associated with actions like deleting a block, and the browser is unable to load or play the configured sound file [1].How to verifyCheck the HTML source code for the <audio> element referenced by o.current. Verify the src attribute of this element to ensure it is present and points to a valid audio file in a supported format (like .mp3, .wav, or .ogg).Suggested fixEnsure that the <audio> element has a src attribute pointing to a valid and supported audio file.
+      
+        
+          Code
+          
+      
+        
+                
+          
+          
+          
+        
+        
+      
+        
+        
+      
+        <audio ref={o} src="/path/to/your/notification/sound.mp3"></audio>
+      
+    
+      
+      
+      
+        Use code snippets with caution
+      
+    
+    Replace /path/to/your/notification/sound.mp3 with the actual path to your audio file.SummaryThe NotSupportedError: The element has no supported sources error when trying to play an audio element means the browser couldn't find or play a supported audio file specified by the element's src attribute. The fix is to make sure the <audio> element has a valid src pointing to a supported audio format.
+      
+          
+          
+            
+              Sources and related content
+              
+              
+      
+      
+        
+          
+            
+              https://groups.google.com/g/blockly/c/JRXwp0rGzxk
+            
+          
+        
+      
+    
+            
+          
+          
+            Data used to understand this message
+            
+        
+            
+            Console message
+          
+            
+            Stacktrace
+          
+            
+            Related code
+          
+        
+      
+          
+          
+            
+          
+          
+          
+      Use search instead
+    
+        
+          
+        
+          
+        
+          
+      AI tools may generate inaccurate info that doesn't represent Google's views.
+      Data sent to Google may be seen by human reviewers to improve this feature.
+      Open settings
+      or
+      learn more
+    
+        
+        
+        
+          
+            
+                
+          
+          
+          
+        
+            
+                
+          
+          
+          
+        
+          
+          
+                
+          
+          
+          
+        
+        
+
+      
+        
+      
+orders:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
+about:srcdoc:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error

@@ -70,12 +70,18 @@ const SoundFallback = ({ notificationType, enabled }: SoundFallbackProps) => {
         div.onclick = () => {
           console.log('Fallback element clicked, trying to play sound');
           
-          // Try to play the sound
+          // Try to play the sound - including notification-sound.mp3 which is in your production Docker container
           const soundSources = [
+            '/api/notification-sound', // New endpoint that always returns an available sound
+            '/notification-sound.mp3', // Direct access to file in production
             '/api/sound/alarm_clock.mp3',
             '/sounds/alarm_clock.mp3',
+            `${window.location.origin}/notification-sound.mp3`,
+            `${window.location.origin}/api/notification-sound`,
             `${window.location.origin}/api/sound/alarm_clock.mp3`,
             `${window.location.origin}/sounds/alarm_clock.mp3`,
+            'https://princealberthotel.dblytics.com/notification-sound.mp3',
+            'https://princealberthotel.dblytics.com/api/notification-sound',
             'https://princealberthotel.dblytics.com/api/sound/alarm_clock.mp3',
             'https://princealberthotel.dblytics.com/sounds/alarm_clock.mp3'
           ];

@@ -47,24 +47,41 @@ export function registerSoundRoutes(app: any) {
   app.get('/api/sound/:filename', (req: Request, res: Response) => {
     try {
       const { filename } = req.params;
-      const soundsDir = path.join(process.cwd(), 'public', 'sounds');
-      const filePath = path.join(soundsDir, filename);
       
-      console.log(`Request for sound file: ${filename}, checking path: ${filePath}`);
+      // Check in multiple locations - handle production environment file structure differences
+      const possiblePaths = [
+        // Development structure - sounds in a subdirectory
+        path.join(process.cwd(), 'public', 'sounds', filename),
+        // Alternate structure - sounds directly in public
+        path.join(process.cwd(), 'public', filename),
+        // Production fallback - use notification-sound.mp3 regardless of requested filename
+        path.join(process.cwd(), 'public', 'notification-sound.mp3')
+      ];
       
-      // Check if file exists
-      if (!fs.existsSync(filePath)) {
-        console.error(`Sound file not found: ${filePath}`);
+      console.log(`Request for sound file: ${filename}, checking multiple paths`);
+      
+      // Try to find the file in any of the possible locations
+      let filePath = '';
+      for (const possiblePath of possiblePaths) {
+        console.log(`Checking path: ${possiblePath}`);
+        if (fs.existsSync(possiblePath)) {
+          filePath = possiblePath;
+          console.log(`Found sound file at: ${filePath}`);
+          break;
+        }
+      }
+      
+      // If no file found, return 404
+      if (!filePath) {
+        console.error(`Sound file not found in any location: ${filename}`);
         return res.status(404).json({ error: "Sound file not found" });
       }
       
-      console.log(`Sound file found, sending: ${filePath}`);
-      
       // Determine content type based on file extension
       let contentType = 'audio/mpeg';
-      if (filename.endsWith('.wav')) {
+      if (filePath.endsWith('.wav')) {
         contentType = 'audio/wav';
-      } else if (filename.endsWith('.ogg')) {
+      } else if (filePath.endsWith('.ogg')) {
         contentType = 'audio/ogg';
       }
       
@@ -89,6 +106,54 @@ export function registerSoundRoutes(app: any) {
     } catch (error) {
       console.error("Error serving sound file:", error);
       res.status(500).json({ error: "Error serving sound file", details: error instanceof Error ? error.message : String(error) });
+    }
+  });
+  
+  // Special endpoint just for notification sounds - always returns the available sound file
+  app.get('/api/notification-sound', (_req: Request, res: Response) => {
+    try {
+      // Try to find notification sound in any location
+      const possiblePaths = [
+        path.join(process.cwd(), 'public', 'notification-sound.mp3'),
+        path.join(process.cwd(), 'public', 'sounds', 'alarm_clock.mp3'),
+        path.join(process.cwd(), 'public', 'alarm_clock.mp3')
+      ];
+      
+      let filePath = '';
+      for (const possiblePath of possiblePaths) {
+        if (fs.existsSync(possiblePath)) {
+          filePath = possiblePath;
+          break;
+        }
+      }
+      
+      if (!filePath) {
+        console.error('No notification sound file found');
+        return res.status(404).json({ error: "Notification sound file not found" });
+      }
+      
+      console.log(`Serving notification sound from: ${filePath}`);
+      
+      // Set headers for proper cross-origin audio playback
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+      res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+      res.setHeader('Cache-Control', 'public, max-age=31536000');
+      
+      // Stream the file
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+      
+      fileStream.on('error', (error) => {
+        console.error(`Error streaming notification sound:`, error);
+        res.status(500).json({ error: "Error streaming notification sound" });
+      });
+    } catch (error) {
+      console.error("Error serving notification sound:", error);
+      res.status(500).json({ error: "Error serving notification sound", details: error instanceof Error ? error.message : String(error) });
     }
   });
   

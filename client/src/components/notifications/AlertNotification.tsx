@@ -92,13 +92,15 @@ export function AlertNotification({
 
       const basePath = getBasePath();
       
-      // Try first with our API endpoint which has proper headers
+      // API endpoint with headers
       const apiSoundPath = `${basePath}/api/sound/alarm_clock.mp3`;
       // Fallback to direct path if API fails
       const directSoundPath = `${basePath}/sounds/alarm_clock.mp3`;
+      // Additional production paths
+      const notificationSoundPath = `${basePath}/notification-sound.mp3`;
+      const apiNotificationPath = `${basePath}/api/notification-sound`;
       
-      console.log(`Attempting to load sound from API: ${apiSoundPath}`);
-      console.log(`Fallback sound path: ${directSoundPath}`);
+      console.log(`Attempting to load sound from multiple sources`)
 
       // Function to try multiple sound sources
       const tryMultipleSoundSources = (sources: string[]) => {
@@ -195,18 +197,20 @@ export function AlertNotification({
         }, 300);
       };
       
-      // Create a list of sound sources to try - using .wav format for wider compatibility
-      const soundSources = [
-        `${basePath}/api/sound/alarm_clock.mp3`,
-        `${basePath}/sounds/alarm_clock.mp3`,
-        `${window.location.origin}/api/sound/alarm_clock.mp3`,
-        `${window.location.origin}/sounds/alarm_clock.mp3`,
-        `/api/sound/alarm_clock.mp3`,
-        `/sounds/alarm_clock.mp3`,
-        // Try absolute URLs with the exact production domain
-        `https://princealberthotel.dblytics.com/api/sound/alarm_clock.mp3`,
-        `https://princealberthotel.dblytics.com/sounds/alarm_clock.mp3`,
-      ];
+      // Add production file paths to our sources
+      soundSources.push(
+        // Try with notification-sound.mp3 which exists in production Docker container
+        `${basePath}/notification-sound.mp3`,
+        `${window.location.origin}/notification-sound.mp3`,
+        `/notification-sound.mp3`,
+        // Try our new dedicated endpoint
+        `${basePath}/api/notification-sound`,
+        `${window.location.origin}/api/notification-sound`,
+        `/api/notification-sound`,
+        // Try absolute URLs with production domain
+        `https://princealberthotel.dblytics.com/notification-sound.mp3`,
+        `https://princealberthotel.dblytics.com/api/notification-sound`
+      );
       
       // For production only, add additional paths to try
       if (window.location.hostname !== 'localhost' && !window.location.hostname.includes('replit')) {
