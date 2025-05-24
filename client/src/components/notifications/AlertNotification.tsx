@@ -284,6 +284,19 @@ export function AlertNotification({
     }
   };
 
+  // Request notification permission for PWA
+  useEffect(() => {
+    // Check if we're in a PWA context
+    const isPwa = window.matchMedia('(display-mode: standalone)').matches;
+    
+    // Request notification permission if we're in a PWA
+    if (isPwa && 'Notification' in window) {
+      Notification.requestPermission().then(permission => {
+        console.log('Notification permission:', permission);
+      });
+    }
+  }, []);
+  
   // Attempt to play sound again when the alert becomes visible
   useEffect(() => {
     // This second effect helps ensure the sound plays even if browser needs user interaction first
