@@ -10,7 +10,7 @@ on:
   pull_request:
     branches: [ main ]
 
-  # Allows you to run this workflow manually from the
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -52,12 +52,6 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-
-
-      - name: Ensure sounds directory exists
-        run: |
-          mkdir -p public/sounds
-            cp public/notification-sound.mp3 public/sounds/alarm_clock.mp3
 
       # SSH into the EC2 instance and run the Docker container
       - name: SSH into EC2, configure NGINX with Let's Encrypt SSL, and run Docker container
@@ -140,7 +134,7 @@ jobs:
             # Add security headers for PWA support to the HTTPS config
             sudo sed -i '/ssl_prefer_server_ciphers/a \\n    # Security headers for PWA and audio playback\n    add_header Content-Security-Policy "default-src \x27self\x27; script-src \x27self\x27 \x27unsafe-inline\x27 \x27unsafe-eval\x27; connect-src \x27self\x27 https://$DOMAIN wss://$DOMAIN; img-src \x27self\x27 data: blob:; style-src \x27self\x27 \x27unsafe-inline\x27; media-src \x27self\x27 blob: https://$DOMAIN; object-src \x27none\x27; frame-ancestors \x27self\x27; worker-src \x27self\x27 blob:;";\n    add_header X-Content-Type-Options "nosniff";\n    add_header Cross-Origin-Embedder-Policy "unsafe-none";\n    add_header Cross-Origin-Opener-Policy "unsafe-none";\n    add_header Cross-Origin-Resource-Policy "cross-origin";\n    add_header X-Frame-Options "SAMEORIGIN";\n    add_header X-XSS-Protection "1; mode=block";\n    add_header Permissions-Policy "autoplay=*";\n    add_header Feature-Policy "autoplay *";' /etc/nginx/sites-available/$DOMAIN
 
-            # Reload nginx apply the changes
+            # Reload nginx to apply the changes
             sudo nginx -t && sudo systemctl reload nginx
 
             # Login to AWS ECR
@@ -161,4 +155,4 @@ jobs:
             -e N8N_WEBHOOK_URL=${{ secrets.N8N_WEBHOOK_URL }} \
             -e HOST=0.0.0.0 \
             --restart unless-stopped \
-              664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest 
+              664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest

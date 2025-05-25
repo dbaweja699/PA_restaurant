@@ -1,11 +1,6 @@
 node_modules
 dist
 .DS_Store
-# Keep this line
 server/public
-
-# But add this exception to ensure sound files are included
-!server/public/sounds
-!public/sounds
 vite.config.ts.*
 *.tar.gz

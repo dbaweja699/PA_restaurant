@@ -9,10 +9,6 @@ RUN npm ci
 # copy the rest of the application code 
 COPY . . 
 
-# Ensure sound files directory exists and copy alarm_clock.mp3 to it
-RUN mkdir -p /app/public/sounds && \
-    cp -f /app/alarm_clock.mp3 /app/public/sounds/alarm_clock.mp3 || true
-
 # Build the application 
 RUN npm run build
 
