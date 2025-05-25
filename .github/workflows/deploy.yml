@@ -1,135 +1,137 @@
-name: Deploy to EC2
+            name: Deploy to EC2
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+            on:
+              push:
+                branches:
+                  - main
+              pull_request:
+                branches:
+                  - main
+              workflow_dispatch:
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+            jobs:
+              deploy:
+                runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
+                steps:
+                  - uses: actions/checkout@v3
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
+                  - name: Configure AWS credentials
+                    uses: aws-actions/configure-aws-credentials@v4
+                    with:
+                      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                      aws-region: us-east-2
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+                  - name: Login to Amazon ECR
+                    id: login-ecr
+                    uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: pa_hotel_ai_assistant
-          IMAGE_TAG: latest
-        run: |
-          aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region us-east-2 || aws ecr create-repository --repository-name $ECR_REPOSITORY --region us-east-2
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+                  - name: Build, tag, and push image to Amazon ECR
+                    id: build-image
+                    env:
+                      ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                      ECR_REPOSITORY: pa_hotel_ai_assistant
+                      IMAGE_TAG: latest
+                    run: |
+                      aws ecr describe-repositories --repository-names $ECR_REPOSITORY --region us-east-2 || aws ecr create-repository --repository-name $ECR_REPOSITORY --region us-east-2
+                      docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                      docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+                      echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Ensure sounds directory exists
-        run: |
-          mkdir -p public/sounds
-          cp public/notification-sound.mp3 public/sounds/alarm_clock.mp3
+                  - name: Ensure sounds directory exists
+                    run: |
+                      mkdir -p public/sounds
+                      cp public/notification-sound.mp3 public/sounds/alarm_clock.mp3
 
-      - name: SSH into EC2, configure NGINX + SSL, and deploy container
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            DOMAIN=princealberthotel.dblytics.com
-            EMAIL="kshitijk146@gmail.com"
+                  - name: SSH into EC2, configure NGINX + SSL, and deploy container
+                    uses: appleboy/ssh-action@v0.1.10
+                    with:
+                      host: ${{ secrets.EC2_HOST }}
+                      username: ubuntu
+                      key: ${{ secrets.EC2_SSH_KEY }}
+                      script: |
+                        DOMAIN=princealberthotel.dblytics.com
+                        EMAIL="kshitijk146@gmail.com"
 
-            sudo kill -9 $(lsof /var/lib/dpkg/lock-frontend -t) 2>/dev/null || true
-            sudo rm -f /var/lib/dpkg/lock-frontend
+                        sudo kill -9 $(lsof /var/lib/dpkg/lock-frontend -t) 2>/dev/null || true
+                        sudo rm -f /var/lib/dpkg/lock-frontend
 
-            sudo apt-get update
-            sudo apt-get install -y nginx certbot python3-certbot-nginx
+                        sudo apt-get update
+                        sudo apt-get install -y nginx certbot python3-certbot-nginx
 
-            sudo tee /etc/nginx/sites-available/$DOMAIN > /dev/null <<EOF
-            server {
-                listen 80;
-                server_name $DOMAIN;
+                        sudo tee /etc/nginx/sites-available/$DOMAIN > /dev/null <<EOF
+                        server {
+                            listen 80;
+                            server_name $DOMAIN;
 
-                location / {
-                    proxy_pass http://localhost:5000;
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade \$http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host \$host;
-                    proxy_cache_bypass \$http_upgrade;
-                }
+                            location / {
+                                proxy_pass http://localhost:5000;
+                                proxy_http_version 1.1;
+                                proxy_set_header Upgrade \$http_upgrade;
+                                proxy_set_header Connection 'upgrade';
+                                proxy_set_header Host \$host;
+                                proxy_cache_bypass \$http_upgrade;
+                            }
 
-                location /sounds/ {
-                    proxy_pass http://localhost:5000;
-                    add_header Access-Control-Allow-Origin "*";
-                    add_header Cross-Origin-Resource-Policy "cross-origin";
-                    add_header Content-Type "audio/mpeg";
-                    expires 1d;
-                }
+                            location /sounds/ {
+                                proxy_pass http://localhost:5000;
+                                add_header Access-Control-Allow-Origin "*";
+                                add_header Cross-Origin-Resource-Policy "cross-origin";
+                                add_header Content-Type "audio/mpeg";
+                                expires 1d;
+                            }
 
-                location /api/sound/ {
-                    proxy_pass http://localhost:5000;
-                    add_header Access-Control-Allow-Origin "*";
-                    add_header Cross-Origin-Resource-Policy "cross-origin";
-                    add_header Content-Type "audio/mpeg";
-                    expires 1d;
-                }
+                            location /api/sound/ {
+                                proxy_pass http://localhost:5000;
+                                add_header Access-Control-Allow-Origin "*";
+                                add_header Cross-Origin-Resource-Policy "cross-origin";
+                                add_header Content-Type "audio/mpeg";
+                                expires 1d;
+                            }
 
-                location = /service-worker.js {
-                    proxy_pass http://localhost:5000;
-                    add_header Service-Worker-Allowed "/";
-                    add_header Cache-Control "no-cache";
-                    add_header Cross-Origin-Embedder-Policy "unsafe-none";
-                    add_header Cross-Origin-Opener-Policy "unsafe-none";
-                }
+                            location = /service-worker.js {
+                                proxy_pass http://localhost:5000;
+                                add_header Service-Worker-Allowed "/";
+                                add_header Cache-Control "no-cache";
+                                add_header Cross-Origin-Embedder-Policy "unsafe-none";
+                                add_header Cross-Origin-Opener-Policy "unsafe-none";
+                            }
 
-                location = /manifest.json {
-                    proxy_pass http://localhost:5000;
-                    add_header Content-Type "application/manifest+json";
-                    add_header Cache-Control "no-cache";
-                }
-            }
-EOF
+                            location = /manifest.json {
+                                proxy_pass http://localhost:5000;
+                                add_header Content-Type "application/manifest+json";
+                                add_header Cache-Control "no-cache";
+                            }
+                        }
+                        EOF
 
-            sudo ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
-            sudo rm -f /etc/nginx/sites-enabled/default || true
-            sudo nginx -t && sudo systemctl reload nginx
+                        sudo ln -sf /etc/nginx/sites-available/$DOMAIN /etc/nginx/sites-enabled/
+                        sudo rm -f /etc/nginx/sites-enabled/default || true
+                        sudo nginx -t && sudo systemctl reload nginx
 
-            sudo certbot --nginx --non-interactive --agree-tos --email $EMAIL -d $DOMAIN
+                        sudo certbot --nginx --non-interactive --agree-tos --email $EMAIL -d $DOMAIN
 
-            sudo sed -i '/ssl_prefer_server_ciphers/a \\n    add_header Content-Security-Policy "default-src \x27self\x27; script-src \x27self\x27 \x27unsafe-inline\x27 \x27unsafe-eval\x27; connect-src \x27self\x27 https://$DOMAIN wss://$DOMAIN; img-src \x27self\x27 data: blob:; style-src \x27self\x27 \x27unsafe-inline\x27; media-src \x27self\x27 blob: https://$DOMAIN; object-src \x27none\x27; frame-ancestors \x27self\x27; worker-src \x27self\x27 blob:;";\n    add_header X-Content-Type-Options "nosniff";\n    add_header Cross-Origin-Embedder-Policy "unsafe-none";\n    add_header Cross-Origin-Opener-Policy "unsafe-none";\n    add_header Cross-Origin-Resource-Policy "cross-origin";\n    add_header X-Frame-Options "SAMEORIGIN";\n    add_header X-XSS-Protection "1; mode=block";\n    add_header Permissions-Policy "autoplay=*";\n    add_header Feature-Policy "autoplay *";' /etc/nginx/sites-available/$DOMAIN
+                        sudo sed -i '/ssl_prefer_server_ciphers/a \\n    add_header Content-Security-Policy "default-src \\x27self\\x27; script-src \\x27self\\x27 \\x27unsafe-inline\\x27 \\x27unsafe-eval\\x27; connect-src \\x27self\\x27 https://$DOMAIN wss://$DOMAIN; img-src \\x27self\\x27 data: blob:; style-src \\x27self\\x27 \\x27unsafe-inline\\x27; media-src \\x27self\\x27 blob: https://$DOMAIN; object-src \\x27none\\x27; frame-ancestors \\x27self\\x27; worker-src \\x27self\\x27 blob:;";\\n    add_header X-Content-Type-Options "nosniff";\\n    add_header Cross-Origin-Embedder-Policy "unsafe-none";\\n    add_header Cross-Origin-Opener-Policy "unsafe-none";\\n    add_header Cross-Origin-Resource-Policy "cross-origin";\\n    add_header X-Frame-Options "SAMEORIGIN";\\n    add_header X-XSS-Protection "1; mode=block";\\n    add_header Permissions-Policy "autoplay=*";\\n    add_header Feature-Policy "autoplay *";' /etc/nginx/sites-available/$DOMAIN
 
-            sudo nginx -t && sudo systemctl reload nginx
+                        sudo nginx -t && sudo systemctl reload nginx
 
-            # 💡 Login to ECR and always pull latest image
-            aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 664418994345.dkr.ecr.us-east-2.amazonaws.com
+                        # 💡 Login to ECR and always pull latest image
+                        aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 664418994345.dkr.ecr.us-east-2.amazonaws.com
 
-            docker pull 664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest
+                        docker pull 664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest
 
-            docker stop pa_hotel_ai_assistant-container || true
-            docker rm pa_hotel_ai_assistant-container || true
+                        docker stop pa_hotel_ai_assistant-container || true
+                        docker rm pa_hotel_ai_assistant-container || true
 
-            docker run -d --name pa_hotel_ai_assistant-container \
-              -p 5000:5000 \
-              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
-              -e SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
-              -e SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
-              -e SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
-              -e SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} \
-              -e N8N_WEBHOOK_URL=${{ secrets.N8N_WEBHOOK_URL }} \
-              -e HOST=0.0.0.0 \
-              --restart unless-stopped \
-              664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest
+                        docker run -d --name pa_hotel_ai_assistant-container \
+                          -p 5000:5000 \
+                          -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+                          -e SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
+                          -e SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+                          -e SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }} \
+                          -e SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }} \
+                          -e N8N_WEBHOOK_URL=${{ secrets.N8N_WEBHOOK_URL }} \
+                          -e HOST=0.0.0.0 \
+                          --restart unless-stopped \
+                          664418994345.dkr.ecr.us-east-2.amazonaws.com/pa_hotel_ai_assistant:latest
