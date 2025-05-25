@@ -10,7 +10,7 @@ on:
   pull_request:
     branches: [ main ]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Allows you to run this workflow manually from the
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -57,7 +57,7 @@ jobs:
       - name: Ensure sounds directory exists
         run: |
           mkdir -p public/sounds
-          cp public/notification-sound.mp3 public/sounds/alarm_clock.mp3
+            cp public/notification-sound.mp3 public/sounds/alarm_clock.mp3
 
       # SSH into the EC2 instance and run the Docker container
       - name: SSH into EC2, configure NGINX with Let's Encrypt SSL, and run Docker container
