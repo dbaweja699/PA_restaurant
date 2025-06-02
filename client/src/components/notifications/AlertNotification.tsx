@@ -497,14 +497,20 @@ export function AlertNotification({
   }, [type, autoClose, autoCloseTime, onClose, notificationAlreadySeen, title, message, details.id]);
 
   // Handle Accept action (for orders)
-  const handleAccept = async () => {
-    setIsProcessing(true);
-
-    // Stop the sound
+  const stopSoundAndFlashing = () => {
+    // Stop the sound immediately
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = null;
+      audioRef.current.currentTime = 0;
     }
+    // Stop title flashing
+    stopTitleFlashing();
+  };
+
+  const handleAccept = async () => {
+    // Stop sound and flashing immediately when button is clicked
+    stopSoundAndFlashing();
+    setIsProcessing(true);
 
     // Only update order status if this is an order type and we have an orderId
     if (type === 'order' && details.orderId) {
@@ -558,11 +564,8 @@ export function AlertNotification({
 
   // Handle close action
   const handleClose = () => {
-    // Stop the sound
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+    // Stop sound and flashing immediately
+    stopSoundAndFlashing();
     
     // If this is an order notification, update its status to "new"
     if (type === 'order' && details.orderId) {
