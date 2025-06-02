@@ -405,14 +405,20 @@ export function NotificationCenter() {
 
       // For order type notifications, show the alert notification
       if (newestNotification.type === 'order') {
-        setAlertNotification(newestNotification);
+        setAlertNotification({
+          ...newestNotification,
+          type: 'order'
+        });
         setShowAlertNotification(true);
         // Play order notification sound
         playNotificationSound('order');
       }
-      // For call type notifications about orders, show the alert notification
+      // For call type notifications about orders, show the alert notification as an order
       else if (newestNotification.type === 'call' && newestNotification.message.toLowerCase().includes('order')) {
-        setAlertNotification(newestNotification);
+        setAlertNotification({
+          ...newestNotification,
+          type: 'order' // Force the type to be 'order' for call-based orders
+        });
         setShowAlertNotification(true);
         // Play order notification sound
         playNotificationSound('order');
