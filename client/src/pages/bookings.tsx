@@ -468,7 +468,7 @@ export default function Bookings() {
                                     await refetch();
                                     toast({
                                       title: "Success",
-                                      description: `Booking for ${booking.customer_name || booking.customerName} has been cancelled.`,
+                                      description: `Booking for ${booking.customerName} has been cancelled.`,
                                       variant: "default",
                                     });
                                   } catch (error) {
@@ -521,7 +521,7 @@ export default function Bookings() {
               <DialogTitle>Booking Details</DialogTitle>
               <DialogDescription>
                 Reservation information for{" "}
-                {selectedBooking.customer_name || selectedBooking.customerName}
+                {selectedBooking.customerName}
               </DialogDescription>
             </DialogHeader>
 
