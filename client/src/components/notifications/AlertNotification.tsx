@@ -453,8 +453,11 @@ export function AlertNotification({
       };
       
       // Load the audio first
-      audioRef.current.addEventListener('canplaythrough', playSound, { once: true });
-      audioRef.current.load();
+      const currentAudio = audioRef.current;
+      if (currentAudio) {
+        currentAudio.addEventListener('canplaythrough', playSound, { once: true });
+        currentAudio.load();
+      }
       
       // Fallback: If canplaythrough doesn't fire within 1 second, try to play anyway
       const fallbackTimer = setTimeout(() => {
@@ -503,8 +506,6 @@ export function AlertNotification({
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
     }
-    // Stop title flashing
-    stopTitleFlashing();
   };
 
   const handleAccept = async () => {
@@ -560,6 +561,29 @@ export function AlertNotification({
       onClose();
       setIsProcessing(false);
     }
+  };
+
+  // Handle dismiss action (for orders)
+  const handleDismiss = () => {
+    // Stop sound and flashing immediately
+    stopSoundAndFlashing();
+    
+    // If this is an order notification, update its status to "dismissed"
+    if (type === 'order' && details.orderId) {
+      apiRequest(
+        'PATCH',
+        `/api/orders/${details.orderId}/status`,
+        { status: 'dismissed' }
+      )
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      })
+      .catch(error => {
+        console.error('Error updating order status to "dismissed":', error);
+      });
+    }
+    
+    onClose();
   };
 
   // Handle close action
