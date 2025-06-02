@@ -422,6 +422,18 @@ export function NotificationCenter() {
         setShowAlertNotification(true);
         // Play order notification sound
         playNotificationSound('order');
+      }
+      // For call type notifications about bookings, show the alert notification as a booking
+      else if (newestNotification.type === 'call' && 
+               (newestNotification.message.toLowerCase().includes('booking') || 
+                newestNotification.message.toLowerCase().includes('reservation'))) {
+        setAlertNotification({
+          ...newestNotification,
+          type: 'booking' // Force the type to be 'booking' for call-based bookings
+        });
+        setShowAlertNotification(true);
+        // Play booking notification sound
+        playNotificationSound('booking');
       } 
       // For bookings and function_bookings, show the temporary alert notification
       else if (newestNotification.type === 'booking' || newestNotification.type === 'function_booking') {

@@ -69,6 +69,7 @@ export default function Bookings() {
     refetch,
   } = useQuery<Booking[]>({
     queryKey: ["/api/bookings"],
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
   });
 
   // Debug log to see what data we're getting from the API
@@ -305,8 +306,7 @@ export default function Bookings() {
                             <div className="flex justify-between items-start">
                               <div>
                                 <h4 className="font-medium">
-                                  {booking.customer_name ||
-                                    booking.customerName}
+                                  {booking.customerName}
                                 </h4>
                                 <div className="flex items-center text-sm text-neutral-600 mt-1">
                                   <Users className="h-3 w-3 mr-1" />
@@ -354,7 +354,7 @@ export default function Bookings() {
                                         await refetch();
                                         toast({
                                           title: "Success",
-                                          description: `Booking for ${booking.customer_name || booking.customerName} has been cancelled.`,
+                                          description: `Booking for ${booking.customerName} has been cancelled.`,
                                           variant: "default",
                                         });
                                       } catch (error) {
@@ -424,7 +424,7 @@ export default function Bookings() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          {booking.customer_name || booking.customerName}
+                          {booking.customerName}
                         </TableCell>
                         <TableCell>{booking.partySize}</TableCell>
                         <TableCell>
